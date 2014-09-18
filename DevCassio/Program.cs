@@ -316,7 +316,7 @@ namespace DevCassio
 
             Config.AddSubMenu(new Menu("AntiGapcloser", "Anti Gapcloser"));
             Config.SubMenu("AntiGapcloser").AddItem(new MenuItem("RAntiGapcloser", "R AntiGapcloser").SetValue(true));
-            Config.SubMenu("AntiGapcloser").AddItem(new MenuItem("RAntiGapcloserMinHealth", "R AntiGapcloser Min Health %").SetValue(new Slider(50, 0, 100)));
+            Config.SubMenu("AntiGapcloser").AddItem(new MenuItem("RAntiGapcloserMinHealth", "R AntiGapcloser Min Health").SetValue(new Slider(50, 0, 100)));
 
             Config.AddToMainMenu();
         }
