@@ -62,3 +62,6 @@ TopCassio/obj/Debug/TopCassio.csproj.FileListAbsolute.txt
 TopCassio/obj/Debug/TopCassio.exe
 TopCassio/obj/Debug/TopCassio.pdb
 TopCassio/obj/Debug/TopCassio.csprojResolveAssemblyReference.cache
+*.exe
+*.manifest
+*.cache
