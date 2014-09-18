@@ -34,7 +34,7 @@ namespace DevCassio
         public static Spell R;
         public static List<Obj_AI_Base> minions;
 
-        public static Ignite ignite = new Ignite();
+        //public static Ignite ignite = new Ignite();
 
         static void Main(string[] args)
         {
@@ -112,11 +112,11 @@ namespace DevCassio
                 return;
             }
 
-            if (ignite.CanKill(eTarget))
-            {
-                ignite.Cast(eTarget);
-                Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
-            }
+            //if (ignite.CanKill(eTarget))
+            //{
+            //    ignite.Cast(eTarget);
+            //    Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
+            //}
 
         }
 
@@ -228,14 +228,14 @@ namespace DevCassio
             SpellList.Add(R);
             Game.PrintChat(string.Format("set menu"));
             SetMainMenu();
-
+            Game.PrintChat(string.Format("set Attach"));
             // Attach Events
             Game.OnGameUpdate += OnTick;
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPosibleToInterrupt += Interrupter_OnPosibleToInterrupt;
             Game.OnGameSendPacket += Game_OnGameSendPacket;
-            ignite.CanKillstealEnemies += ignite_CanKillstealEnemies;
+            //ignite.CanKillstealEnemies += ignite_CanKillstealEnemies;
 
             Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
         }
@@ -244,7 +244,7 @@ namespace DevCassio
         {
             if (Config.Item("ComboActive").GetValue<KeyBind>().Active)
             {
-                ignite.Cast(e.Enemies.FirstOrDefault());
+                //ignite.Cast(e.Enemies.FirstOrDefault());
                 Game.PrintChat(string.Format("Ignite KS -> {0} ", e.Enemies.FirstOrDefault().SkinName));
             }
         }
