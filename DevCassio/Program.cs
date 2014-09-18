@@ -205,6 +205,8 @@ namespace DevCassio
 
         private static void onGameLoad(EventArgs args)
         {
+            Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio Loading.. Hi {0}</font>", ObjectManager.Player.ChampionName));
+
             Player = ObjectManager.Player;
 
             if (Player.ChampionName != ChampionName)
