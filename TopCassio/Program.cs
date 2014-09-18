@@ -149,15 +149,25 @@ namespace TopCassio
         }
         public static void freeze()
         {
+            var FreezeOnlyELastHitPoison = Config.Item("FreezeOnlyELastHitPoison").GetValue<bool>();
+
             if (minions.Count > 1)
             {
                 foreach (var minion in minions)
                 {
                     var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
 
-                    if (E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range) && minion.HasBuffOfType(BuffType.Poison))
+                    if (E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
                     {
-                        E.CastOnUnit(minion, true);
+                        if (FreezeOnlyELastHitPoison)
+                        {
+                            if (minion.HasBuffOfType(BuffType.Poison))
+                                E.CastOnUnit(minion, true);
+                        }
+                        else
+                        {
+                            E.CastOnUnit(minion, true);
+                        }
                     }
                 }
             }
@@ -205,6 +215,7 @@ namespace TopCassio
 
             Config.AddSubMenu(new Menu("Farm", "Farm"));
             Config.SubMenu("Farm").AddItem(new MenuItem("FreezeActive", "Freeze!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
+            Config.SubMenu("Farm").AddItem(new MenuItem("FreezeOnlyELastHitPoison", "Only LastHit E on Poison").SetValue(true));
             Config.SubMenu("Farm").AddItem(new MenuItem("LaneClearActive", "LaneClear!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
