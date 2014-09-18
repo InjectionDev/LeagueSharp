@@ -50,7 +50,6 @@ namespace TopCassio
             {
                 combo();
             }
-
             if (Config.Item("HarassActive").GetValue<KeyBind>().Active)
             {
                 harass();
@@ -71,12 +70,14 @@ namespace TopCassio
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
+
             var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
                 R.CastIfWillHit(eTarget, Config.Item("rCount").GetValue<Slider>().Value, true);
                 return;
             }
+
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
                 if (eTarget.HasBuffOfType(BuffType.Poison) || DamageLib.getDmg(eTarget, DamageLib.SpellType.E) > eTarget.Health)
@@ -85,11 +86,13 @@ namespace TopCassio
                     return;
                 }
             }
+
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
                 Q.CastIfHitchanceEquals(eTarget, HitChance.High, true);
                 return;
             }
+
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
             {
                 W.CastIfHitchanceEquals(eTarget, HitChance.High, true);
@@ -102,6 +105,7 @@ namespace TopCassio
             var useQ = Config.Item("UseQHarass").GetValue<bool>();
             var useW = Config.Item("UseWHarass").GetValue<bool>();
             var useE = Config.Item("UseEHarass").GetValue<bool>();
+
             var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
@@ -111,11 +115,13 @@ namespace TopCassio
                     return;
                 }
             }
+
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
                 Q.CastIfHitchanceEquals(eTarget, HitChance.High, true);
                 return;
             }
+
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
             {
                 W.CastIfHitchanceEquals(eTarget, HitChance.High, true);
@@ -149,25 +155,15 @@ namespace TopCassio
         }
         public static void freeze()
         {
-            var FreezeOnlyELastHitPoison = Config.Item("FreezeOnlyELastHitPoison").GetValue<bool>();
-
             if (minions.Count > 1)
             {
                 foreach (var minion in minions)
                 {
                     var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
 
-                    if (E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
+                    if (E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range) && minion.HasBuffOfType(BuffType.Poison))
                     {
-                        if (FreezeOnlyELastHitPoison)
-                        {
-                            if (minion.HasBuffOfType(BuffType.Poison))
-                                E.CastOnUnit(minion, true);
-                        }
-                        else
-                        {
-                            E.CastOnUnit(minion, true);
-                        }
+                        E.CastOnUnit(minion, true);
                     }
                 }
             }
@@ -215,7 +211,6 @@ namespace TopCassio
 
             Config.AddSubMenu(new Menu("Farm", "Farm"));
             Config.SubMenu("Farm").AddItem(new MenuItem("FreezeActive", "Freeze!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
-            Config.SubMenu("Farm").AddItem(new MenuItem("FreezeOnlyELastHitPoison", "Only LastHit E on Poison").SetValue(true));
             Config.SubMenu("Farm").AddItem(new MenuItem("LaneClearActive", "LaneClear!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
