@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Reflection;
 
 using LeagueSharp;
@@ -228,7 +226,7 @@ namespace DevCassio
             SpellList.Add(W);
             SpellList.Add(E);
             SpellList.Add(R);
-
+            Game.PrintChat(string.Format("set menu"));
             SetMainMenu();
 
             // Attach Events
