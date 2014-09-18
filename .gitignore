@@ -41,3 +41,23 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+LeagueSharp.sln
+LeagueSharp.v12.suo
+TopCassio/bin/Debug/LeagueSharp.Common.dll
+TopCassio/bin/Debug/LeagueSharp.dll
+TopCassio/bin/Debug/LeagueSharp.xml
+*.dll
+TopCassio/bin/Debug/TopCassio.exe
+TopCassio/bin/Debug/TopCassio.exe.config
+TopCassio/bin/Debug/TopCassio.pdb
+TopCassio/bin/Debug/TopCassio.vshost.exe
+TopCassio/bin/Debug/TopCassio.vshost.exe.config
+TopCassio/bin/Debug/TopCassio.vshost.exe.manifest
+TopCassio/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+TopCassio/obj/Debug/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+TopCassio/obj/Debug/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+TopCassio/obj/Debug/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
+TopCassio/obj/Debug/TopCassio.csproj.FileListAbsolute.txt
+TopCassio/obj/Debug/TopCassio.exe
+TopCassio/obj/Debug/TopCassio.pdb

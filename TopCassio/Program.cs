@@ -7,9 +7,7 @@ using LeagueSharp;
 using LeagueSharp.Common;
 
 /*
- * Script Base crétidos: https://github.com/fueledbyflux/LeagueSharp-Public/tree/master/SigmaCass
- * MODS:
- * Slider de mana para 
+ * Script Base: https://github.com/fueledbyflux/LeagueSharp-Public/tree/master/SigmaCass
 */
 
 namespace TopCassio
@@ -157,7 +155,7 @@ namespace TopCassio
                 {
                     var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
 
-                    if (E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
+                    if (E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range) && minion.HasBuffOfType(BuffType.Poison))
                     {
                         E.CastOnUnit(minion, true);
                     }
