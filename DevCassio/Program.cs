@@ -9,15 +9,13 @@ using Igniter;
 /*
  * #### DevCassio ####
  * 
- * InjectionDev GitHub
- * https://github.com/InjectionDev/LeagueSharp/
- * 
- * /
+ * InjectionDev GitHub: https://github.com/InjectionDev/LeagueSharp/
+ * Script Based GitHub: https://github.com/fueledbyflux/LeagueSharp-Public/tree/master/SigmaCass/ - Credits to fueledbyflux
+* /
 
 /*
- * #### Script Base: https://github.com/fueledbyflux/LeagueSharp-Public/tree/master/SigmaCass/ - Credits to fueledbyflux ####
+ * ##### DevCassio Mods #####
  * 
- * #### DevCassio Mods ####
  * + AntiGapCloser with R when LowHealth
  * + LastHit E On Posioned Minions
  * + LastHit E On Non-Posioned Minions, if no enemy near
@@ -43,8 +41,8 @@ namespace DevCassio
         public static Spell W;
         public static Spell E;
         public static Spell R;
+        public static Ignite IgniteSpell;
         public static List<Obj_AI_Base> MinionList;
-        public static Ignite IgniteSpell = new Ignite();
         public static DevCommom.SkinManager SkinManager;
 
         public static bool mustDebug = Environment.MachineName == "daniel";
@@ -60,6 +58,7 @@ namespace DevCassio
 
             if (Config.Item("ComboActive").GetValue<KeyBind>().Active)
             {
+                BurstCombo();
                 Combo();
             }
             if (Config.Item("HarassActive").GetValue<KeyBind>().Active)
@@ -74,6 +73,41 @@ namespace DevCassio
             {
                 Freeze();
             }
+
+            SkinManager.Update();
+        }
+
+        public static void BurstCombo()
+        {
+            var useQ = Config.Item("UseQCombo").GetValue<bool>();
+            var useW = Config.Item("UseWCombo").GetValue<bool>();
+            var useE = Config.Item("UseECombo").GetValue<bool>();
+            var useR = Config.Item("UseRCombo").GetValue<bool>();
+            var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
+
+            IEnumerable<DamageLib.SpellType> spellCombo = new[]
+                {
+                    DamageLib.SpellType.Q, 
+                    DamageLib.SpellType.E, 
+                    DamageLib.SpellType.E,
+                    DamageLib.SpellType.R, 
+                    DamageLib.SpellType.IGNITE
+                };
+
+            bool igniteReady = Player.SummonerSpellbook.CanUseSpell(IgniteSpell.GetSpell().Slot) == SpellState.Ready;
+
+            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR && igniteReady)
+            {
+                if (DamageLib.IsKillable(eTarget, spellCombo))
+                {
+                    R.CastIfWillHit(eTarget, 1, packetCast);
+
+                    IgniteSpell.Cast(eTarget);
+                }
+            }
         }
 
         public static void Combo()
@@ -86,6 +120,7 @@ namespace DevCassio
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
@@ -155,10 +190,10 @@ namespace DevCassio
 
         public static void WaveClear()
         {
-            var packetCast = Config.Item("PacketCast").GetValue<bool>();
-
             if (MinionList.Count == 0)
                 return;
+
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             foreach (var minion in MinionList)
             {
@@ -183,11 +218,11 @@ namespace DevCassio
 
         public static void Freeze()
         {
-            var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            var nearTarget = DevCommom.DevCommom.GetNearestEnemy();
-
             if (MinionList.Count == 0)
                 return;
+
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var nearestTarget = DevCommom.DevCommom.GetNearestEnemy();
 
             foreach (var minion in MinionList)
             {
@@ -199,7 +234,7 @@ namespace DevCassio
                     {
                         E.CastOnUnit(minion, packetCast);
                     }
-                    else if (Player.ServerPosition.Distance(nearTarget.ServerPosition) > Q.Range + 50)
+                    else if (Player.ServerPosition.Distance(nearestTarget.ServerPosition) > Q.Range + 50)
                     {
                         E.CastOnUnit(minion, packetCast);
                     }
@@ -207,7 +242,7 @@ namespace DevCassio
             }
         }
 
-        public static void AssistedUlt()
+        public static void CastAssistedUlt()
         {
             var eTarget = DevCommom.DevCommom.GetNearestEnemy();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
@@ -251,19 +286,21 @@ namespace DevCassio
 
         private static void InitializeSpells()
         {
-            float defaultHitBox = 75; // TODO: check
+            float extraHitBox = 75; // TODO: check
 
-            Q = new Spell(SpellSlot.Q, 850 + defaultHitBox);
+            Q = new Spell(SpellSlot.Q, 850 + extraHitBox);
             Q.SetSkillshot(0.6f, 140, float.MaxValue, false, SkillshotType.SkillshotCircle);
 
-            W = new Spell(SpellSlot.W, 850 + defaultHitBox);
+            W = new Spell(SpellSlot.W, 850 + extraHitBox);
             W.SetSkillshot(0.5f, 210, 2500, false, SkillshotType.SkillshotCircle);
 
             E = new Spell(SpellSlot.E, 700);
             E.SetTargetted(0.1f, float.MaxValue);
 
-            R = new Spell(SpellSlot.R, 800 + defaultHitBox);
+            R = new Spell(SpellSlot.R, 800 + extraHitBox);
             R.SetSkillshot(0.5f, 210, float.MaxValue, false, SkillshotType.SkillshotCone);
+
+            IgniteSpell = new Ignite();
 
             SpellList.Add(Q);
             SpellList.Add(W);
@@ -312,7 +349,7 @@ namespace DevCassio
             if (Config.Item("UseAssistedUlt").GetValue<KeyBind>().Active && args.Msg == Config.Item("AssistedUltKey").GetValue<KeyBind>().Key)
             {
                 args.Process = false;
-                AssistedUlt();
+                CastAssistedUlt();
             }
         }
 
@@ -375,21 +412,12 @@ namespace DevCassio
         {
             Config = new Menu("DevCassio", "DevCassio", true);
 
-            Game.PrintChat(string.Format("set menu 1"));
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-
-            Game.PrintChat(string.Format("set menu 11"));
             SimpleTs.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
-            Game.PrintChat(string.Format("set menu 2"));
-
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
-
-            Game.PrintChat(string.Format("set menu 21"));
             Orbwalker = new Orbwalking.Orbwalker(Config.SubMenu("Orbwalking"));
-
-            Game.PrintChat(string.Format("set menu 3"));
 
             Config.AddSubMenu(new Menu("Combo", "Combo"));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseQCombo", "Use Q").SetValue(true));

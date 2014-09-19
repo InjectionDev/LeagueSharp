@@ -30,10 +30,12 @@ namespace DevCommom
                 SelectedSkin = Menu.Item("Skin_" + ObjectManager.Player.ChampionName + "_select").GetValue<StringList>().SelectedIndex;
             }
         }
+
         public void Add(string skin)
         {
             Skins.Add(skin);
         }
+
         public void Update()
         {
             if (Menu.Item("Skin_" + ObjectManager.Player.ChampionName + "_enabled").GetValue<bool>())
@@ -47,6 +49,7 @@ namespace DevCommom
                 }
             }
         }
+
         private static void GenerateSkinPacket(int skinNumber)
         {
             int netID = ObjectManager.Player.NetworkId;
