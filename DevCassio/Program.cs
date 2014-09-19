@@ -212,7 +212,6 @@ namespace DevCassio
 
             float defaultHitBox = 75;
 
-
             Q = new Spell(SpellSlot.Q, 850 + defaultHitBox);
             W = new Spell(SpellSlot.W, 850 + defaultHitBox);
             E = new Spell(SpellSlot.E, 700);
@@ -226,9 +225,9 @@ namespace DevCassio
             SpellList.Add(W);
             SpellList.Add(E);
             SpellList.Add(R);
-            Game.PrintChat(string.Format("set menu"));
+
             SetMainMenu();
-            Game.PrintChat(string.Format("set Attach"));
+
             // Attach Events
             Game.OnGameUpdate += OnTick;
             Drawing.OnDraw += OnDraw;
