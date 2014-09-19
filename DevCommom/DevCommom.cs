@@ -6,15 +6,39 @@ using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace LeagueSharp
+namespace DevCommom
 {
-    public class DevCommom
+    public static class DevCommom
     {
+        public static List<Obj_AI_Hero> GetEnemyList()
+        {
+            return ObjectManager.Get<Obj_AI_Hero>()
+                .Where(x => x.IsEnemy && x.IsValidTarget())
+                .OrderBy(x => ObjectManager.Player.ServerPosition.Distance(x.ServerPosition))
+                .ToList();
+        }
+
+        public static List<Obj_AI_Hero> GetAllyList()
+        {
+            return ObjectManager.Get<Obj_AI_Hero>()
+                .Where(x => x.IsAlly && x.IsValidTarget())
+                .OrderBy(x => ObjectManager.Player.ServerPosition.Distance(x.ServerPosition))
+                .ToList();
+        }
+
         public static Obj_AI_Hero GetNearestEnemy()
         {
             return ObjectManager.Get<Obj_AI_Hero>()
                 .Where(x => x.IsEnemy && x.IsValidTarget())
                 .OrderBy(x => ObjectManager.Player.ServerPosition.Distance(x.ServerPosition))
+                .FirstOrDefault();
+        }
+
+        public static Obj_AI_Hero GetNearestEnemyFromUnit(Obj_AI_Base unit)
+        {
+            return ObjectManager.Get<Obj_AI_Hero>()
+                .Where(x => x.IsEnemy && x.IsValidTarget())
+                .OrderBy(x => unit.ServerPosition.Distance(x.ServerPosition))
                 .FirstOrDefault();
         }
 

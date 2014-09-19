@@ -23,7 +23,10 @@ using Igniter;
  * + LastHit E On Non-Posioned Minions, if no enemy near
  * + Ignite KS
  * + Menu No-Face Exploit (PacketCast)
- * 
+ * + Skin Hack
+ * + Show E Damage on Enemy HPBar
+ * + Assited Ult
+ * + Block Ult if will not hit
 */
 
 namespace DevCassio
@@ -40,29 +43,20 @@ namespace DevCassio
         public static Spell W;
         public static Spell E;
         public static Spell R;
-        public static List<Obj_AI_Base> minions;
+        public static List<Obj_AI_Base> MinionList;
         public static Ignite IgniteSpell = new Ignite();
+        public static DevCommom.SkinManager SkinManager;
+
+        public static bool mustDebug = Environment.MachineName == "daniel";
 
         static void Main(string[] args)
         {
             LeagueSharp.Common.CustomEvents.Game.OnGameLoad += onGameLoad;
         }
 
-        private static void OnDraw(EventArgs args)
-        {
-            foreach (var spell in SpellList)
-            {
-                var menuItem = Config.Item(spell.Slot + "Range").GetValue<Circle>();
-                if (menuItem.Active && spell.IsReady())
-                {
-                    Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
-                }
-            }
-        }
-
         private static void OnTick(EventArgs args)
         {
-            minions = MinionManager.GetMinions(ObjectManager.Player.Position, E.Range, MinionTypes.All);
+            MinionList = MinionManager.GetMinions(ObjectManager.Player.Position, E.Range, MinionTypes.All);
 
             if (Config.Item("ComboActive").GetValue<KeyBind>().Active)
             {
@@ -163,26 +157,26 @@ namespace DevCassio
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (minions.Count > 1)
+            if (MinionList.Count == 0)
+                return;
+
+            foreach (var minion in MinionList)
             {
-                foreach (var minion in minions)
+                var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
+
+                if (E.IsReady() && minion.HasBuffOfType(BuffType.Poison) && E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
                 {
-                    var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
+                    E.CastOnUnit(minion, packetCast);
+                }
 
-                    if (E.IsReady() && minion.HasBuffOfType(BuffType.Poison) && E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
-                    {
-                        E.CastOnUnit(minion, packetCast);
-                    }
+                if (Q.IsReady() && minion.IsValidTarget(Q.Range))
+                {
+                    Q.Cast(Q.GetCircularFarmLocation(MinionList).Position, packetCast);
+                }
 
-                    if (Q.IsReady() && minion.IsValidTarget(Q.Range))
-                    {
-                        Q.Cast(Q.GetCircularFarmLocation(minions).Position, packetCast);
-                    }
-
-                    if (W.IsReady() && minion.IsValidTarget(Q.Range))
-                    {
-                        W.Cast(W.GetCircularFarmLocation(minions).Position, packetCast);
-                    }
+                if (W.IsReady() && minion.IsValidTarget(Q.Range))
+                {
+                    W.Cast(W.GetCircularFarmLocation(MinionList).Position, packetCast);
                 }
             }
         }
@@ -190,26 +184,39 @@ namespace DevCassio
         public static void Freeze()
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            var nearTarget = DevCommom.GetNearestEnemy();
+            var nearTarget = DevCommom.DevCommom.GetNearestEnemy();
 
-            if (minions.Count > 1)
+            if (MinionList.Count == 0)
+                return;
+
+            foreach (var minion in MinionList)
             {
-                foreach (var minion in minions)
-                {
-                    var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
+                var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
 
-                    if (E.IsReady() && E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
+                if (E.IsReady() && E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
+                {
+                    if (minion.HasBuffOfType(BuffType.Poison))
                     {
-                        if (minion.HasBuffOfType(BuffType.Poison))
-                        {
-                            E.CastOnUnit(minion, packetCast);
-                        }
-                        else if (Player.ServerPosition.Distance(nearTarget.ServerPosition) > Q.Range + 50)
-                        {
-                            E.CastOnUnit(minion, packetCast);
-                        }
+                        E.CastOnUnit(minion, packetCast);
+                    }
+                    else if (Player.ServerPosition.Distance(nearTarget.ServerPosition) > Q.Range + 50)
+                    {
+                        E.CastOnUnit(minion, packetCast);
                     }
                 }
+            }
+        }
+
+        public static void AssistedUlt()
+        {
+            var eTarget = DevCommom.DevCommom.GetNearestEnemy();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (eTarget.IsValidTarget(R.Range) && R.IsReady())
+            {
+                R.CastIfWillHit(eTarget, 1, packetCast);
+                Game.PrintChat(string.Format("AssistedUlt fired"));
+                return;
             }
         }
 
@@ -220,49 +227,92 @@ namespace DevCassio
             if (Player.ChampionName != ChampionName)
                 return;
 
+            InitializeSpells();
+
+            InitializeMainMenu();
+
+            InitializeSkinManager();
+
+            InitializeAttachEvents();
+
+            Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+        }
+
+        private static void InitializeAttachEvents()
+        {
+            Game.OnGameUpdate += OnTick;
+            Game.OnGameSendPacket += Game_OnGameSendPacket;
+            Game.OnWndProc += Game_OnWndProc;
+            Drawing.OnDraw += OnDraw;
+            AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
+            Interrupter.OnPosibleToInterrupt += Interrupter_OnPosibleToInterrupt;
+            IgniteSpell.CanKillstealEnemies += IgniteSpell_CanKillstealEnemies;
+        }
+
+        private static void InitializeSpells()
+        {
             float defaultHitBox = 75; // TODO: check
 
             Q = new Spell(SpellSlot.Q, 850 + defaultHitBox);
-            W = new Spell(SpellSlot.W, 850 + defaultHitBox);
-            E = new Spell(SpellSlot.E, 700);
-            R = new Spell(SpellSlot.R, 800 + defaultHitBox);
-
             Q.SetSkillshot(0.6f, 140, float.MaxValue, false, SkillshotType.SkillshotCircle);
+
+            W = new Spell(SpellSlot.W, 850 + defaultHitBox);
             W.SetSkillshot(0.5f, 210, 2500, false, SkillshotType.SkillshotCircle);
+
+            E = new Spell(SpellSlot.E, 700);
+            E.SetTargetted(0.1f, float.MaxValue);
+
+            R = new Spell(SpellSlot.R, 800 + defaultHitBox);
             R.SetSkillshot(0.5f, 210, float.MaxValue, false, SkillshotType.SkillshotCone);
 
             SpellList.Add(Q);
             SpellList.Add(W);
             SpellList.Add(E);
             SpellList.Add(R);
-            Game.PrintChat(string.Format("set menu"));
-            SetMainMenu();
-            Game.PrintChat(string.Format("set Attach"));
-            // Attach Events
-            Game.OnGameUpdate += OnTick;
-            Drawing.OnDraw += OnDraw;
-            AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
-            Interrupter.OnPosibleToInterrupt += Interrupter_OnPosibleToInterrupt;
-            Game.OnGameSendPacket += Game_OnGameSendPacket;
-            IgniteSpell.CanKillstealEnemies += ignite_CanKillstealEnemies;
-
-            Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
         }
 
-        static void ignite_CanKillstealEnemies(object sender, IgniteEventArgs e)
+        private static void InitializeSkinManager()
+        {
+            SkinManager = new DevCommom.SkinManager();
+            SkinManager.Add("Classic");
+            SkinManager.Add("Desperada");
+            SkinManager.Add("Siren");
+            SkinManager.Add("Mythic");
+            SkinManager.Add("Jade Fang");
+        }
+
+        static void IgniteSpell_CanKillstealEnemies(object sender, IgniteEventArgs e)
         {
             if (Config.Item("ComboActive").GetValue<KeyBind>().Active)
             {
-                //ignite.Cast(e.Enemies.FirstOrDefault());
+                IgniteSpell.Cast(e.Enemies.FirstOrDefault());
                 Game.PrintChat(string.Format("Ignite KS -> {0} ", e.Enemies.FirstOrDefault().SkinName));
             }
         }
 
         static void Game_OnGameSendPacket(GamePacketEventArgs args)
         {
-            if (args.PacketData[0] == Packet.C2S.Move.Header)
+            if (Config.Item("BlockUlt").GetValue<KeyBind>().Active && args.PacketData[0] == Packet.C2S.Move.Header)
             {
-                // TODO: Block R
+                var decodedPacket = Packet.C2S.Cast.Decoded(args.PacketData);
+                if (decodedPacket.SourceNetworkId == Player.NetworkId && decodedPacket.Slot == SpellSlot.R)
+                {
+                    var query = DevCommom.DevCommom.GetEnemyList().Where(x => R.WillHit(x, R.GetPrediction(x).CastPosition));
+                    if (query.Count() == 0)
+                    {
+                        args.Process = false;
+                        Game.PrintChat(string.Format("Ult Blocked"));
+                    }
+                }
+            }
+        }
+
+        static void Game_OnWndProc(WndEventArgs args)
+        {
+            if (Config.Item("UseAssistedUlt").GetValue<KeyBind>().Active && args.Msg == Config.Item("AssistedUltKey").GetValue<KeyBind>().Key)
+            {
+                args.Process = false;
+                AssistedUlt();
             }
         }
 
@@ -279,15 +329,49 @@ namespace DevCassio
             var RAntiGapcloser = Config.Item("RAntiGapcloser").GetValue<bool>();
             var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
 
-            if (RAntiGapcloser && DevCommom.GetHealthPerc() < RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range))
+            if (RAntiGapcloser && DevCommom.DevCommom.GetHealthPerc() < RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range))
             {
                 R.Cast(gapcloser.Sender.ServerPosition, packetCast);
                 Game.PrintChat(string.Format("OnEnemyGapcloser -> RAntiGapcloser on {0} !", gapcloser.Sender.SkinName));
             }
         }
-        
 
-        private static void SetMainMenu()
+        private static float GetEDamage(Obj_AI_Hero hero)
+        {
+            return (float)DamageLib.getDmg(hero, DamageLib.SpellType.E);
+        }
+
+        private static void DrawDebug()
+        {
+            float y = 0;
+
+            // Buff Draw
+            foreach (var t in ObjectManager.Player.Buffs.Select(b => b.DisplayName + " - " + b.IsActive + " - " + (b.EndTime > Game.Time) + " - " + b.IsPositive))
+            {
+                LeagueSharp.Drawing.DrawText(0, y, System.Drawing.Color.Wheat, t);
+                y += 16;
+            }
+        }
+
+        private static void OnDraw(EventArgs args)
+        {
+            foreach (var spell in SpellList)
+            {
+                var menuItem = Config.Item(spell.Slot + "Range").GetValue<Circle>();
+                if (menuItem.Active && spell.IsReady())
+                {
+                    Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
+                }
+            }
+
+            if (Config.Item("EDamage").GetValue<KeyBind>().Active)
+                Utility.HpBarDamageIndicator.DamageToUnit = GetEDamage;
+
+            if (mustDebug)
+                DrawDebug();
+        }
+
+        private static void InitializeMainMenu()
         {
             Config = new Menu("DevCassio", "DevCassio", true);
 
@@ -322,16 +406,16 @@ namespace DevCassio
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("HarassActive", "Harass!").SetValue(new KeyBind("V".ToCharArray()[0], KeyBindType.Press)));
 
-
             Config.AddSubMenu(new Menu("Farm", "Farm"));
             Config.SubMenu("Farm").AddItem(new MenuItem("FreezeActive", "Freeze!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
             Config.SubMenu("Farm").AddItem(new MenuItem("LaneClearActive", "LaneClear!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
-            Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q range").SetValue(new Circle(true, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
-            Config.SubMenu("Drawings").AddItem(new MenuItem("WRange", "W range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
-            Config.SubMenu("Drawings").AddItem(new MenuItem("ERange", "E range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
-            Config.SubMenu("Drawings").AddItem(new MenuItem("RRange", "R range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
+            Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q Range").SetValue(new Circle(true, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
+            Config.SubMenu("Drawings").AddItem(new MenuItem("WRange", "W Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
+            Config.SubMenu("Drawings").AddItem(new MenuItem("ERange", "E Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
+            Config.SubMenu("Drawings").AddItem(new MenuItem("RRange", "R Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
+            Config.SubMenu("Drawings").AddItem(new MenuItem("EDamage", "E Damage on HPBar").SetValue(true));
 
             Config.AddSubMenu(new Menu("AntiGapcloser", "Anti Gapcloser"));
             Config.SubMenu("AntiGapcloser").AddItem(new MenuItem("RAntiGapcloser", "R AntiGapcloser").SetValue(true));
@@ -339,6 +423,13 @@ namespace DevCassio
 
             Config.AddSubMenu(new Menu("Exploit", "Exploit"));
             Config.SubMenu("Exploit").AddItem(new MenuItem("PacketCast", "No-Face Exploit (PacketCast)").SetValue(true));
+
+            Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("AssistedUltKey", "Assisted Ult Key").SetValue((new KeyBind("R".ToCharArray()[0], KeyBindType.Press))));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("BlockUlt", "Block Ult will Not Hit").SetValue(true));
+
+            SkinManager.AddToMenu(ref Config);
 
             Game.PrintChat(string.Format("set menu 4"));
 
