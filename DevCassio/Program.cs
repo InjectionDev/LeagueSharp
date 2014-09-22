@@ -409,7 +409,7 @@ namespace DevCassio
             if (MenuGUI.IsChatOpen)
                 return;
 
-            if (Config.Item("UseAssistedUlt").GetValue<bool>() && args.WParam == 'R')
+            if (Config.Item("UseAssistedUlt").GetValue<bool>() && args.WParam == Config.Item("AssistedUltKey").GetValue<KeyBind>().Key)
             {
                 if (mustDebug)
                     Game.PrintChat("CastAssistedUlt");
@@ -449,9 +449,10 @@ namespace DevCassio
             float y = 0;
 
             // Buff Draw
-            foreach (var t in ObjectManager.Player.Buffs.Select(b => b.DisplayName + " - " + b.IsActive + " - " + (b.EndTime > Game.Time) + " - " + b.IsPositive))
+            foreach (var buff in ObjectManager.Player.Buffs)
             {
-                LeagueSharp.Drawing.DrawText(0, y, System.Drawing.Color.Wheat, t);
+                if (buff.IsActive)
+                    LeagueSharp.Drawing.DrawText(0, y, System.Drawing.Color.Wheat, buff.DisplayName);
                 y += 16;
             }
         }
