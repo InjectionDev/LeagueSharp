@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 
 namespace DevCommom
 {
@@ -26,15 +27,7 @@ namespace DevCommom
                 .ToList();
         }
 
-        public static Obj_AI_Hero GetNearestEnemy()
-        {
-            return ObjectManager.Get<Obj_AI_Hero>()
-                .Where(x => x.IsEnemy && x.IsValidTarget())
-                .OrderBy(x => ObjectManager.Player.ServerPosition.Distance(x.ServerPosition))
-                .FirstOrDefault();
-        }
-
-        public static Obj_AI_Hero GetNearestEnemyFromUnit(Obj_AI_Base unit)
+        public static Obj_AI_Hero GetNearestEnemy(this Obj_AI_Base unit)
         {
             return ObjectManager.Get<Obj_AI_Hero>()
                 .Where(x => x.IsEnemy && x.IsValidTarget())
@@ -42,17 +35,46 @@ namespace DevCommom
                 .FirstOrDefault();
         }
 
-        public static float GetHealthPerc()
+        public static Obj_AI_Hero GetNearestEnemyFromUnit(this Obj_AI_Base unit)
         {
-            return ObjectManager.Player.Health * 100 / ObjectManager.Player.MaxHealth;
+            return ObjectManager.Get<Obj_AI_Hero>()
+                .Where(x => x.IsEnemy && x.IsValidTarget())
+                .OrderBy(x => unit.ServerPosition.Distance(x.ServerPosition))
+                .FirstOrDefault();
         }
 
-        public static float GetManaPerc()
+        public static float GetHealthPerc(this Obj_AI_Base unit)
         {
-            return ObjectManager.Player.Mana * 100 / ObjectManager.Player.MaxMana;
+            return unit.Health * 100 / unit.MaxHealth;
         }
 
+        public static float GetManaPerc(this Obj_AI_Base unit)
+        {
+            return unit.Mana * 100 / unit.MaxMana;
+        }
 
+        public static void SendMovePacket(this Obj_AI_Base v, Vector2 point)
+        {
+            Packet.C2S.Move.Encoded(new Packet.C2S.Move.Struct(point.X, point.Y)).Send();
+        }
+
+        public static bool IsUnderEnemyTurret(this Obj_AI_Base unit)
+        {
+            IEnumerable<Obj_AI_Turret> query;
+
+            if (unit.IsEnemy)
+            {
+                query = ObjectManager.Get<Obj_AI_Turret>()
+                    .Where(x => x.IsAlly && x.IsValid && !x.IsDead && unit.ServerPosition.Distance(x.ServerPosition) < x.AttackRange);
+            }
+            else
+            {
+                query = ObjectManager.Get<Obj_AI_Turret>()
+                    .Where(x => x.IsEnemy && x.IsValid && !x.IsDead && unit.ServerPosition.Distance(x.ServerPosition) < x.AttackRange);
+            }
+
+            return (query.Count() > 0);
+        }
 
     }
 }
