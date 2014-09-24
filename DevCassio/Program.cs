@@ -77,7 +77,7 @@ namespace DevCassio
             {
                 Freeze();
             }
-            if (Config.Item("UseUltUnderTower").GetValue<KeyBind>().Active)
+            if (Config.Item("UseUltUnderTower").GetValue<bool>())
             {
                 UseUltUnderTower();
             }
@@ -110,6 +110,9 @@ namespace DevCassio
                 };
 
 
+            if (mustDebug)
+                Game.PrintChat("BurstCombo Damage {0}/{1} {2}", Convert.ToInt32(DamageLib.GetComboDamage(eTarget, spellCombo)), Convert.ToInt32(eTarget.Health), DamageLib.IsKillable(eTarget, spellCombo) ? "BustKill" : "Harras");
+
             if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR && IgniteSpell.IsReady())
             {
                 if (DamageLib.IsKillable(eTarget, spellCombo))
@@ -140,7 +143,6 @@ namespace DevCassio
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
                 R.CastIfWillHit(eTarget, Config.Item("rCount").GetValue<Slider>().Value, true);
-                return;
             }
 
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
@@ -148,26 +150,22 @@ namespace DevCassio
                 if (eTarget.HasBuffOfType(BuffType.Poison) || DamageLib.getDmg(eTarget, DamageLib.SpellType.E) > eTarget.Health)
                 {
                     E.CastOnUnit(eTarget, packetCast);
-                    return;
                 }
             }
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
                 Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                return;
             }
 
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                return;
             }
 
-            if (IgniteSpell.CanKill(eTarget))
+            if (IgniteSpell.IsReady() && IgniteSpell.CanKill(eTarget))
             {
                 IgniteSpell.Cast(eTarget);
-                Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
             }
 
         }
@@ -191,30 +189,18 @@ namespace DevCassio
             {
                 if (eTarget.HasBuffOfType(BuffType.Poison) || DamageLib.getDmg(eTarget, DamageLib.SpellType.E) > eTarget.Health)
                 {
-                    if (mustDebug)
-                        Game.PrintChat("Harass Cast E");
-
                     E.CastOnUnit(eTarget, packetCast);
-                    return;
                 }
             }
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
-                if (mustDebug)
-                    Game.PrintChat("Harass Cast Q");
-
                 Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                return;
             }
 
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
             {
-                if (mustDebug)
-                    Game.PrintChat("Harass Cast W");
-
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                return;
             }
 
             if (mustDebug)
@@ -234,11 +220,11 @@ namespace DevCassio
             var useE = Config.Item("UseELaneClear").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            foreach (var minion in MinionList)
+            foreach (var minion in MinionList.OrderBy(x => x.Health))
             {
                 var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
 
-                if (E.IsReady() && predHP > 0 && minion.IsValidTarget(E.Range) && useE)
+                if (E.IsReady() && predHP > 0 && minion.IsValidTarget(E.Range) && useE && minion.HasBuffOfType(BuffType.Poison))
                 {
                     E.CastOnUnit(minion, packetCast);
                 }
@@ -246,14 +232,16 @@ namespace DevCassio
 
             if (Q.IsReady() && useQ)
             {
-                if (Q.GetCircularFarmLocation(MinionList).MinionsHit > 1)
-                    Q.Cast(Q.GetCircularFarmLocation(MinionList).Position, packetCast);
+                MinionManager.FarmLocation farm = Q.GetCircularFarmLocation(MinionList);
+                if (farm.MinionsHit >= 3)
+                    Q.Cast(farm.Position, packetCast);
             }
 
             if (W.IsReady() && useW)
             {
-                if (W.GetCircularFarmLocation(MinionList).MinionsHit > 1)
-                    W.Cast(W.GetCircularFarmLocation(MinionList).Position, packetCast);
+                MinionManager.FarmLocation farm = W.GetCircularFarmLocation(MinionList);
+                if (farm.MinionsHit >= 3)
+                    W.Cast(farm.Position, packetCast);
             }
         }
 
@@ -290,8 +278,8 @@ namespace DevCassio
             {
                 if (eTarget.IsUnderEnemyTurret() && eTarget.IsValidTarget(R.Range) && R.IsReady())
                 {
-                    R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                    Game.PrintChat("Ult Under Tower!");
+                    if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                        Game.PrintChat("Ult Under Tower!");
                 }
             }
         }
@@ -306,8 +294,8 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady())
             {
-                R.CastIfWillHit(eTarget, 1, packetCast);
-                Game.PrintChat(string.Format("AssistedUlt fired"));
+                if (R.CastIfWillHit(eTarget, 1, packetCast))
+                    Game.PrintChat(string.Format("AssistedUlt fired"));
                 return;
             }
 
@@ -350,7 +338,7 @@ namespace DevCassio
             Game.OnWndProc += Game_OnWndProc;
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
-            Interrupter.OnPosibleToInterrupt += Interrupter_OnPosibleToInterrupt;
+            Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
@@ -361,19 +349,19 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("InitializeSpells Start");
 
-            float extraHitBox = 75; // TODO: check
+            Q = new Spell(SpellSlot.Q, 850);
+            Q.SetSkillshot(0.6f, 110, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Q.Range = 850 + (Q.Width / 2);
 
-            Q = new Spell(SpellSlot.Q, 850 + extraHitBox);
-            Q.SetSkillshot(0.6f, 140, float.MaxValue, false, SkillshotType.SkillshotCircle);
-
-            W = new Spell(SpellSlot.W, 850 + extraHitBox);
-            W.SetSkillshot(0.5f, 210, 2500, false, SkillshotType.SkillshotCircle);
+            W = new Spell(SpellSlot.W, 850);
+            W.SetSkillshot(0.5f, 125, 2500, false, SkillshotType.SkillshotCircle);
+            W.Range = 850 + (W.Width / 2);
 
             E = new Spell(SpellSlot.E, 700);
             E.SetTargetted(0.1f, float.MaxValue);
 
-            R = new Spell(SpellSlot.R, 825 + extraHitBox);
-            R.SetSkillshot(0.5f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
+            R = new Spell(SpellSlot.R, 825);
+            R.SetSkillshot(0.6f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
 
             IgniteSpell = new DevCommom.IgniteManager();
 
@@ -441,33 +429,29 @@ namespace DevCassio
             }
         }
 
-        static void Interrupter_OnPosibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
+        static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
         {
-            Game.PrintChat(string.Format("OnPosibleToInterrupt -> {0} cast {1}", unit.SkinName, spell.SpellName));
-
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var RInterrupetSpell = Config.Item("RInterrupetSpell").GetValue<bool>();
             var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
 
             if (RInterrupetSpell && Player.GetHealthPerc() < RAntiGapcloserMinHealth && unit.IsValidTarget(R.Range) && spell.DangerLevel == InterruptableDangerLevel.High)
             {
-                R.CastIfHitchanceEquals(unit, unit.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                Game.PrintChat(string.Format("OnPosibleToInterrupt -> RInterrupetSpell on {0} !", unit.SkinName));
+                if (R.CastIfHitchanceEquals(unit, unit.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                    Game.PrintChat(string.Format("OnPosibleToInterrupt -> RInterrupetSpell on {0} !", unit.SkinName));
             }
         }
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            Game.PrintChat(string.Format("OnEnemyGapcloser -> {0}", gapcloser.Sender.SkinName));
-
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var RAntiGapcloser = Config.Item("RAntiGapcloser").GetValue<bool>();
             var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
 
             if (RAntiGapcloser && Player.GetHealthPerc() < RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range))
             {
-                R.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                Game.PrintChat(string.Format("OnEnemyGapcloser -> RAntiGapcloser on {0} !", gapcloser.Sender.SkinName));
+                if (R.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                    Game.PrintChat(string.Format("OnEnemyGapcloser -> RAntiGapcloser on {0} !", gapcloser.Sender.SkinName));
             }
         }
 
@@ -480,11 +464,10 @@ namespace DevCassio
         {
             float y = 0;
 
-            // Buff Draw
             foreach (var buff in ObjectManager.Player.Buffs)
             {
                 if (buff.IsActive)
-                    LeagueSharp.Drawing.DrawText(0, y, System.Drawing.Color.Wheat, buff.DisplayName);
+                    LeagueSharp.Drawing.DrawText(0, y, System.Drawing.Color.Wheat, string.Format("{0} {1}", buff.DisplayName, buff.Count));
                 y += 16;
             }
         }
@@ -553,7 +536,6 @@ namespace DevCassio
             Config.SubMenu("Gapcloser").AddItem(new MenuItem("RInterrupetSpell", "R InterruptSpell").SetValue(true));
             Config.SubMenu("Gapcloser").AddItem(new MenuItem("RAntiGapcloserMinHealth", "R AntiGapcloser Min Health").SetValue(new Slider(60, 0, 100)));
             
-
             Config.AddSubMenu(new Menu("Exploit", "Exploit"));
             Config.SubMenu("Exploit").AddItem(new MenuItem("PacketCast", "No-Face Exploit (PacketCast)").SetValue(true));
 
@@ -561,7 +543,7 @@ namespace DevCassio
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("AssistedUltKey", "Assisted Ult Key").SetValue((new KeyBind("R".ToCharArray()[0], KeyBindType.Press))));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("BlockUlt", "Block Ult will Not Hit").SetValue(true));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseUltUnderTower", "Use Ult Enemy Under Tower").SetValue(true));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseUltUnderTower", "Ult Enemy Under Tower").SetValue(true));
 
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
             Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q Range").SetValue(new Circle(true, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
