@@ -24,7 +24,7 @@ using SharpDX;
  * + Menu No-Face Exploit (PacketCast)
  * + Skin Hack
  * + Show E Damage on Enemy HPBar
- * + Assited Ult
+ * + Assisted Ult
  * + Block Ult if will not hit
  * + Ult if Enemy is Under Tower
 */
@@ -50,7 +50,6 @@ namespace DevCassio
         public static bool mustDebug = false;
 
 
-
         static void Main(string[] args)
         {
             LeagueSharp.Common.CustomEvents.Game.OnGameLoad += onGameLoad;
@@ -58,31 +57,37 @@ namespace DevCassio
 
         private static void OnTick(EventArgs args)
         {
-            MinionList = MinionManager.GetMinions(ObjectManager.Player.Position, E.Range, MinionTypes.All);
+            try
+            {
+                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+                {
+                    BurstCombo();
+                    Combo();
+                }
+                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+                {
+                    Harass();
+                }
+                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
+                {
+                    WaveClear();
+                }
+                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit)
+                {
+                    Freeze();
+                }
+                if (Config.Item("UseUltUnderTower").GetValue<bool>())
+                {
+                    UseUltUnderTower();
+                }
 
-            if (Config.Item("ComboActive").GetValue<KeyBind>().Active)
-            {
-                BurstCombo();
-                Combo();
+                SkinManager.Update();
             }
-            if (Config.Item("HarassActive").GetValue<KeyBind>().Active)
+            catch (Exception ex)
             {
-                Harass();
+                Console.WriteLine(ex.ToString());
+                Game.PrintChat(ex.ToString());
             }
-            if (Config.Item("LaneClearActive").GetValue<KeyBind>().Active)
-            {
-                WaveClear();
-            }
-            if (Config.Item("FreezeActive").GetValue<KeyBind>().Active)
-            {
-                Freeze();
-            }
-            if (Config.Item("UseUltUnderTower").GetValue<bool>())
-            {
-                UseUltUnderTower();
-            }
-
-            SkinManager.Update();
         }
 
 
@@ -212,6 +217,8 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("WaveClear Start");
 
+            MinionList = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range, MinionTypes.All);
+
             if (MinionList.Count == 0)
                 return;
 
@@ -220,7 +227,7 @@ namespace DevCassio
             var useE = Config.Item("UseELaneClear").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            foreach (var minion in MinionList.OrderBy(x => x.Health))
+            foreach (var minion in MinionList)
             {
                 var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
 
@@ -250,21 +257,27 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("Freeze Start");
 
+            MinionList = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range, MinionTypes.All);
+
             if (MinionList.Count == 0)
                 return;
 
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var nearestTarget = Player.GetNearestEnemy();
+            var useE = Config.Item("UseEFreeze").GetValue<bool>();
 
-            foreach (var minion in MinionList)
+            if (useE)
             {
-                var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
-
-                if (E.IsReady() && E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
+                foreach (var minion in MinionList)
                 {
-                    if (minion.HasBuffOfType(BuffType.Poison))
+                    var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
+
+                    if (E.IsReady() && E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
                     {
-                        E.CastOnUnit(minion, packetCast);
+                        if (minion.HasBuffOfType(BuffType.Poison))
+                        {
+                            E.CastOnUnit(minion, packetCast);
+                        }
                     }
                 }
             }
@@ -296,7 +309,6 @@ namespace DevCassio
             {
                 if (R.CastIfWillHit(eTarget, 1, packetCast))
                     Game.PrintChat(string.Format("AssistedUlt fired"));
-                return;
             }
 
             if (mustDebug)
@@ -325,6 +337,7 @@ namespace DevCassio
             catch(Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+                Game.PrintChat(ex.ToString());
             }
         }
 
@@ -338,7 +351,7 @@ namespace DevCassio
             Game.OnWndProc += Game_OnWndProc;
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
-            Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
+            Interrupter.OnPosibleToInterrupt += Interrupter_OnPossibleToInterrupt;
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
@@ -514,22 +527,23 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("rCount", "Min R Count").SetValue(new Slider(2, 1, 5)));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
-            Config.SubMenu("Combo").AddItem(new MenuItem("ComboActive", "Combo!").SetValue(new KeyBind(32, KeyBindType.Press)));
+            //Config.SubMenu("Combo").AddItem(new MenuItem("ComboActive", "Combo!").SetValue(new KeyBind(32, KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
-            Config.SubMenu("Harass").AddItem(new MenuItem("HarassActive", "Harass!").SetValue(new KeyBind("V".ToCharArray()[0], KeyBindType.Press)));
+            //Config.SubMenu("Harass").AddItem(new MenuItem("HarassActive", "Harass!").SetValue(new KeyBind("V".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
-            Config.SubMenu("Freeze").AddItem(new MenuItem("FreezeActive", "Freeze!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
+            Config.SubMenu("Freeze").AddItem(new MenuItem("UseEFreeze", "Use E").SetValue(true));
+            //Config.SubMenu("Freeze").AddItem(new MenuItem("FreezeActive", "Freeze!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearActive", "LaneClear!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
+           // Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearActive", "LaneClear!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Gapcloser", "Gapcloser"));
             Config.SubMenu("Gapcloser").AddItem(new MenuItem("RAntiGapcloser", "R AntiGapcloser").SetValue(true));
