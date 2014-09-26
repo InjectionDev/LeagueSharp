@@ -10,53 +10,38 @@ namespace DevCommom
 {
     public class IgniteManager
     {
-
-        private SpellDataInst igniteSpell = null;
+        public bool HasIgnite;
+        public SpellDataInst IgniteSpell = null;
 
         public IgniteManager()
         {
-            igniteSpell = GetSpell();
+            this.IgniteSpell = ObjectManager.Player.Spellbook.GetSpell(ObjectManager.Player.GetSpellSlot("SummonerDot"));
+
+            if (this.IgniteSpell != null && this.IgniteSpell.Slot != SpellSlot.Unknown)
+                this.HasIgnite = true;
         }
 
         public bool Cast(Obj_AI_Hero enemy)
         {
             if (!enemy.IsValid || !enemy.IsVisible || !enemy.IsTargetable || enemy.IsDead)
-            {
                 return false;
-            }
 
-            if (IsReady())
-            {
-                ObjectManager.Player.SummonerSpellbook.CastSpell(igniteSpell.Slot, enemy);
-                return true;
-            }
+            if (HasIgnite && IsReady() && enemy.IsValidTarget(600))
+                return ObjectManager.Player.SummonerSpellbook.CastSpell(this.IgniteSpell.Slot, enemy);
+
             return false;
         }
 
         public bool IsReady()
         {
-            SpellDataInst IgniteSpell = GetSpell();
-            return (IgniteSpell != null && IgniteSpell.Slot != SpellSlot.Unknown && IgniteSpell.State == SpellState.Ready && ObjectManager.Player.CanCast);
-        }
-
-        public SpellDataInst GetSpell()
-        {
-            if (igniteSpell != null)
-            {
-                return igniteSpell;
-            }
-            SpellDataInst[] spells = ObjectManager.Player.SummonerSpellbook.Spells;
-            return spells.FirstOrDefault(spell => spell.Name == "SummonerDot");
+            return HasIgnite && this.IgniteSpell.State == SpellState.Ready && ObjectManager.Player.CanCast;
         }
 
         public bool CanKill(Obj_AI_Hero enemy)
         {
-            return enemy.Health <= IgniteDamage();
+            return HasIgnite && IsReady() && enemy.Health < Damage.GetSummonerSpellDamage(ObjectManager.Player, enemy, Damage.SummonerSpell.Ignite);
         }
 
-        private double IgniteDamage()
-        {
-            return ObjectManager.Player.Level * 20 + 50;
-        }
+
     }
 }

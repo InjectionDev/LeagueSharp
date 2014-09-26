@@ -8,13 +8,6 @@ using DevCommom;
 using SharpDX;
 
 /*
- * #### DevCassio ####
- * 
- * InjectionDev GitHub: https://github.com/InjectionDev/LeagueSharp/
- * Script Based GitHub: https://github.com/fueledbyflux/LeagueSharp-Public/tree/master/SigmaCass/ - Credits to fueledbyflux
-* /
-
-/*
  * ##### DevCassio Mods #####
  * 
  * + AntiGapCloser with R when LowHealth
@@ -26,14 +19,15 @@ using SharpDX;
  * + Show E Damage on Enemy HPBar
  * + Assisted Ult
  * + Block Ult if will not hit
- * + Ult if Enemy is Under Tower
+ * + Auto Ult Enemy Under Tower
+ * + Auto Ult if will hit X
 */
 
 namespace DevCassio
 {
     class Program
     {
-        public const string ChampionName = "Cassiopeia";
+        public const string ChampionName = "cassiopeia";
 
         public static Menu Config;
         public static Orbwalking.Orbwalker Orbwalker;
@@ -44,8 +38,8 @@ namespace DevCassio
         public static Spell E;
         public static Spell R;
         public static List<Obj_AI_Base> MinionList;
-        public static DevCommom.SkinManager SkinManager;
-        public static DevCommom.IgniteManager IgniteSpell;
+        public static SkinManager SkinManager;
+        public static IgniteManager IgniteManager;
 
         public static bool mustDebug = false;
 
@@ -86,7 +80,7 @@ namespace DevCassio
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                Game.PrintChat(ex.ToString());
+                Game.PrintChat(ex.Message);
             }
         }
 
@@ -105,28 +99,37 @@ namespace DevCassio
 
             var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
 
-            IEnumerable<DamageLib.SpellType> spellCombo = new[]
-                {
-                    DamageLib.SpellType.Q, 
-                    DamageLib.SpellType.E, 
-                    DamageLib.SpellType.E,
-                    DamageLib.SpellType.R, 
-                    DamageLib.SpellType.IGNITE
-                };
+            if (eTarget == null)
+                return;
 
+            double totalComboDamage = 0;
+            totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
+            totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.Q);
+            totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
+            totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
+            totalComboDamage += Damage.GetSummonerSpellDamage(Player, eTarget, Damage.SummonerSpell.Ignite);
+
+            double totalManaCost = 0;
+            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
+            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
+            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.E).ManaCost;
+            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.E).ManaCost;
 
             if (mustDebug)
-                Game.PrintChat("BurstCombo Damage {0}/{1} {2}", Convert.ToInt32(DamageLib.GetComboDamage(eTarget, spellCombo)), Convert.ToInt32(eTarget.Health), DamageLib.IsKillable(eTarget, spellCombo) ? "BustKill" : "Harras");
-
-            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR && IgniteSpell.IsReady())
             {
-                if (DamageLib.IsKillable(eTarget, spellCombo))
+                Game.PrintChat("BurstCombo Damage {0}/{1} {2}", Convert.ToInt32(totalComboDamage), Convert.ToInt32(eTarget.Health), eTarget.Health < totalComboDamage ? "BustKill" : "Harras");
+                Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), eTarget.Mana >= totalManaCost ? "Mana OK" : "No Mana");
+            }
+
+            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR && IgniteManager.IsReady())
+            {
+                if (eTarget.Health < totalComboDamage && eTarget.Mana >= totalManaCost)
                 {
                     new Alerter(10, 10, "BurstCombo!", 13, new ColorBGRA(250, 250, 250, 100));
 
                     R.CastIfWillHit(eTarget, 1, packetCast);
 
-                    IgniteSpell.Cast(eTarget);
+                    IgniteManager.Cast(eTarget);
                 }
             }
         }
@@ -145,6 +148,9 @@ namespace DevCassio
 
             var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
 
+            if (eTarget == null)
+                return;
+
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
                 R.CastIfWillHit(eTarget, Config.Item("rCount").GetValue<Slider>().Value, true);
@@ -152,7 +158,7 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
-                if (eTarget.HasBuffOfType(BuffType.Poison) || DamageLib.getDmg(eTarget, DamageLib.SpellType.E) > eTarget.Health)
+                if (eTarget.HasBuffOfType(BuffType.Poison) || Damage.GetSpellDamage(Player, eTarget, SpellSlot.E) > eTarget.Health)
                 {
                     E.CastOnUnit(eTarget, packetCast);
                 }
@@ -168,9 +174,9 @@ namespace DevCassio
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (IgniteSpell.IsReady() && IgniteSpell.CanKill(eTarget))
+            if (IgniteManager.HasIgnite && IgniteManager.IsReady() && IgniteManager.CanKill(eTarget))
             {
-                IgniteSpell.Cast(eTarget);
+                IgniteManager.Cast(eTarget);
             }
 
         }
@@ -187,12 +193,15 @@ namespace DevCassio
 
             var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
 
+            if (eTarget == null)
+                return;
+
             if (mustDebug)
                 Game.PrintChat("Harass Target -> " + eTarget.SkinName);
 
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
-                if (eTarget.HasBuffOfType(BuffType.Poison) || DamageLib.getDmg(eTarget, DamageLib.SpellType.E) > eTarget.Health)
+                if (eTarget.HasBuffOfType(BuffType.Poison) || Damage.GetSpellDamage(Player, eTarget, SpellSlot.E) > eTarget.Health)
                 {
                     E.CastOnUnit(eTarget, packetCast);
                 }
@@ -287,9 +296,9 @@ namespace DevCassio
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            foreach (var eTarget in DevCommom.DevCommom.GetEnemyList())
+            foreach (var eTarget in DevHelper.GetEnemyList())
             {
-                if (eTarget.IsUnderEnemyTurret() && eTarget.IsValidTarget(R.Range) && R.IsReady())
+                if (eTarget.IsValidTarget(R.Range) && eTarget.IsUnderEnemyTurret() && R.IsReady())
                 {
                     if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
                         Game.PrintChat("Ult Under Tower!");
@@ -321,7 +330,7 @@ namespace DevCassio
             {
                 Player = ObjectManager.Player;
 
-                if (Player.ChampionName != ChampionName)
+                if (Player.ChampionName.ToLower() != ChampionName)
                     return;
 
                 InitializeSpells();
@@ -351,7 +360,7 @@ namespace DevCassio
             Game.OnWndProc += Game_OnWndProc;
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
-            Interrupter.OnPosibleToInterrupt += Interrupter_OnPossibleToInterrupt;
+            Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
@@ -364,11 +373,9 @@ namespace DevCassio
 
             Q = new Spell(SpellSlot.Q, 850);
             Q.SetSkillshot(0.6f, 110, float.MaxValue, false, SkillshotType.SkillshotCircle);
-            Q.Range = 850 + (Q.Width / 2);
 
             W = new Spell(SpellSlot.W, 850);
             W.SetSkillshot(0.5f, 125, 2500, false, SkillshotType.SkillshotCircle);
-            W.Range = 850 + (W.Width / 2);
 
             E = new Spell(SpellSlot.E, 700);
             E.SetTargetted(0.1f, float.MaxValue);
@@ -376,7 +383,7 @@ namespace DevCassio
             R = new Spell(SpellSlot.R, 825);
             R.SetSkillshot(0.6f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
 
-            IgniteSpell = new DevCommom.IgniteManager();
+            IgniteManager = new IgniteManager();
 
             SpellList.Add(Q);
             SpellList.Add(W);
@@ -392,7 +399,7 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("InitializeSkinManager Start");
 
-            SkinManager = new DevCommom.SkinManager();
+            SkinManager = new SkinManager();
             SkinManager.Add("Cassio");
             SkinManager.Add("Desperada Cassio");
             SkinManager.Add("Siren Cassio");
@@ -413,7 +420,7 @@ namespace DevCassio
                 if (decodedPacket.SourceNetworkId == Player.NetworkId && decodedPacket.Slot == SpellSlot.R)
                 {
                     Vector3 vecCast = new Vector3(decodedPacket.ToX, decodedPacket.ToY, 0);
-                    var query = DevCommom.DevCommom.GetEnemyList().Where(x => R.WillHit(x, vecCast));
+                    var query = DevHelper.GetEnemyList().Where(x => R.WillHit(x, vecCast));
 
                     if (query.Count() == 0)
                     {
@@ -470,7 +477,7 @@ namespace DevCassio
 
         private static float GetEDamage(Obj_AI_Hero hero)
         {
-            return (float)DamageLib.getDmg(hero, DamageLib.SpellType.E);
+            return (float)Damage.GetSpellDamage(Player, hero, SpellSlot.E);
         }
 
         private static void DrawDebug()
@@ -549,9 +556,9 @@ namespace DevCassio
             Config.SubMenu("Gapcloser").AddItem(new MenuItem("RAntiGapcloser", "R AntiGapcloser").SetValue(true));
             Config.SubMenu("Gapcloser").AddItem(new MenuItem("RInterrupetSpell", "R InterruptSpell").SetValue(true));
             Config.SubMenu("Gapcloser").AddItem(new MenuItem("RAntiGapcloserMinHealth", "R AntiGapcloser Min Health").SetValue(new Slider(60, 0, 100)));
-            
-            Config.AddSubMenu(new Menu("Exploit", "Exploit"));
-            Config.SubMenu("Exploit").AddItem(new MenuItem("PacketCast", "No-Face Exploit (PacketCast)").SetValue(true));
+
+            Config.AddSubMenu(new Menu("Misc", "Misc"));
+            Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "No-Face Exploit (PacketCast)").SetValue(true));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));

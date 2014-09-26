@@ -9,12 +9,12 @@ using SharpDX;
 
 namespace DevCommom
 {
-    public static class DevCommom
+    public static class DevHelper
     {
         public static List<Obj_AI_Hero> GetEnemyList()
         {
             return ObjectManager.Get<Obj_AI_Hero>()
-                .Where(x => x.IsEnemy && x.IsValidTarget())
+                .Where(x => x.IsEnemy && x.IsValid)
                 .OrderBy(x => ObjectManager.Player.ServerPosition.Distance(x.ServerPosition))
                 .ToList();
         }
@@ -22,7 +22,7 @@ namespace DevCommom
         public static List<Obj_AI_Hero> GetAllyList()
         {
             return ObjectManager.Get<Obj_AI_Hero>()
-                .Where(x => x.IsAlly && x.IsValidTarget())
+                .Where(x => x.IsAlly && x.IsValid)
                 .OrderBy(x => ObjectManager.Player.ServerPosition.Distance(x.ServerPosition))
                 .ToList();
         }
@@ -30,7 +30,7 @@ namespace DevCommom
         public static Obj_AI_Hero GetNearestEnemy(this Obj_AI_Base unit)
         {
             return ObjectManager.Get<Obj_AI_Hero>()
-                .Where(x => x.IsEnemy && x.IsValidTarget())
+                .Where(x => x.IsEnemy && x.IsValid)
                 .OrderBy(x => unit.ServerPosition.Distance(x.ServerPosition))
                 .FirstOrDefault();
         }
@@ -38,7 +38,7 @@ namespace DevCommom
         public static Obj_AI_Hero GetNearestEnemyFromUnit(this Obj_AI_Base unit)
         {
             return ObjectManager.Get<Obj_AI_Hero>()
-                .Where(x => x.IsEnemy && x.IsValidTarget())
+                .Where(x => x.IsEnemy && x.IsValid)
                 .OrderBy(x => unit.ServerPosition.Distance(x.ServerPosition))
                 .FirstOrDefault();
         }
