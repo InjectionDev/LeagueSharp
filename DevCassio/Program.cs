@@ -183,7 +183,7 @@ namespace DevCassio
             comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
             comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
 
-            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR)
+            if (E.IsReady(2000) && R.IsReady() && useR)
             {
                 if (eTarget.Health < comboTotal)
                 {
