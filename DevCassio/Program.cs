@@ -382,7 +382,7 @@ namespace DevCassio
             Q.SetSkillshot(0.6f, 110, float.MaxValue, false, SkillshotType.SkillshotCircle);
 
             W = new Spell(SpellSlot.W, 850);
-            W.SetSkillshot(0.5f, 125, 2500, false, SkillshotType.SkillshotCircle);
+            W.SetSkillshot(0.5f, 150, 2500, false, SkillshotType.SkillshotCircle);
 
             E = new Spell(SpellSlot.E, 700);
             E.SetTargetted(0.1f, float.MaxValue);
