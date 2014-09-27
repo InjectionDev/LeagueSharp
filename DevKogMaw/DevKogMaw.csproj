@@ -2,7 +2,7 @@
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{90898417-9BFA-4871-B2E6-02AB16984DA1}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -11,13 +11,15 @@
     <AssemblyName>DevKogMaw</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <PreBuildEvent />
+    <PostBuildEvent />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\Release</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -32,14 +34,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Igniter">
+      <HintPath>E:\OneDrive\Projetos\LSharp\System\Igniter.dll</HintPath>
+    </Reference>
     <Reference Include="LeagueSharp">
-      <HintPath>C:\Users\Daniel\Desktop\lsharp\lsharp\Assemblies\System\LeagueSharp.dll</HintPath>
+      <HintPath>E:\OneDrive\Projetos\LSharp\System\LeagueSharp.dll</HintPath>
     </Reference>
     <Reference Include="LeagueSharp.Common">
-      <HintPath>C:\Users\Daniel\Desktop\lsharp\lsharp\Assemblies\System\LeagueSharp.Common.dll</HintPath>
+      <HintPath>E:\OneDrive\Projetos\LSharp\System\LeagueSharp.Common.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>C:\Users\Daniel\Desktop\lsharp\lsharp\Assemblies\System\SharpDX.dll</HintPath>
+      <HintPath>E:\OneDrive\Projetos\LSharp\System\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

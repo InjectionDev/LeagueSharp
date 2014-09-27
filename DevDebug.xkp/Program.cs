@@ -22,16 +22,11 @@ namespace DevDebug
         static void Game_OnGameLoad(EventArgs args)
         {
             Player = ObjectManager.Player;
-
-            InitializeMainMenu();
-
-            InitializeAttachEvents();
-
-            Game.PrintChat("DevDebug Loaded");
         }
 
         private static void InitializeAttachEvents()
         {
+
             Game.OnGameUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
         }
@@ -50,8 +45,8 @@ namespace DevDebug
 
         private static void DrawBuffs()
         {
-            float xAlly = 60;
-            float xEnemy = 320;
+            float xAlly = 0;
+            float xEnemy = 80;
             float yAlly = 0;
             float yEnemy = 0;
 

@@ -327,6 +327,13 @@ namespace DevCassio
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
 
+            Config.Item("RDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
+            if (Config.Item("RDamage").GetValue<bool>())
+            {
+                Utility.HpBarDamageIndicator.DamageToUnit = GetRDamage;
+                Utility.HpBarDamageIndicator.Enabled = true;
+            }
+
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
         }
@@ -443,18 +450,6 @@ namespace DevCassio
             return (float)Damage.GetSpellDamage(Player, enemy, SpellSlot.R);
         }
 
-        private static void DrawDebug()
-        {
-            float y = 0;
-
-            foreach (var buff in ObjectManager.Player.Buffs)
-            {
-                if (buff.IsActive)
-                    LeagueSharp.Drawing.DrawText(0, y, System.Drawing.Color.Wheat, buff.DisplayName);
-                y += 16;
-            }
-        }
-
         private static void OnDraw(EventArgs args)
         {
             foreach (var spell in SpellList)
@@ -465,15 +460,6 @@ namespace DevCassio
                     Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
                 }
             }
-
-            if (Config.Item("RDamage").GetValue<bool>())
-            {
-                Utility.HpBarDamageIndicator.DamageToUnit = GetRDamage;
-                Utility.HpBarDamageIndicator.Enabled = true;
-            }
-
-            if (mustDebug)
-                DrawDebug();
         }
 
         private static void InitializeMainMenu()

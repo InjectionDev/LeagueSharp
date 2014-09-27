@@ -41,7 +41,7 @@ namespace DevCassio
         public static SkinManager SkinManager;
         public static IgniteManager IgniteManager;
 
-        public static bool mustDebug = false;
+        public static bool mustDebug = true;
 
 
         static void Main(string[] args)
@@ -55,7 +55,7 @@ namespace DevCassio
             {
                 if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
                 {
-                    BurstCombo();
+                    //BurstCombo();
                     Combo();
                 }
                 if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
@@ -103,11 +103,11 @@ namespace DevCassio
                 return;
 
             double totalComboDamage = 0;
-            totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
-            totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.Q);
-            totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
-            totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
-            totalComboDamage += Damage.GetSummonerSpellDamage(Player, eTarget, Damage.SummonerSpell.Ignite);
+            //totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
+            //totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.Q);
+            //totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
+            //totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
+            //totalComboDamage += Damage.GetSummonerSpellDamage(Player, eTarget, Damage.SummonerSpell.Ignite);
 
             double totalManaCost = 0;
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
@@ -362,6 +362,13 @@ namespace DevCassio
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
 
+            Config.Item("EDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
+            if (Config.Item("EDamage").GetValue<bool>())
+            {
+                Utility.HpBarDamageIndicator.DamageToUnit += GetEDamage;
+                Utility.HpBarDamageIndicator.Enabled = true;
+            }
+
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
         }
@@ -480,18 +487,6 @@ namespace DevCassio
             return (float)Damage.GetSpellDamage(Player, hero, SpellSlot.E);
         }
 
-        private static void DrawDebug()
-        {
-            float y = 0;
-
-            foreach (var buff in ObjectManager.Player.Buffs)
-            {
-                if (buff.IsActive)
-                    LeagueSharp.Drawing.DrawText(0, y, System.Drawing.Color.Wheat, string.Format("{0} {1}", buff.DisplayName, buff.Count));
-                y += 16;
-            }
-        }
-
         private static void OnDraw(EventArgs args)
         {
             foreach (var spell in SpellList)
@@ -502,15 +497,11 @@ namespace DevCassio
                     Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
                 }
             }
+        }
 
-            if (Config.Item("EDamage").GetValue<bool>())
-            {
-                Utility.HpBarDamageIndicator.DamageToUnit += GetEDamage;
-                Utility.HpBarDamageIndicator.Enabled = true;
-            }
-
-            if (mustDebug)
-                DrawDebug();
+        static void Program_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            
         }
 
         private static void InitializeMainMenu()

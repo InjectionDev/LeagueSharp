@@ -4,19 +4,18 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D7913D32-BC5C-4A9B-84AA-A8018057E6F7}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{A4F2CA38-BD65-4B8A-86C5-86222603BC71}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DevCommom</RootNamespace>
-    <AssemblyName>DevCommom</AssemblyName>
+    <RootNamespace>DevDebug</RootNamespace>
+    <AssemblyName>DevDebug</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PreBuildEvent />
     <PostBuildEvent />
-    <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\Release</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -26,28 +25,27 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LeagueSharp, Version=1.0.0.25, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="LeagueSharp">
       <HintPath>E:\OneDrive\Projetos\LSharp\System\LeagueSharp.dll</HintPath>
     </Reference>
-    <Reference Include="LeagueSharp.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="LeagueSharp.Common">
       <HintPath>E:\OneDrive\Projetos\LSharp\System\LeagueSharp.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="SharpDX">
       <HintPath>E:\OneDrive\Projetos\LSharp\System\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -55,15 +53,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BarrierManager.cs" />
-    <Compile Include="DevHelper.cs" />
-    <Compile Include="IgniteManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SkinManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DevCommom\DevCommom.csproj">
+      <Project>{d7913d32-bc5c-4a9b-84aa-a8018057e6f7}</Project>
+      <Name>DevCommom</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
