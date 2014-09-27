@@ -80,7 +80,8 @@ namespace DevCassio
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                Game.PrintChat(ex.Message);
+                if (mustDebug)
+                    Game.PrintChat(ex.Message);
             }
         }
 
@@ -179,19 +180,19 @@ namespace DevCassio
                 IgniteManager.Cast(eTarget);
             }
 
-            double comboTotal = 0;
-            comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
-            comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
+            //double comboTotal = 0;
+            //comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
+            //comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
 
-            if (E.IsReady(2000) && R.IsReady() && useR)
-            {
-                if (eTarget.Health < comboTotal)
-                {
-                    R.CastIfWillHit(eTarget, 1, packetCast);
+            //if (E.IsReady(2000) && R.IsReady() && useR)
+            //{
+            //    if (eTarget.Health < comboTotal)
+            //    {
+            //        CastAssistedUlt();
 
-                    IgniteManager.Cast(eTarget);
-                }
-            }
+            //        IgniteManager.Cast(eTarget);
+            //    }
+            //}
 
         }
 
@@ -262,14 +263,14 @@ namespace DevCassio
 
             if (Q.IsReady() && useQ)
             {
-                MinionManager.FarmLocation farm = Q.GetCircularFarmLocation(MinionList);
+                MinionManager.FarmLocation farm = Q.GetCircularFarmLocation(MinionList, Q.Width - 50);
                 if (farm.MinionsHit >= 3)
                     Q.Cast(farm.Position, packetCast);
             }
 
             if (W.IsReady() && useW)
             {
-                MinionManager.FarmLocation farm = W.GetCircularFarmLocation(MinionList);
+                MinionManager.FarmLocation farm = W.GetCircularFarmLocation(MinionList, W.Width - 50);
                 if (farm.MinionsHit >= 3)
                     W.Cast(farm.Position, packetCast);
             }
@@ -330,7 +331,7 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady())
             {
-                if (R.CastIfWillHit(eTarget, 1, packetCast))
+                if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
                     Game.PrintChat(string.Format("AssistedUlt fired"));
             }
 
@@ -360,7 +361,8 @@ namespace DevCassio
             catch(Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                Game.PrintChat(ex.ToString());
+                if (mustDebug)
+                    Game.PrintChat(ex.ToString());
             }
         }
 
@@ -538,23 +540,19 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("rCount", "Min R Count").SetValue(new Slider(2, 1, 5)));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
-            //Config.SubMenu("Combo").AddItem(new MenuItem("ComboActive", "Combo!").SetValue(new KeyBind(32, KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
-            //Config.SubMenu("Harass").AddItem(new MenuItem("HarassActive", "Harass!").SetValue(new KeyBind("V".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
             Config.SubMenu("Freeze").AddItem(new MenuItem("UseEFreeze", "Use E").SetValue(true));
-            //Config.SubMenu("Freeze").AddItem(new MenuItem("FreezeActive", "Freeze!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
-           // Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearActive", "LaneClear!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Gapcloser", "Gapcloser"));
             Config.SubMenu("Gapcloser").AddItem(new MenuItem("RAntiGapcloser", "R AntiGapcloser").SetValue(true));
