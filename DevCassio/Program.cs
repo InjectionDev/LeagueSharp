@@ -179,6 +179,20 @@ namespace DevCassio
                 IgniteManager.Cast(eTarget);
             }
 
+            double comboTotal = 0;
+            comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
+            comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
+
+            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR)
+            {
+                if (eTarget.Health < comboTotal)
+                {
+                    R.CastIfWillHit(eTarget, 1, packetCast);
+
+                    IgniteManager.Cast(eTarget);
+                }
+            }
+
         }
 
         public static void Harass()
@@ -475,10 +489,9 @@ namespace DevCassio
             var RAntiGapcloser = Config.Item("RAntiGapcloser").GetValue<bool>();
             var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
 
-            if (RAntiGapcloser && Player.GetHealthPerc() < RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range))
+            if (RAntiGapcloser && Player.GetHealthPerc() < RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range) && R.IsReady())
             {
-                if (R.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                    Game.PrintChat(string.Format("OnEnemyGapcloser -> RAntiGapcloser on {0} !", gapcloser.Sender.SkinName));
+                R.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
         }
 
