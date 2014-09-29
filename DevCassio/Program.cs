@@ -126,11 +126,8 @@ namespace DevCassio
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
-                    new Alerter(10, 10, "BurstCombo!", 13, new ColorBGRA(250, 250, 250, 100));
-
-                    R.CastIfWillHit(eTarget, 1, packetCast);
-
-                    IgniteManager.Cast(eTarget);
+                    if (R.CastIfWillHit(eTarget, 1, packetCast))
+                        IgniteManager.Cast(eTarget);
                 }
             }
         }
@@ -311,7 +308,7 @@ namespace DevCassio
             if (mobs.Count == 0)
                 return;
 
-            var mob = mobs.FirstOrDefault();
+            var mob = mobs.First();
 
             if (UseQJungleClear && Q.IsReady())
             {
@@ -409,8 +406,11 @@ namespace DevCassio
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
+            var useQ = Config.Item("UseQCombo").GetValue<bool>();
+            var useW = Config.Item("UseWCombo").GetValue<bool>();
+
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-                if (Q.IsReady() || W.IsReady())
+                if ((useQ && Q.IsReady()) || (useW && W.IsReady()))
                     args.Process = false;
         }
 
