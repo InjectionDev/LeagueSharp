@@ -55,7 +55,7 @@ namespace DevCassio
             {
                 if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
                 {
-                    //BurstCombo();
+                    BurstCombo();
                     Combo();
                 }
                 if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
@@ -64,6 +64,7 @@ namespace DevCassio
                 }
                 if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
                 {
+                    JungleClear();
                     WaveClear();
                 }
                 if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit)
@@ -104,15 +105,13 @@ namespace DevCassio
                 return;
 
             double totalComboDamage = 0;
-            //totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
-            //totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.Q);
-            //totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
-            //totalComboDamage += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
-            //totalComboDamage += Damage.GetSummonerSpellDamage(Player, eTarget, Damage.SummonerSpell.Ignite);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
-            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.E).ManaCost;
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.E).ManaCost;
 
@@ -122,9 +121,9 @@ namespace DevCassio
                 Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), eTarget.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
-            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR && IgniteManager.IsReady())
+            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR)
             {
-                if (eTarget.Health < totalComboDamage && eTarget.Mana >= totalManaCost)
+                if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
                     new Alerter(10, 10, "BurstCombo!", 13, new ColorBGRA(250, 250, 250, 100));
 
@@ -180,20 +179,6 @@ namespace DevCassio
                 IgniteManager.Cast(eTarget);
             }
 
-            //double comboTotal = 0;
-            //comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.R);
-            //comboTotal += Damage.GetSpellDamage(Player, eTarget, SpellSlot.E);
-
-            //if (E.IsReady(2000) && R.IsReady() && useR)
-            //{
-            //    if (eTarget.Health < comboTotal)
-            //    {
-            //        CastAssistedUlt();
-
-            //        IgniteManager.Cast(eTarget);
-            //    }
-            //}
-
         }
 
         public static void Harass()
@@ -241,7 +226,7 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("WaveClear Start");
 
-            MinionList = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range, MinionTypes.All);
+            MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All);
 
             if (MinionList.Count == 0)
                 return;
@@ -249,15 +234,22 @@ namespace DevCassio
             var useQ = Config.Item("UseQLaneClear").GetValue<bool>();
             var useW = Config.Item("UseWLaneClear").GetValue<bool>();
             var useE = Config.Item("UseELaneClear").GetValue<bool>();
+            var UseELastHitLaneClear = Config.Item("UseELastHitLaneClear").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            foreach (var minion in MinionList)
+            if (E.IsReady() && useE)
             {
-                var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
-
-                if (E.IsReady() && predHP > 0 && minion.IsValidTarget(E.Range) && useE && minion.HasBuffOfType(BuffType.Poison))
+                foreach (var minion in MinionList)
                 {
-                    E.CastOnUnit(minion, packetCast);
+                    var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
+
+                    if (predHP > 0 && minion.IsValidTarget(E.Range) && useE && minion.HasBuffOfType(BuffType.Poison))
+                    {
+                        if (UseELastHitLaneClear && Player.GetSpellDamage(minion, SpellSlot.E) > predHP)
+                            E.CastOnUnit(minion, packetCast);
+                        else
+                            E.CastOnUnit(minion, packetCast);
+                    }
                 }
             }
 
@@ -281,7 +273,7 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("Freeze Start");
 
-            MinionList = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range, MinionTypes.All);
+            MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All);
 
             if (MinionList.Count == 0)
                 return;
@@ -304,6 +296,30 @@ namespace DevCassio
                         }
                     }
                 }
+            }
+        }
+
+        private static void JungleClear()
+        {
+            var UseQJungleClear = Config.Item("UseQJungleClear").GetValue<bool>();
+            var UseEJungleClear = Config.Item("UseEJungleClear").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            var mobs = MinionManager.GetMinions(Player.ServerPosition, W.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+
+            if (mobs.Count == 0)
+                return;
+
+            var mob = mobs.FirstOrDefault();
+
+            if (UseQJungleClear && Q.IsReady())
+            {
+                Q.Cast(mob.ServerPosition, packetCast);
+            }
+
+            if (UseEJungleClear && E.IsReady() && mob.HasBuffOfType(BuffType.Poison))
+            {
+                E.CastOnUnit(mob, packetCast);
             }
         }
 
@@ -377,6 +393,7 @@ namespace DevCassio
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
+            Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
 
             Config.Item("EDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("EDamage").GetValue<bool>())
@@ -387,6 +404,13 @@ namespace DevCassio
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
+        }
+
+        static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        {
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+                if (Q.IsReady() || W.IsReady())
+                    args.Process = false;
         }
 
         private static void InitializeSpells()
@@ -553,6 +577,11 @@ namespace DevCassio
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELastHitLaneClear", "Use E Only LastHit").SetValue(true));
+
+            Config.AddSubMenu(new Menu("JungleClear", "JungleClear"));
+            Config.SubMenu("JungleClear").AddItem(new MenuItem("UseQJungleClear", "Use Q").SetValue(true));
+            Config.SubMenu("JungleClear").AddItem(new MenuItem("UseEJungleClear", "Use E").SetValue(true));
 
             Config.AddSubMenu(new Menu("Gapcloser", "Gapcloser"));
             Config.SubMenu("Gapcloser").AddItem(new MenuItem("RAntiGapcloser", "R AntiGapcloser").SetValue(true));
