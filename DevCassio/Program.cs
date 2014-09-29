@@ -239,11 +239,9 @@ namespace DevCassio
             {
                 foreach (var minion in MinionList)
                 {
-                    var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
-
-                    if (predHP > 0 && minion.IsValidTarget(E.Range) && useE && minion.HasBuffOfType(BuffType.Poison))
+                    if (minion.Health > 0 && minion.IsValidTarget(E.Range) && useE && minion.HasBuffOfType(BuffType.Poison))
                     {
-                        if (UseELastHitLaneClear && Player.GetSpellDamage(minion, SpellSlot.E) > predHP)
+                        if (UseELastHitLaneClear && Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health)
                             E.CastOnUnit(minion, packetCast);
                         else
                             E.CastOnUnit(minion, packetCast);
