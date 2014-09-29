@@ -143,7 +143,7 @@ namespace DevCassio
             var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = SimpleTs.GetTarget(W.Range, SimpleTs.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -223,7 +223,10 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("WaveClear Start");
 
-            MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
+            var rangedMinionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range + Q.Width, MinionTypes.Ranged);
+            var allMinionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All);
+            var rangedMinionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, W.Range + W.Width, MinionTypes.Ranged);
+            var allMinionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, W.Range + W.Width, MinionTypes.All);
 
             if (MinionList.Count == 0)
                 return;
@@ -236,20 +239,24 @@ namespace DevCassio
 
             if (Q.IsReady() && useQ)
             {
-                MinionManager.FarmLocation farm = Q.GetCircularFarmLocation(MinionList);
-                var query = MinionList.Where(x => x.Distance(farm.Position) < Q.Width);
+                var farmRanged = Q.GetCircularFarmLocation(rangedMinionsQ);
+                var farmAll = Q.GetCircularFarmLocation(allMinionsQ);
 
-                if (farm.MinionsHit >= 2 && query.Count() >= 2) // double check
-                    Q.Cast(farm.Position, packetCast);
+                if (farmRanged.MinionsHit >= 3)
+                    Q.Cast(farmRanged.Position, packetCast);
+                else if (farmAll.MinionsHit >= 2 || allMinionsQ.Count > 0)
+                    Q.Cast(farmAll.Position, packetCast);
             }
 
             if (W.IsReady() && useW)
             {
-                MinionManager.FarmLocation farm = W.GetCircularFarmLocation(MinionList);
-                var query = MinionList.Where(x => x.Distance(farm.Position) < W.Width);
+                var farmRanged = Q.GetCircularFarmLocation(rangedMinionsW);
+                var farmAll = Q.GetCircularFarmLocation(allMinionsW);
 
-                if (farm.MinionsHit >= 2 && query.Count() >= 2) // double check
-                    W.Cast(farm.Position, packetCast);
+                if (farmRanged.MinionsHit >= 3)
+                    W.Cast(farmRanged.Position, packetCast);
+                else if (farmAll.MinionsHit >= 2 || allMinionsQ.Count > 0)
+                    W.Cast(farmAll.Position, packetCast);
             }
 
             if (E.IsReady() && useE)
