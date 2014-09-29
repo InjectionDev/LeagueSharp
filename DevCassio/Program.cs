@@ -299,18 +299,18 @@ namespace DevCassio
 
         private static void JungleClear()
         {
-            var UseQJungleClear = Config.Item("UseQJungleClear").GetValue<bool>();
-            var UseEJungleClear = Config.Item("UseEJungleClear").GetValue<bool>();
-            var packetCast = Config.Item("PacketCast").GetValue<bool>();
-
             var mobs = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
 
             if (mobs.Count == 0)
                 return;
 
+            var UseQJungleClear = Config.Item("UseQJungleClear").GetValue<bool>();
+            var UseEJungleClear = Config.Item("UseEJungleClear").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
             var mob = mobs.First();
 
-            if (UseQJungleClear && Q.IsReady())
+            if (UseQJungleClear && Q.IsReady() && mob.IsValidTarget(Q.Range))
             {
                 Q.Cast(mob.ServerPosition, packetCast);
             }
