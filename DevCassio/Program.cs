@@ -121,12 +121,12 @@ namespace DevCassio
                 Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), eTarget.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
-            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR)
+            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
-                    if (R.CastIfWillHit(eTarget, 1, packetCast))
-                        IgniteManager.Cast(eTarget);
+                    R.Cast(eTarget.ServerPosition);
+                    IgniteManager.Cast(eTarget);
                 }
             }
         }
@@ -223,16 +223,6 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("WaveClear Start");
 
-            MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
-
-            var rangedMinionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range + Q.Width, MinionTypes.Ranged);
-            var allMinionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All);
-            var rangedMinionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, W.Range + W.Width, MinionTypes.Ranged);
-            var allMinionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, W.Range + W.Width, MinionTypes.All);
-
-            if (MinionList.Count == 0)
-                return;
-
             var useQ = Config.Item("UseQLaneClear").GetValue<bool>();
             var useW = Config.Item("UseWLaneClear").GetValue<bool>();
             var useE = Config.Item("UseELaneClear").GetValue<bool>();
@@ -241,37 +231,49 @@ namespace DevCassio
 
             if (Q.IsReady() && useQ)
             {
-                var farmRanged = Q.GetCircularFarmLocation(rangedMinionsQ);
+                var allMinionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All);
+                var allMinionsQNonPoisoned = allMinionsQ.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
+
+                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsQNonPoisoned);
                 var farmAll = Q.GetCircularFarmLocation(allMinionsQ);
 
-                if (farmRanged.MinionsHit >= 3)
-                    Q.Cast(farmRanged.Position, packetCast);
-                else if (farmAll.MinionsHit >= 2 || allMinionsQ.Count > 0)
+                if (farmNonPoisoned.MinionsHit >= 3)
+                    Q.Cast(farmNonPoisoned.Position, packetCast);
+                else if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
                     Q.Cast(farmAll.Position, packetCast);
             }
 
             if (W.IsReady() && useW)
             {
-                var farmRanged = Q.GetCircularFarmLocation(rangedMinionsW);
+                var allMinionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, W.Range + W.Width, MinionTypes.All);
+                var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
+
+                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsWNonPoisoned);
                 var farmAll = Q.GetCircularFarmLocation(allMinionsW);
 
-                if (farmRanged.MinionsHit >= 3)
-                    W.Cast(farmRanged.Position, packetCast);
-                else if (farmAll.MinionsHit >= 2 || allMinionsQ.Count > 0)
+                if (farmNonPoisoned.MinionsHit >= 3)
+                    W.Cast(farmNonPoisoned.Position, packetCast);
+                else if (farmAll.MinionsHit >= 2 || allMinionsW.Count == 1)
                     W.Cast(farmAll.Position, packetCast);
             }
 
             if (E.IsReady() && useE)
             {
+                MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
+
                 foreach (var minion in MinionList)
                 {
                     if (minion.IsValidTarget(E.Range) && minion.HasBuffOfType(BuffType.Poison))
                     {
-                        if (UseELastHitLaneClear && Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health)
+                        if (UseELastHitLaneClear)
+                        {
+                            if (Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health)
+                                E.CastOnUnit(minion, packetCast);
+                        }
+                        else    
+                        {
                             E.CastOnUnit(minion, packetCast);
-
-                        if (!UseELastHitLaneClear)
-                            E.CastOnUnit(minion, packetCast);
+                        }
                     }
                 }
             }
@@ -337,8 +339,9 @@ namespace DevCassio
             {
                 if (eTarget.IsValidTarget(R.Range) && eTarget.IsUnderEnemyTurret() && R.IsReady())
                 {
-                    if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                        Game.PrintChat("Ult Under Tower!");
+                    //if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                    //    Game.PrintChat("Ult Under Tower!");
+                    R.Cast(eTarget.ServerPosition, packetCast);
                 }
             }
         }
@@ -353,8 +356,9 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady())
             {
-                if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                    Game.PrintChat(string.Format("AssistedUlt fired"));
+                //if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                //    Game.PrintChat(string.Format("AssistedUlt fired"));
+                R.Cast(eTarget.ServerPosition, packetCast);
             }
 
             if (mustDebug)
