@@ -234,20 +234,6 @@ namespace DevCassio
             var UseELastHitLaneClear = Config.Item("UseELastHitLaneClear").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (E.IsReady() && useE)
-            {
-                foreach (var minion in MinionList)
-                {
-                    if (minion.Health > 0 && minion.IsValidTarget(E.Range) && useE && minion.HasBuffOfType(BuffType.Poison))
-                    {
-                        if (UseELastHitLaneClear && Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health)
-                            E.CastOnUnit(minion, packetCast);
-                        else
-                            E.CastOnUnit(minion, packetCast);
-                    }
-                }
-            }
-
             if (Q.IsReady() && useQ)
             {
                 MinionManager.FarmLocation farm = Q.GetCircularFarmLocation(MinionList, Q.Width - 50);
@@ -260,6 +246,20 @@ namespace DevCassio
                 MinionManager.FarmLocation farm = W.GetCircularFarmLocation(MinionList, W.Width - 50);
                 if (farm.MinionsHit >= 3)
                     W.Cast(farm.Position, packetCast);
+            }
+
+            if (E.IsReady() && useE)
+            {
+                foreach (var minion in MinionList)
+                {
+                    if (minion.Health > 0 && minion.IsValidTarget(E.Range) && minion.HasBuffOfType(BuffType.Poison))
+                    {
+                        if (UseELastHitLaneClear && Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health)
+                            E.CastOnUnit(minion, packetCast);
+                        else
+                            E.CastOnUnit(minion, packetCast);
+                    }
+                }
             }
         }
 
@@ -388,7 +388,7 @@ namespace DevCassio
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
-            Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
+            //Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
 
             Config.Item("EDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("EDamage").GetValue<bool>())
@@ -513,7 +513,7 @@ namespace DevCassio
             var RAntiGapcloser = Config.Item("RAntiGapcloser").GetValue<bool>();
             var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
 
-            if (RAntiGapcloser && Player.GetHealthPerc() < RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range) && R.IsReady())
+            if (RAntiGapcloser && Player.GetHealthPerc() <= RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range) && R.IsReady())
             {
                 if (R.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
                     Game.PrintChat(string.Format("OnEnemyGapcloser -> RAntiGapcloser on {0} !", gapcloser.Sender.SkinName));
