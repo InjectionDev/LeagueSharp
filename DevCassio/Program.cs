@@ -21,6 +21,7 @@ using SharpDX;
  * + Block Ult if will not hit
  * + Auto Ult Enemy Under Tower
  * + Auto Ult if will hit X
+ * + Jungle Clear
 */
 
 namespace DevCassio
@@ -288,7 +289,7 @@ namespace DevCassio
                 {
                     var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
 
-                    if (E.IsReady() && E.GetDamage(minion) > minion.Health && predHP > 0 && minion.IsValidTarget(E.Range))
+                    if (E.IsReady() && Player.GetSpellDamage(minion, SpellSlot.E) > predHP && predHP > 0 && minion.IsValidTarget(E.Range))
                     {
                         if (minion.HasBuffOfType(BuffType.Poison))
                         {
@@ -305,7 +306,7 @@ namespace DevCassio
             var UseEJungleClear = Config.Item("UseEJungleClear").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var mobs = MinionManager.GetMinions(Player.ServerPosition, W.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+            var mobs = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
 
             if (mobs.Count == 0)
                 return;
@@ -317,7 +318,7 @@ namespace DevCassio
                 Q.Cast(mob.ServerPosition, packetCast);
             }
 
-            if (UseEJungleClear && E.IsReady() && mob.HasBuffOfType(BuffType.Poison))
+            if (UseEJungleClear && E.IsReady() && mob.HasBuffOfType(BuffType.Poison) && mob.IsValidTarget(E.Range))
             {
                 E.CastOnUnit(mob, packetCast);
             }
