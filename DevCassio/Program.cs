@@ -252,11 +252,12 @@ namespace DevCassio
             {
                 foreach (var minion in MinionList)
                 {
-                    if (minion.Health > 0 && minion.IsValidTarget(E.Range) && minion.HasBuffOfType(BuffType.Poison))
+                    if (minion.IsValidTarget(E.Range) && minion.HasBuffOfType(BuffType.Poison))
                     {
                         if (UseELastHitLaneClear && Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health)
                             E.CastOnUnit(minion, packetCast);
-                        else
+
+                        if (!UseELastHitLaneClear)
                             E.CastOnUnit(minion, packetCast);
                     }
                 }
@@ -274,16 +275,13 @@ namespace DevCassio
                 return;
 
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            var nearestTarget = Player.GetNearestEnemy();
             var useE = Config.Item("UseEFreeze").GetValue<bool>();
 
             if (useE)
             {
                 foreach (var minion in MinionList)
                 {
-                    var predHP = HealthPrediction.GetHealthPrediction(minion, (int)E.Delay);
-
-                    if (E.IsReady() && Player.GetSpellDamage(minion, SpellSlot.E) > predHP && predHP > 0 && minion.IsValidTarget(E.Range))
+                    if (E.IsReady() && Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health && minion.IsValidTarget(E.Range))
                     {
                         if (minion.HasBuffOfType(BuffType.Poison))
                         {
