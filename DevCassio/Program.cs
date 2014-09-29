@@ -236,15 +236,15 @@ namespace DevCassio
 
             if (Q.IsReady() && useQ)
             {
-                MinionManager.FarmLocation farm = Q.GetCircularFarmLocation(MinionList, Q.Width - 50);
-                if (farm.MinionsHit >= 3)
+                MinionManager.FarmLocation farm = Q.GetCircularFarmLocation(MinionList);
+                if (farm.MinionsHit >= 2)
                     Q.Cast(farm.Position, packetCast);
             }
 
             if (W.IsReady() && useW)
             {
-                MinionManager.FarmLocation farm = W.GetCircularFarmLocation(MinionList, W.Width - 50);
-                if (farm.MinionsHit >= 3)
+                MinionManager.FarmLocation farm = W.GetCircularFarmLocation(MinionList);
+                if (farm.MinionsHit >= 2)
                     W.Cast(farm.Position, packetCast);
             }
 
