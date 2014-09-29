@@ -223,7 +223,7 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("WaveClear Start");
 
-            MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All);
+            MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
             if (MinionList.Count == 0)
                 return;
@@ -237,14 +237,18 @@ namespace DevCassio
             if (Q.IsReady() && useQ)
             {
                 MinionManager.FarmLocation farm = Q.GetCircularFarmLocation(MinionList);
-                if (farm.MinionsHit >= 2)
+                var query = MinionList.Where(x => x.Distance(farm.Position) < Q.Width);
+
+                if (farm.MinionsHit >= 2 && query.Count() >= 2) // double check
                     Q.Cast(farm.Position, packetCast);
             }
 
             if (W.IsReady() && useW)
             {
                 MinionManager.FarmLocation farm = W.GetCircularFarmLocation(MinionList);
-                if (farm.MinionsHit >= 2)
+                var query = MinionList.Where(x => x.Distance(farm.Position) < W.Width);
+
+                if (farm.MinionsHit >= 2 && query.Count() >= 2) // double check
                     W.Cast(farm.Position, packetCast);
             }
 
@@ -269,7 +273,7 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("Freeze Start");
 
-            MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All);
+            MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
             if (MinionList.Count == 0)
                 return;
@@ -386,7 +390,7 @@ namespace DevCassio
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
-            //Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
+            Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
 
             Config.Item("EDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("EDamage").GetValue<bool>())
