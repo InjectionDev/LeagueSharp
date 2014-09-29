@@ -113,8 +113,7 @@ namespace DevCassio
 
             double totalManaCost = 0;
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
-            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.E).ManaCost;
-            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.E).ManaCost;
+            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
 
             if (mustDebug)
             {
@@ -516,7 +515,8 @@ namespace DevCassio
 
             if (RAntiGapcloser && Player.GetHealthPerc() < RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range) && R.IsReady())
             {
-                R.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                if (R.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                    Game.PrintChat(string.Format("OnEnemyGapcloser -> RAntiGapcloser on {0} !", gapcloser.Sender.SkinName));
             }
         }
 
