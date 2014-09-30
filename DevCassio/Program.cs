@@ -214,6 +214,9 @@ namespace DevCassio
                 Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
+            if (Config.Item("UseWHarass").GetValue<bool>())
+                useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range)));
+
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && Player.GetManaPerc() >= HarassMinMana)
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
