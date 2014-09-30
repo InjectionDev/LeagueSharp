@@ -93,17 +93,17 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("BurstCombo Start");
 
+            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
             var useQ = Config.Item("UseQCombo").GetValue<bool>();
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-
-            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
-
-            if (eTarget == null)
-                return;
 
             double totalComboDamage = 0;
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
@@ -234,8 +234,8 @@ namespace DevCassio
                 var allMinionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All);
                 var allMinionsQNonPoisoned = allMinionsQ.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsQNonPoisoned);
-                var farmAll = Q.GetCircularFarmLocation(allMinionsQ);
+                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsQNonPoisoned, Q.Width * 0.8f);
+                var farmAll = Q.GetCircularFarmLocation(allMinionsQ, Q.Width * 0.8f);
 
                 if (farmNonPoisoned.MinionsHit >= 3)
                     Q.Cast(farmNonPoisoned.Position, packetCast);
@@ -248,8 +248,8 @@ namespace DevCassio
                 var allMinionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, W.Range + W.Width, MinionTypes.All);
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsWNonPoisoned);
-                var farmAll = Q.GetCircularFarmLocation(allMinionsW);
+                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsWNonPoisoned, Q.Width * 0.8f);
+                var farmAll = Q.GetCircularFarmLocation(allMinionsW, Q.Width * 0.8f);
 
                 if (farmNonPoisoned.MinionsHit >= 3)
                     W.Cast(farmNonPoisoned.Position, packetCast);

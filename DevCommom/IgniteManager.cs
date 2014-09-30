@@ -39,7 +39,7 @@ namespace DevCommom
 
         public bool CanKill(Obj_AI_Hero enemy)
         {
-            return HasIgnite && IsReady() && enemy.Health < Damage.GetSummonerSpellDamage(ObjectManager.Player, enemy, Damage.SummonerSpell.Ignite);
+            return HasIgnite && IsReady() && enemy.Health < ObjectManager.Player.GetSummonerSpellDamage(enemy, Damage.SummonerSpell.Ignite);
         }
 
 
