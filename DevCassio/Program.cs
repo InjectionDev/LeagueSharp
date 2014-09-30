@@ -107,6 +107,7 @@ namespace DevCassio
 
             double totalComboDamage = 0;
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
@@ -121,7 +122,7 @@ namespace DevCassio
                 Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), eTarget.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
-            if (Q.IsReady(2000) && E.IsReady(2000) && R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
+            if (Q.IsReady(2000) && R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
@@ -231,36 +232,30 @@ namespace DevCassio
 
             if (Q.IsReady() && useQ)
             {
-                var allMinionsQ = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All);
+                var allMinionsQ = MinionManager.GetMinions(Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All);
                 var allMinionsQNonPoisoned = allMinionsQ.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                if (allMinionsQ.Count > 0)
-                {
-                    var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsQNonPoisoned, Q.Width * 0.8f);
-                    var farmAll = Q.GetCircularFarmLocation(allMinionsQ, Q.Width * 0.8f);
+                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsQNonPoisoned, Q.Width * 0.8f);
+                var farmAll = Q.GetCircularFarmLocation(allMinionsQ, Q.Width * 0.8f);
 
-                    if (farmNonPoisoned.MinionsHit >= 3)
-                        Q.Cast(farmNonPoisoned.Position, packetCast);
-                    else if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
-                        Q.Cast(farmAll.Position, packetCast);
-                }
+                if (farmNonPoisoned.MinionsHit >= 3)
+                    Q.Cast(farmNonPoisoned.Position, packetCast);
+                else if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
+                    Q.Cast(farmAll.Position, packetCast);
             }
 
             if (W.IsReady() && useW)
             {
-                var allMinionsW = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, W.Range + W.Width, MinionTypes.All);
+                var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All);
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                if (allMinionsW.Count > 0)
-                {
-                    var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsWNonPoisoned, W.Width * 0.8f);
-                    var farmAll = Q.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
+                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsWNonPoisoned, W.Width * 0.8f);
+                var farmAll = Q.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
 
-                    if (farmNonPoisoned.MinionsHit >= 3)
-                        W.Cast(farmNonPoisoned.Position, packetCast);
-                    else if (farmAll.MinionsHit >= 2 || allMinionsW.Count == 1)
-                        W.Cast(farmAll.Position, packetCast);
-                }
+                if (farmNonPoisoned.MinionsHit >= 3)
+                    W.Cast(farmNonPoisoned.Position, packetCast);
+                else if (farmAll.MinionsHit >= 2 || allMinionsW.Count == 1)
+                    W.Cast(farmAll.Position, packetCast);
             }
 
             if (E.IsReady() && useE)
