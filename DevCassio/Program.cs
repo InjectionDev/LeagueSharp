@@ -167,7 +167,7 @@ namespace DevCassio
                 Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && !eTarget.HasBuffOfType(BuffType.Poison))
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -188,6 +188,7 @@ namespace DevCassio
             var useW = Config.Item("UseWHarass").GetValue<bool>();
             var useE = Config.Item("UseEHarass").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var HarassMinMana = Config.Item("HarassMinMana").GetValue<Slider>().Value;
 
             var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
 
@@ -205,12 +206,12 @@ namespace DevCassio
                 }
             }
 
-            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
+            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ && Player.GetManaPerc() >= HarassMinMana)
             {
                 Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && Player.GetManaPerc() >= HarassMinMana)
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -581,6 +582,7 @@ namespace DevCassio
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
+            Config.SubMenu("Harass").AddItem(new MenuItem("HarassMinMana", "Harras Min Mana").SetValue(new Slider(40, 0, 100)));
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
             Config.SubMenu("Freeze").AddItem(new MenuItem("UseEFreeze", "Use E").SetValue(true));
