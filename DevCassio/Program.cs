@@ -268,7 +268,7 @@ namespace DevCassio
                     {
                         if (UseELastHitLaneClear)
                         {
-                            if (Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health)
+                            if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > minion.Health)
                                 E.CastOnUnit(minion, packetCast);
                         }
                         else    
@@ -297,7 +297,7 @@ namespace DevCassio
             {
                 foreach (var minion in MinionList)
                 {
-                    if (E.IsReady() && Player.GetSpellDamage(minion, SpellSlot.E) > minion.Health && minion.IsValidTarget(E.Range))
+                    if (E.IsReady() && Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > minion.Health && minion.IsValidTarget(E.Range))
                     {
                         if (minion.HasBuffOfType(BuffType.Poison))
                         {
