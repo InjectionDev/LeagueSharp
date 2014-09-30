@@ -126,7 +126,7 @@ namespace DevCassio
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
-                    R.Cast(eTarget.ServerPosition);
+                    R.Cast(eTarget.ServerPosition, packetCast);
                     IgniteManager.Cast(eTarget);
                 }
             }
