@@ -110,6 +110,7 @@ namespace DevCassio
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
@@ -119,7 +120,7 @@ namespace DevCassio
             if (mustDebug)
             {
                 Game.PrintChat("BurstCombo Damage {0}/{1} {2}", Convert.ToInt32(totalComboDamage), Convert.ToInt32(eTarget.Health), eTarget.Health < totalComboDamage ? "BustKill" : "Harras");
-                Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), eTarget.Mana >= totalManaCost ? "Mana OK" : "No Mana");
+                Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), Player.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
             if (Q.IsReady(2000) && R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
@@ -137,17 +138,17 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("Combo Start");
 
+            var eTarget = SimpleTs.GetTarget(W.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
             var useQ = Config.Item("UseQCombo").GetValue<bool>();
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-
-            var eTarget = SimpleTs.GetTarget(W.Range, SimpleTs.DamageType.Magical);
-
-            if (eTarget == null)
-                return;
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
@@ -187,16 +188,17 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("Harass Start");
 
+            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
             var useQ = Config.Item("UseQHarass").GetValue<bool>();
             var useW = Config.Item("UseWHarass").GetValue<bool>();
             var useE = Config.Item("UseEHarass").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var HarassMinMana = Config.Item("HarassMinMana").GetValue<Slider>().Value;
 
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
-
-            if (eTarget == null)
-                return;
 
             if (mustDebug)
                 Game.PrintChat("Harass Target -> " + eTarget.SkinName);
