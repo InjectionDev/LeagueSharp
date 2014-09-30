@@ -249,8 +249,8 @@ namespace DevCassio
                 var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All);
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsWNonPoisoned, W.Width * 0.8f);
-                var farmAll = Q.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
+                var farmNonPoisoned = W.GetCircularFarmLocation(allMinionsWNonPoisoned, W.Width * 0.8f);
+                var farmAll = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
 
                 if (farmNonPoisoned.MinionsHit >= 3)
                     W.Cast(farmNonPoisoned.Position, packetCast);
@@ -554,10 +554,6 @@ namespace DevCassio
             }
         }
 
-        static void Program_ValueChanged(object sender, OnValueChangeEventArgs e)
-        {
-            
-        }
 
         private static void InitializeMainMenu()
         {
