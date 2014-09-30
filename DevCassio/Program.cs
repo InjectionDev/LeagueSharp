@@ -167,7 +167,10 @@ namespace DevCassio
                 Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && !eTarget.HasBuffOfType(BuffType.Poison))
+            if (Config.Item("UseWCombo").GetValue<bool>())
+                useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range)));
+
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
