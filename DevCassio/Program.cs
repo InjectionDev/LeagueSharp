@@ -428,12 +428,23 @@ namespace DevCassio
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            var useQ = Config.Item("UseQCombo").GetValue<bool>();
-            var useW = Config.Item("UseWCombo").GetValue<bool>();
-
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            {
+                var useQ = Config.Item("UseQCombo").GetValue<bool>();
+                var useW = Config.Item("UseWCombo").GetValue<bool>();
+
                 if ((useQ && Q.IsReady()) || (useW && W.IsReady()))
                     args.Process = false;
+            }
+            else
+                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+                {
+                    var useQ = Config.Item("UseQHarass").GetValue<bool>();
+                    var useW = Config.Item("UseWHarass").GetValue<bool>();
+
+                    if ((useQ && Q.IsReady()) || (useW && W.IsReady()))
+                        args.Process = false;
+                }
         }
 
         private static void InitializeSpells()
