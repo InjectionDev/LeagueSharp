@@ -9,17 +9,20 @@ using SharpDX;
 
 /*
  * ##### DevKogMaw Mods #####
- * + Auto Chase Enemy After Death
+ * + Chase Enemy After Death
  * + R KillSteal
  * + W/R Range based on Skill Level
  * + Assisted Ult
  * + Block Ult if will not hit
  * + Cast E with Min Mana Slider
  * + Barrier GapCloser when LowHealth
+ * + Smart W usage
+ * + Jungle Steal Alert
+ * + Jungle Steal with R (Blue/Red/Dragon/Balron)
 
 */
 
-namespace DevCassio
+namespace DevKogMaw
 {
     class Program
     {
@@ -38,9 +41,9 @@ namespace DevCassio
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
 
+        private static float AttackRangeWithoutBuff;
+
         public static bool mustDebug = false;
-
-
 
 
         static void Main(string[] args)
@@ -76,7 +79,6 @@ namespace DevCassio
             {
                 ChaseEnemyAfterDeath();
             }
-            
 
             UpdateSpellsRange();
 
@@ -89,6 +91,11 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("Combo Start");
 
+            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
             var useQ = Config.Item("UseQCombo").GetValue<bool>();
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
@@ -98,17 +105,12 @@ namespace DevCassio
             var RMaxStacksCombo = Config.Item("RMaxStacksCombo").GetValue<Slider>().Value;
             var EManaCombo = Config.Item("EManaCombo").GetValue<Slider>().Value;
 
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
-
-            if (eTarget == null)
-                return;
-
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
                 Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (eTarget.IsValidTarget(Player.AttackRange + W.Range) && W.IsReady() && useW)
+            if (!HasWBuff() && !eTarget.IsValidTarget(Orbwalking.GetRealAutoAttackRange(eTarget)) && eTarget.IsValidTarget(Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
             {
                 W.Cast();
             }
@@ -137,17 +139,17 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("Harass Start");
 
+            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
             var useQ = Config.Item("UseQHarass").GetValue<bool>();
             var useW = Config.Item("UseWHarass").GetValue<bool>();
             var useE = Config.Item("UseEHarass").GetValue<bool>();
             var useR = Config.Item("UseRHarass").GetValue<bool>();
             var RMaxStacksHarass = Config.Item("RMaxStacksHarass").GetValue<Slider>().Value;
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
-
-            if (eTarget == null)
-                return;
 
             if (mustDebug)
                 Game.PrintChat("Harass Target -> " + eTarget.SkinName);
@@ -157,7 +159,7 @@ namespace DevCassio
                 R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (eTarget.IsValidTarget(Player.AttackRange + W.Range) && W.IsReady() && useW)
+            if (!HasWBuff() && !eTarget.IsValidTarget(Orbwalking.GetRealAutoAttackRange(eTarget)) && eTarget.IsValidTarget(Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
             {
                 W.Cast();
             }
@@ -212,14 +214,15 @@ namespace DevCassio
                 Game.PrintChat("CastAssistedUlt Start");
 
             var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
-            var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (eTarget == null)
                 return;
 
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
             if (eTarget.IsValidTarget(R.Range) && R.IsReady())
             {
-                if (R.CastIfWillHit(eTarget, 1, packetCast))
+                if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
                     Game.PrintChat(string.Format("AssistedUlt fired"));
             }
 
@@ -244,7 +247,7 @@ namespace DevCassio
             {
                 foreach (var enemy in DevHelper.GetEnemyList())
                 {
-                    if (enemy.IsValidTarget(R.Range) && HealthPrediction.GetHealthPrediction(enemy, (int)R.Delay * 1000) < Damage.GetSpellDamage(Player, enemy, SpellSlot.R))
+                    if (enemy.IsValidTarget(R.Range) && enemy.Health < Player.GetSpellDamage(enemy, SpellSlot.R))
                     {
                         if (R.CastIfHitchanceEquals(enemy, enemy.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
                         {
@@ -262,7 +265,7 @@ namespace DevCassio
         {
             var ChaseEnemyAfterDeath = Config.Item("ChaseEnemyAfterDeath").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
+            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -295,7 +298,7 @@ namespace DevCassio
             {
                 Player = ObjectManager.Player;
 
-                if (Player.ChampionName.ToLower() != ChampionName)
+                if (!Player.ChampionName.ToLower().Contains(ChampionName))
                     return;
 
                 InitializeSpells();
@@ -326,6 +329,7 @@ namespace DevCassio
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
+            
 
             Config.Item("RDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("RDamage").GetValue<bool>())
@@ -342,6 +346,8 @@ namespace DevCassio
         {
             if (mustDebug)
                 Game.PrintChat("InitializeSpells Start");
+
+            AttackRangeWithoutBuff = Player.AttackRange;
 
             IgniteManager = new IgniteManager();
             BarrierManager = new BarrierManager();
@@ -462,6 +468,68 @@ namespace DevCassio
             }
         }
 
+        private static bool HasWBuff()
+        {
+            return Player.AttackRange > AttackRangeWithoutBuff;
+        }
+
+        private static void JungleStealAlert()
+        {
+            var JungleStealAlert = Config.Item("JungleStealAlert").GetValue<bool>();
+
+            if (!JungleStealAlert)
+                return;
+
+            string[] monsterNames = { "LizardElder", "AncientGolem", "Worm", "Dragon" };
+            var mobs = MinionManager.GetMinions(Player.ServerPosition, 5000, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+
+            var query = mobs.Where(x =>
+                monsterNames.Any(monster => x.BaseSkinName.Contains(monster)) &&
+                x.Health < x.MaxHealth &&
+                !x.IsValidTarget(R.Range) &&
+                DevHelper.GetEnemyList().Any(enemy => x.ServerPosition.Distance(enemy.ServerPosition) < 800));
+
+            if (query.Count() > 0)
+            {
+                var mob = query.FirstOrDefault();
+                Game.PrintChat("Jungle Steal Alert, Get closer!");
+                Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
+                Utility.DelayAction.Add(200, () => DevHelper.Ping(mob.ServerPosition));
+                Utility.DelayAction.Add(400, () => DevHelper.Ping(mob.ServerPosition));
+            }
+        }
+
+        private static void JungleSteal()
+        {
+            var JungleSteal = Config.Item("JungleSteal").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (!JungleSteal || !R.IsReady())
+                return;
+
+            string[] monsterNames = { "LizardElder", "AncientGolem", "Worm", "Dragon" };
+            var mobs = MinionManager.GetMinions(Player.ServerPosition, R.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+
+            var query = mobs.Where(x => 
+                monsterNames.Any(monster => x.BaseSkinName.Contains(monster)) &&
+                x.IsValidTarget(R.Range) && 
+                x.Health < Player.GetSpellDamage(x, SpellSlot.R) &&
+                DevHelper.GetEnemyList().Any(enemy => x.ServerPosition.Distance(enemy.ServerPosition) < 800));
+
+            if (query.Count() > 0)
+            {
+                var mob = query.FirstOrDefault();
+
+                R.Cast(mob.ServerPosition, packetCast);
+                Game.PrintChat("Jungle Steal!");
+                Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
+                Utility.DelayAction.Add(200, () => DevHelper.Ping(mob.ServerPosition));
+                Utility.DelayAction.Add(400, () => DevHelper.Ping(mob.ServerPosition));
+            }
+        }
+
+
+
         private static void InitializeMainMenu()
         {
             if (mustDebug)
@@ -484,7 +552,6 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("RMaxStacksCombo", "R Max Stacks").SetValue(new Slider(3, 1, 5)));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("EManaCombo", "Min Mana to E").SetValue(new Slider(50, 1, 100)));
-            //Config.SubMenu("Combo").AddItem(new MenuItem("ComboActive", "Combo!").SetValue(new KeyBind(32, KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
@@ -492,20 +559,17 @@ namespace DevCassio
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseRHarass", "Use R").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("RMaxStacksHarass", "R Max Stacks").SetValue(new Slider(1, 1, 5)));
-            //Config.SubMenu("Harass").AddItem(new MenuItem("HarassActive", "Harass!").SetValue(new KeyBind("V".ToCharArray()[0], KeyBindType.Press)));
             
-            //Config.AddSubMenu(new Menu("Freeze", "Freeze"));
-            //Config.SubMenu("Freeze").AddItem(new MenuItem("FreezeActive", "Freeze!").SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press)));
-
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(false));
-            //Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearActive", "LaneClear!").SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("KillSteal", "KillSteal"));
             Config.SubMenu("KillSteal").AddItem(new MenuItem("RKillSteal", "R KillSteal").SetValue(true));
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("ChaseEnemyAfterDeath", "Chase Enemy After Death").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("JungleStealAlert", "Jungle Steal Alert").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("JungleSteal", "Jungle Steal with R").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
 
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
