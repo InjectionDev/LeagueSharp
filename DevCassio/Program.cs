@@ -149,10 +149,11 @@ namespace DevCassio
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var RMinHit = Config.Item("RMinHit").GetValue<Slider>().Value;
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
-                R.CastIfWillHit(eTarget, Config.Item("rCount").GetValue<Slider>().Value, true);
+                R.CastIfWillHit(eTarget, RMinHit, packetCast);
             }
 
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
@@ -198,7 +199,6 @@ namespace DevCassio
             var useE = Config.Item("UseEHarass").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var HarassMinMana = Config.Item("HarassMinMana").GetValue<Slider>().Value;
-
 
             if (mustDebug)
                 Game.PrintChat("Harass Target -> " + eTarget.SkinName);
@@ -594,7 +594,7 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseWCombo", "Use W").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseECombo", "Use E").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
-            Config.SubMenu("Combo").AddItem(new MenuItem("rCount", "Min R Count").SetValue(new Slider(2, 1, 5)));
+            Config.SubMenu("Combo").AddItem(new MenuItem("RMinHit", "Min Enemies to Ult").SetValue(new Slider(2, 1, 5)));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
