@@ -72,6 +72,7 @@ namespace DevCassio
                 {
                     Freeze();
                 }
+
                 if (Config.Item("UseUltUnderTower").GetValue<bool>())
                 {
                     UseUltUnderTower();
