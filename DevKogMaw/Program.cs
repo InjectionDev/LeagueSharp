@@ -80,6 +80,9 @@ namespace DevKogMaw
                 ChaseEnemyAfterDeath();
             }
 
+            JungleStealAlert();
+            JungleSteal();
+
             UpdateSpellsRange();
 
             SkinManager.Update();
