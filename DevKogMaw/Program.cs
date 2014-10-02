@@ -42,10 +42,10 @@ namespace DevKogMaw
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
 
-        public static DateTime dtLastJungleStealAlert = DateTime.Now;
-        public static DateTime dtLastJungleSteal = DateTime.Now;
+        private static DateTime dtLastJungleStealAlert = DateTime.Now;
+        private static DateTime dtLastJungleSteal = DateTime.Now;
 
-        public static bool mustDebug = false;
+        private static bool mustDebug = false;
 
 
         static void Main(string[] args)
