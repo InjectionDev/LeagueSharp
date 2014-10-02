@@ -519,7 +519,7 @@ namespace DevKogMaw
 
                 if (dtLastJungleStealAlert.AddSeconds(5) < DateTime.Now)
                 {
-                    if (mob.Distance(Player.ServerPosition) > R.Range)
+                    if (Player.Distance(mob.ServerPosition) > R.Range)
                         Game.PrintChat("Jungle Steal Alert, Get closer!");
                     else
                         Game.PrintChat("Jungle Steal Alert! Wait...");
@@ -536,7 +536,7 @@ namespace DevKogMaw
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             string[] monsterNames = { "LizardElder", "AncientGolem", "Worm", "Dragon" };
-            var mobs = MinionManager.GetMinions(Player.ServerPosition, R.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+            var mobs = MinionManager.GetMinions(Player.ServerPosition, R.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.Health);
 
             var query = mobs.Where(x => 
                 monsterNames.Any(monster => x.BaseSkinName.Contains(monster)) &&
