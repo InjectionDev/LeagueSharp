@@ -511,7 +511,7 @@ namespace DevKogMaw
                 monsterNames.Any(monster => x.BaseSkinName.Contains(monster)) &&
                 x.GetHealthPerc() < 90 &&
                 x.IsValid &&
-                DevHelper.GetEnemyList().Any(enemy => DevHelper.GetDistanceSqr(x, enemy) < 2000));
+                DevHelper.GetEnemyList().Any(enemy => x.Distance(enemy.ServerPosition) < 2000));
 
             if (query.Count() > 0)
             {
