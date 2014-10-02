@@ -511,7 +511,7 @@ namespace DevKogMaw
                 monsterNames.Any(monster => x.BaseSkinName.Contains(monster)) &&
                 x.GetHealthPerc() < 90 &&
                 x.IsValid &&
-                DevHelper.GetEnemyList().Any(enemy => DevHelper.GetDistanceSqr(x, enemy) < 1000));
+                DevHelper.GetEnemyList().Any(enemy => DevHelper.GetDistanceSqr(x, enemy) < 2000));
 
             if (query.Count() > 0)
             {
@@ -541,7 +541,8 @@ namespace DevKogMaw
             var query = mobs.Where(x => 
                 monsterNames.Any(monster => x.BaseSkinName.Contains(monster)) &&
                 x.IsValidTarget(R.Range) && 
-                x.Health < Player.GetSpellDamage(x, SpellSlot.R) );
+                x.Health < Player.GetSpellDamage(x, SpellSlot.R) &&
+                DevHelper.GetEnemyList().Any(enemy => x.Distance(enemy.ServerPosition) < 1000));
 
             if (query.Count() > 0)
             {
