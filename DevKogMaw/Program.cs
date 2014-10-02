@@ -37,7 +37,6 @@ namespace DevKogMaw
         public static Spell W;
         public static Spell E;
         public static Spell R;
-        public static List<Obj_AI_Base> MinionList;
         public static SkinManager SkinManager;
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
@@ -129,7 +128,10 @@ namespace DevKogMaw
 
             if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
             {
-                W.Cast();
+                if (packetCast)
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.W)).Send();
+                else
+                    W.Cast();
                 Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
             }
 
@@ -180,7 +182,10 @@ namespace DevKogMaw
 
             if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
             {
-                W.Cast();
+                if (packetCast)
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.W)).Send();
+                else
+                    W.Cast();
                 Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
             }
 
