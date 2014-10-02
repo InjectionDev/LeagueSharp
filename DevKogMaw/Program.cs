@@ -517,7 +517,7 @@ namespace DevKogMaw
             {
                 var mob = query.FirstOrDefault();
 
-                if (dtLastJungleStealAlert.AddSeconds(10) < DateTime.Now)
+                if (dtLastJungleStealAlert.AddSeconds(5) < DateTime.Now)
                 {
                     if (mob.Distance(Player.ServerPosition) > R.Range)
                         Game.PrintChat("Jungle Steal Alert, Get closer!");
@@ -549,7 +549,7 @@ namespace DevKogMaw
                 var mob = query.FirstOrDefault();
                 R.Cast(mob.ServerPosition, packetCast);
 
-                if (dtLastJungleSteal.AddSeconds(10) < DateTime.Now)
+                if (dtLastJungleSteal.AddSeconds(5) < DateTime.Now)
                 {
                     Game.PrintChat("Jungle Steal!");
                     Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
