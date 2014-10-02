@@ -17,7 +17,6 @@ using System.Threading.Tasks;
  * + Interrupt Spell with W
  * + W Gapcloser
  * + Skin Hack
- * + Ignite on Combo
 
 */
 
@@ -169,7 +168,7 @@ namespace DevRyze
 
         static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
         {
-            Game.PrintChat(string.Format("OnPosibleToInterrupt -> {0} cast {1}", unit.SkinName, spell.SpellName));
+            //Game.PrintChat(string.Format("OnPosibleToInterrupt -> {0} cast {1}", unit.SkinName, spell.SpellName));
 
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var WInterruptSpell = Config.Item("WInterruptSpell").GetValue<bool>();
@@ -182,7 +181,7 @@ namespace DevRyze
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            Game.PrintChat(string.Format("OnEnemyGapcloser -> {0}", gapcloser.Sender.SkinName));
+            //Game.PrintChat(string.Format("OnEnemyGapcloser -> {0}", gapcloser.Sender.SkinName));
 
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var BarrierGapCloser = Config.Item("BarrierGapCloser").GetValue<bool>();
