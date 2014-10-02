@@ -34,9 +34,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Igniter">
-      <HintPath>E:\OneDrive\Projetos\LSharp\System\Igniter.dll</HintPath>
-    </Reference>
     <Reference Include="LeagueSharp">
       <HintPath>E:\OneDrive\Projetos\LSharp\System\LeagueSharp.dll</HintPath>
     </Reference>

@@ -54,29 +54,28 @@ namespace DevCassio
         {
             try
             {
-                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+                switch (Orbwalker.ActiveMode)
                 {
-                    BurstCombo();
-                    Combo();
-                }
-                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
-                {
-                    Harass();
-                }
-                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
-                {
-                    JungleClear();
-                    WaveClear();
-                }
-                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit)
-                {
-                    Freeze();
+                    case Orbwalking.OrbwalkingMode.Combo:
+                        BurstCombo();
+                        Combo();
+                        break;
+                    case Orbwalking.OrbwalkingMode.Mixed:
+                        Harass();
+                        break;
+                    case Orbwalking.OrbwalkingMode.LaneClear:
+                        JungleClear();
+                        WaveClear();
+                        break;
+                    case Orbwalking.OrbwalkingMode.LastHit:
+                        Freeze();
+                        break;
+                    default:
+                        break;
                 }
 
                 if (Config.Item("UseUltUnderTower").GetValue<bool>())
-                {
                     UseUltUnderTower();
-                }
 
                 SkinManager.Update();
             }
@@ -382,7 +381,7 @@ namespace DevCassio
             {
                 Player = ObjectManager.Player;
 
-                if (Player.ChampionName.ToLower() != ChampionName)
+                if (!Player.ChampionName.ToLower().Contains(ChampionName))
                     return;
 
                 InitializeSpells();

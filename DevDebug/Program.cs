@@ -59,7 +59,7 @@ namespace DevDebug
             {
                 System.Drawing.Color color = hero.IsEnemy ? System.Drawing.Color.Red : System.Drawing.Color.Blue;
 
-                LeagueSharp.Drawing.DrawText(hero.IsEnemy ? xEnemy : xAlly, hero.IsEnemy ? yEnemy : yAlly, color, string.Format("{0}", hero.BaseSkinName));
+                LeagueSharp.Drawing.DrawText(hero.IsEnemy ? xEnemy : xAlly, hero.IsEnemy ? yEnemy : yAlly, color, string.Format("{0} range{1}", hero.ChampionName, Orbwalking.GetRealAutoAttackRange(hero)));
                 
                 if (hero.IsEnemy)
                     yEnemy += 16;
