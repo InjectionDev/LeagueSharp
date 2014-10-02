@@ -42,6 +42,9 @@ namespace DevKogMaw
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
 
+        public static DateTime dtLastJungleStealAlert = DateTime.Now;
+        public static DateTime dtLastJungleSteal = DateTime.Now;
+
         public static bool mustDebug = false;
 
 
@@ -513,13 +516,18 @@ namespace DevKogMaw
             if (query.Count() > 0)
             {
                 var mob = query.FirstOrDefault();
-                if (mob.Distance(Player.ServerPosition) > R.Range)
-                    Game.PrintChat("Jungle Steal Alert, Get closer!");
-                else
-                    Game.PrintChat("Jungle Steal Alert! Wait...");
-                Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
-                Utility.DelayAction.Add(200, () => DevHelper.Ping(mob.ServerPosition));
-                Utility.DelayAction.Add(400, () => DevHelper.Ping(mob.ServerPosition));
+
+                if (dtLastJungleStealAlert.AddSeconds(10) < DateTime.Now)
+                {
+                    if (mob.Distance(Player.ServerPosition) > R.Range)
+                        Game.PrintChat("Jungle Steal Alert, Get closer!");
+                    else
+                        Game.PrintChat("Jungle Steal Alert! Wait...");
+                    Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
+                    Utility.DelayAction.Add(200, () => DevHelper.Ping(mob.ServerPosition));
+                    Utility.DelayAction.Add(400, () => DevHelper.Ping(mob.ServerPosition));
+                    dtLastJungleStealAlert = DateTime.Now;
+                }
             }
         }
 
@@ -533,18 +541,21 @@ namespace DevKogMaw
             var query = mobs.Where(x => 
                 monsterNames.Any(monster => x.BaseSkinName.Contains(monster)) &&
                 x.IsValidTarget(R.Range) && 
-                x.Health < Player.GetSpellDamage(x, SpellSlot.R) &&
-                DevHelper.GetEnemyList().Any(enemy => DevHelper.GetDistanceSqr(x, enemy) < 1000));
+                x.Health < Player.GetSpellDamage(x, SpellSlot.R) );
 
             if (query.Count() > 0)
             {
                 var mob = query.FirstOrDefault();
-
                 R.Cast(mob.ServerPosition, packetCast);
-                Game.PrintChat("Jungle Steal!");
-                Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
-                Utility.DelayAction.Add(200, () => DevHelper.Ping(mob.ServerPosition));
-                Utility.DelayAction.Add(400, () => DevHelper.Ping(mob.ServerPosition));
+
+                if (dtLastJungleSteal.AddSeconds(10) < DateTime.Now)
+                {
+                    Game.PrintChat("Jungle Steal!");
+                    Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
+                    Utility.DelayAction.Add(200, () => DevHelper.Ping(mob.ServerPosition));
+                    Utility.DelayAction.Add(400, () => DevHelper.Ping(mob.ServerPosition));
+                    dtLastJungleSteal = DateTime.Now;
+                }
             }
         }
 
