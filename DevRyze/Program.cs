@@ -64,7 +64,7 @@ namespace DevRyze
 
                 InitializeAttachEvents();
 
-                Game.PrintChat(string.Format("<font color='#F7A100'>DevKogMaw Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                Game.PrintChat(string.Format("<font color='#F7A100'>DevRyze Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
             }
             catch (Exception ex)
             {
@@ -244,7 +244,6 @@ namespace DevRyze
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
-            var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             // Cast R if will hit 1+ enemies
@@ -258,7 +257,7 @@ namespace DevRyze
 
             // Cast R for Killable Combo
             IEnumerable<SpellSlot> spellCombo = new[] { SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R };
-            if (useR && R.IsReady() && eTarget.IsImmovable && DevHelper.IsKillable(Player, eTarget, spellCombo))
+            if (useR && R.IsReady() && DevHelper.IsKillable(Player, eTarget, spellCombo))
             {
                 if (packetCast)
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
@@ -281,7 +280,6 @@ namespace DevRyze
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
-            var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
