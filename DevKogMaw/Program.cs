@@ -42,7 +42,7 @@ namespace DevKogMaw
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
 
-        public static bool mustDebug = true;
+        public static bool mustDebug = false;
 
 
         static void Main(string[] args)
