@@ -55,6 +55,9 @@ namespace DevKogMaw
 
         private static void OnTick(EventArgs args)
         {
+            if (Player.IsDead)
+                return;
+
             try
             {
                 switch (Orbwalker.ActiveMode)
