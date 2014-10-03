@@ -290,7 +290,8 @@ namespace DevKogMaw
 
             if (HasPassiveBuff() && eTarget.IsValidTarget() && Player.Distance(eTarget.ServerPosition) > 10)
             {
-                Player.SendMovePacket(eTarget.ServerPosition.To2D());
+                Player.IssueOrder(GameObjectOrder.MoveTo, eTarget.ServerPosition);
+                //Player.SendMovePacket(eTarget.ServerPosition.To2D());
             }
         }
 

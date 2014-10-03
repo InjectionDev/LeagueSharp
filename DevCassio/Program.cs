@@ -104,7 +104,6 @@ namespace DevCassio
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            var UltRange = Config.Item("UltRange").GetValue<Slider>().Value;
 
             double totalComboDamage = 0;
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
@@ -149,17 +148,16 @@ namespace DevCassio
             var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var UltRange = Config.Item("UltRange").GetValue<Slider>().Value;
             var RMinHit = Config.Item("RMinHit").GetValue<Slider>().Value;
             var RMinHitFacing = Config.Item("RMinHitFacing").GetValue<Slider>().Value;
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
                 var castPred = R.GetPrediction(eTarget, true, R.Range);
-                var enemies = DevHelper.GetEnemyList().Where(x => R.WillHit(eTarget, castPred.CastPosition));
-                var enemiesFacing = enemies.Where(x => x.IsFacing());
+                var enemiesHit = DevHelper.GetEnemyList().Where(x => R.WillHit(eTarget, castPred.CastPosition));
+                var enemiesFacing = enemiesHit.Where(x => x.IsFacing());
 
-                if (enemies.Count() >= RMinHit && enemiesFacing.Count() >= RMinHitFacing)
+                if (enemiesHit.Count() >= RMinHit && enemiesFacing.Count() >= RMinHitFacing)
                     R.Cast(castPred.CastPosition, packetCast);
             }
 
