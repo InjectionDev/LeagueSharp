@@ -157,7 +157,7 @@ namespace DevCassio
             {
                 var castPred = R.GetPrediction(eTarget, true, R.Range);
                 var enemies = DevHelper.GetEnemyList().Where(x => R.WillHit(eTarget, castPred.CastPosition));
-                var enemiesFacing = DevHelper.GetEnemyList().Where(x => R.WillHit(eTarget, castPred.CastPosition) && x.IsFacing());
+                var enemiesFacing = enemies.Where(x => x.IsFacing());
 
                 if (enemies.Count() >= RMinHit && enemiesFacing.Count() >= RMinHitFacing)
                     R.Cast(castPred.CastPosition, packetCast);
