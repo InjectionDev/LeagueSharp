@@ -87,7 +87,7 @@ namespace DevCommom
             return Vector2.DistanceSquared(source.ServerPosition.To2D(), target.ServerPosition.To2D());
         }
 
-        public static bool IsFacing(Obj_AI_Base enemy)
+        public static bool IsFacing(this Obj_AI_Base enemy)
         {
             if (enemy.Path.Count() > 0 && enemy.Path[0].Distance(ObjectManager.Player.ServerPosition) > ObjectManager.Player.Distance(enemy))
                 return false;
