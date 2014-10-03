@@ -106,9 +106,6 @@ namespace DevCassio
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var UltRange = Config.Item("UltRange").GetValue<Slider>().Value;
 
-            if (R.Range != UltRange)
-                R.Range = UltRange;
-
             double totalComboDamage = 0;
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
@@ -155,9 +152,6 @@ namespace DevCassio
             var UltRange = Config.Item("UltRange").GetValue<Slider>().Value;
             var RMinHit = Config.Item("RMinHit").GetValue<Slider>().Value;
             var RMinHitFacing = Config.Item("RMinHitFacing").GetValue<Slider>().Value;
-
-            if (R.Range != UltRange)
-                R.Range = UltRange;
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
@@ -434,6 +428,9 @@ namespace DevCassio
                 Utility.HpBarDamageIndicator.DamageToUnit += GetEDamage;
                 Utility.HpBarDamageIndicator.Enabled = true;
             }
+
+            Config.Item("UltRange").ValueChanged += (object sender, OnValueChangeEventArgs e) => { R.Range = e.GetNewValue<Slider>().Value; };
+            R.Range = Config.Item("UltRange").GetValue<Slider>().Value;
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
