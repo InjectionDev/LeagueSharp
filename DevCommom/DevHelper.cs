@@ -46,12 +46,12 @@ namespace DevCommom
 
         public static float GetHealthPerc(this Obj_AI_Base unit)
         {
-            return unit.Health * 100 / unit.MaxHealth;
+            return (unit.Health / unit.MaxHealth) * 100;
         }
 
         public static float GetManaPerc(this Obj_AI_Base unit)
         {
-            return unit.Mana * 100 / unit.MaxMana;
+            return (unit.Mana / unit.MaxMana) * 100;
         }
 
         public static void SendMovePacket(this Obj_AI_Base v, Vector2 point)
@@ -66,12 +66,12 @@ namespace DevCommom
             if (unit.IsEnemy)
             {
                 query = ObjectManager.Get<Obj_AI_Turret>()
-                    .Where(x => x.IsAlly && x.IsValid && !x.IsDead && unit.ServerPosition.Distance(x.ServerPosition) < x.AttackRange);
+                    .Where(x => x.IsAlly && x.IsValid && !x.IsDead && unit.ServerPosition.Distance(x.ServerPosition) < 950);
             }
             else
             {
                 query = ObjectManager.Get<Obj_AI_Turret>()
-                    .Where(x => x.IsEnemy && x.IsValid && !x.IsDead && unit.ServerPosition.Distance(x.ServerPosition) < x.AttackRange);
+                    .Where(x => x.IsEnemy && x.IsValid && !x.IsDead && unit.ServerPosition.Distance(x.ServerPosition) < 950);
             }
 
             return (query.Count() > 0);

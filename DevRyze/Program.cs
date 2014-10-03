@@ -151,7 +151,7 @@ namespace DevRyze
                 var useW = Config.Item("UseWCombo").GetValue<bool>();
                 var useE = Config.Item("UseQCombo").GetValue<bool>();
 
-                if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady())))
+                if ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady()))
                     args.Process = false;
             }
             else
@@ -161,7 +161,7 @@ namespace DevRyze
                     var useW = Config.Item("UseWHarass").GetValue<bool>();
                     var useE = Config.Item("UseEHarass").GetValue<bool>();
 
-                    if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady())))
+                    if ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady()))
                         args.Process = false;
                 }
         }
