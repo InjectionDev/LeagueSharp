@@ -57,8 +57,8 @@ namespace DevCassio
                 switch (Orbwalker.ActiveMode)
                 {
                     case Orbwalking.OrbwalkingMode.Combo:
-                        BurstCombo();
                         Combo();
+                        BurstCombo();
                         break;
                     case Orbwalking.OrbwalkingMode.Mixed:
                         Harass();
@@ -104,13 +104,15 @@ namespace DevCassio
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var UltRange = Config.Item("UltRange").GetValue<Slider>().Value;
+
+            if (R.Range != UltRange)
+                R.Range = UltRange;
 
             double totalComboDamage = 0;
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E) * 3;
             totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
@@ -149,16 +151,27 @@ namespace DevCassio
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            var UltRange = Config.Item("UltRange").GetValue<Slider>().Value;
             var RMinHit = Config.Item("RMinHit").GetValue<Slider>().Value;
+            var RMinHitFacing = Config.Item("RMinHitFacing").GetValue<Slider>().Value;
+
+            if (R.Range != UltRange)
+                R.Range = UltRange;
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
-                R.CastIfWillHit(eTarget, RMinHit, packetCast);
+                var castPred = R.GetPrediction(eTarget, true, R.Range);
+                var enemies = DevHelper.GetEnemyList().Where(x => R.WillHit(eTarget, castPred.CastPosition));
+                var enemiesFacing = DevHelper.GetEnemyList().Where(x => R.WillHit(eTarget, castPred.CastPosition) && x.IsFacing());
+
+                if (enemies.Count() >= RMinHit && enemiesFacing.Count() >= RMinHitFacing)
+                    R.Cast(castPred.CastPosition, packetCast);
             }
 
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
-                if (eTarget.HasBuffOfType(BuffType.Poison) || Damage.GetSpellDamage(Player, eTarget, SpellSlot.E) > eTarget.Health)
+                if (eTarget.HasBuffOfType(BuffType.Poison) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
                 {
                     E.CastOnUnit(eTarget, packetCast);
                 }
@@ -461,7 +474,7 @@ namespace DevCassio
             E = new Spell(SpellSlot.E, 700);
             E.SetTargetted(0.1f, float.MaxValue);
 
-            R = new Spell(SpellSlot.R, 825);
+            R = new Spell(SpellSlot.R, 850);
             R.SetSkillshot(0.6f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
 
             IgniteManager = new IgniteManager();
@@ -594,7 +607,6 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseWCombo", "Use W").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseECombo", "Use E").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
-            Config.SubMenu("Combo").AddItem(new MenuItem("RMinHit", "Min Enemies to Ult").SetValue(new Slider(2, 1, 5)));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
@@ -629,6 +641,10 @@ namespace DevCassio
             Config.SubMenu("Ultimate").AddItem(new MenuItem("AssistedUltKey", "Assisted Ult Key").SetValue((new KeyBind("R".ToCharArray()[0], KeyBindType.Press))));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("BlockUlt", "Block Ult will Not Hit").SetValue(true));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseUltUnderTower", "Ult Enemy Under Tower").SetValue(true));
+            
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("UltRange", "Ultimate Range").SetValue(new Slider(750, 0, 850)));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("RMinHit", "Min Enemies Hit").SetValue(new Slider(2, 1, 5)));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("RMinHitFacing", "Min Enemies Facing").SetValue(new Slider(1, 1, 5)));
 
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
             Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q Range").SetValue(new Circle(true, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
