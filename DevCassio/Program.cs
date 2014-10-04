@@ -436,10 +436,13 @@ namespace DevCassio
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            var useAA = Config.Item("UseAACombo").GetValue<bool>();
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            {
+                var useAA = Config.Item("UseAACombo").GetValue<bool>();
 
-            if (!useAA)
-                args.Process = false;
+                if (!useAA)
+                    args.Process = false;
+            }
 
             //if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             //{
