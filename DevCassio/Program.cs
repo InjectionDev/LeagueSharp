@@ -436,23 +436,31 @@ namespace DevCassio
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-            {
-                var useQ = Config.Item("UseQCombo").GetValue<bool>();
-                var useW = Config.Item("UseWCombo").GetValue<bool>();
+            var useAA = Config.Item("UseAACombo").GetValue<bool>();
 
-                if ((useQ && Q.IsReady()) || (useW && W.IsReady()))
-                    args.Process = false;
-            }
-            else
-                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
-                {
-                    var useQ = Config.Item("UseQHarass").GetValue<bool>();
-                    var useW = Config.Item("UseWHarass").GetValue<bool>();
+            if (!useAA)
+                args.Process = false;
 
-                    if ((useQ && Q.IsReady()) || (useW && W.IsReady()))
-                        args.Process = false;
-                }
+            //if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            //{
+            //    var useQ = Config.Item("UseQCombo").GetValue<bool>();
+            //    var useW = Config.Item("UseWCombo").GetValue<bool>();
+            //    var useAA = Config.Item("UseAACombo").GetValue<bool>();
+
+            //    if (!useAA)
+            //        args.Process = false;
+            //    else if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady())))
+            //            args.Process = false;
+            //}
+            //else
+            //    if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+            //    {
+            //        var useQ = Config.Item("UseQHarass").GetValue<bool>();
+            //        var useW = Config.Item("UseWHarass").GetValue<bool>();
+
+            //        if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady())))
+            //            args.Process = false;
+            //    }
         }
 
         private static void InitializeSpells()
@@ -603,12 +611,13 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseECombo", "Use E").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseAACombo", "Use AA").SetValue(true));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
-            Config.SubMenu("Harass").AddItem(new MenuItem("HarassMinMana", "Harras Min Mana").SetValue(new Slider(40, 0, 100)));
+            Config.SubMenu("Harass").AddItem(new MenuItem("HarassMinMana", "Harras Min Mana").SetValue(new Slider(10, 0, 100)));
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
             Config.SubMenu("Freeze").AddItem(new MenuItem("UseEFreeze", "Use E").SetValue(true));
