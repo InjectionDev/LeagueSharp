@@ -151,7 +151,7 @@ namespace DevRyze
                 var useW = Config.Item("UseWCombo").GetValue<bool>();
                 var useE = Config.Item("UseQCombo").GetValue<bool>();
 
-                if ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady()))
+                if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady())))
                     args.Process = false;
             }
             else
@@ -161,7 +161,7 @@ namespace DevRyze
                     var useW = Config.Item("UseWHarass").GetValue<bool>();
                     var useE = Config.Item("UseEHarass").GetValue<bool>();
 
-                    if ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady()))
+                    if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady())))
                         args.Process = false;
                 }
         }
@@ -456,7 +456,7 @@ namespace DevRyze
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(50, 1, 100)));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(40, 1, 100)));
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
