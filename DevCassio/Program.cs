@@ -155,7 +155,7 @@ namespace DevCassio
             {
                 var castPred = R.GetPrediction(eTarget, true, R.Range);
                 var enemiesHit = DevHelper.GetEnemyList().Where(x => R.WillHit(eTarget, castPred.CastPosition));
-                var enemiesFacing = enemiesHit.Where(x => x.IsFacing());
+                var enemiesFacing = enemiesHit.Where(x => x.IsFacing()).ToList();
 
                 if (enemiesHit.Count() >= RMinHit && enemiesFacing.Count() >= RMinHitFacing)
                     R.Cast(castPred.CastPosition, packetCast);
@@ -442,6 +442,8 @@ namespace DevCassio
 
                 if (!useAA)
                     args.Process = false;
+
+                
             }
 
             //if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
