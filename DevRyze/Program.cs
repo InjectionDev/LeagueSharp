@@ -287,16 +287,19 @@ namespace DevRyze
             if (Player.Distance(eTarget) >= 575 && !DevHelper.IsFacing(eTarget) && W.IsReady() && useW)
             {
                 W.CastOnUnit(eTarget, packetCast);
+                return;
             }
 
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
             {
                 W.CastOnUnit(eTarget, packetCast);
+                return;
             }
 
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
                 E.CastOnUnit(eTarget, packetCast);
+                return;
             }
 
             if (IgniteManager.CanKill(eTarget))

@@ -89,7 +89,7 @@ namespace DevCommom
 
         public static bool IsFacing(this Obj_AI_Base enemy)
         {
-            if (enemy.Path.Count() > 0 && enemy.Path[0].Distance(ObjectManager.Player.ServerPosition) > ObjectManager.Player.Distance(enemy))
+            if (enemy.IsValid && enemy.Path.Count() > 0 && enemy.Path[0].Distance(ObjectManager.Player.ServerPosition) > ObjectManager.Player.Distance(enemy))
                 return false;
             else 
                 return true;

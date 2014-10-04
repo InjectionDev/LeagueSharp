@@ -41,8 +41,11 @@ namespace DevCassio
         public static List<Obj_AI_Base> MinionList;
         public static SkinManager SkinManager;
         public static IgniteManager IgniteManager;
+        public static LevelUpManager LevelUpManager;
 
-        public static bool mustDebug = false;
+        private static DateTime dtBurstComboStart = DateTime.MinValue;
+
+        public static bool mustDebug = true;
 
 
         static void Main(string[] args)
@@ -77,7 +80,11 @@ namespace DevCassio
                 if (Config.Item("UseUltUnderTower").GetValue<bool>())
                     UseUltUnderTower();
 
+                //if (Config.Item("AutoLevelUP").GetValue<bool>())
+                //    LevelUpManager.Update();
+
                 SkinManager.Update();
+
             }
             catch (Exception ex)
             {
@@ -87,12 +94,9 @@ namespace DevCassio
             }
         }
 
-
+        
         public static void BurstCombo()
         {
-            if (mustDebug)
-                Game.PrintChat("BurstCombo Start");
-
             var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
 
             if (eTarget == null)
@@ -108,7 +112,8 @@ namespace DevCassio
             double totalComboDamage = 0;
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E) * 3;
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
@@ -125,17 +130,20 @@ namespace DevCassio
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
-                    R.Cast(eTarget.ServerPosition, packetCast);
-                    IgniteManager.Cast(eTarget);
+                    if (totalComboDamage / 2 < eTarget.Health) // Anti Overkill
+                        R.Cast(eTarget.ServerPosition, packetCast);
+                    dtBurstComboStart = DateTime.Now;
                 }
+            }
+
+            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now)
+            {
+                IgniteManager.Cast(eTarget);
             }
         }
 
         public static void Combo()
         {
-            if (mustDebug)
-                Game.PrintChat("Combo Start");
-
             var eTarget = SimpleTs.GetTarget(W.Range, SimpleTs.DamageType.Magical);
 
             if (eTarget == null)
@@ -153,9 +161,14 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
-                var castPred = R.GetPrediction(eTarget, true, R.Range);
-                var enemiesHit = DevHelper.GetEnemyList().Where(x => R.WillHit(eTarget, castPred.CastPosition));
+                var castPred = R.GetPrediction(eTarget, true, R.Range);       
+                var enemiesHit = DevHelper.GetEnemyList().Where(x => R.WillHit(x, castPred.CastPosition)).ToList();
                 var enemiesFacing = enemiesHit.Where(x => x.IsFacing()).ToList();
+
+                if (mustDebug)
+                {
+                    Game.PrintChat("Hit:{0} Facing:{1}", enemiesHit.Count(), enemiesFacing.Count());
+                }
 
                 if (enemiesHit.Count() >= RMinHit && enemiesFacing.Count() >= RMinHitFacing)
                     R.Cast(castPred.CastPosition, packetCast);
@@ -191,9 +204,6 @@ namespace DevCassio
 
         public static void Harass()
         {
-            if (mustDebug)
-                Game.PrintChat("Harass Start");
-
             var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
 
             if (eTarget == null)
@@ -235,9 +245,6 @@ namespace DevCassio
 
         public static void WaveClear()
         {
-            if (mustDebug)
-                Game.PrintChat("WaveClear Start");
-
             var useQ = Config.Item("UseQLaneClear").GetValue<bool>();
             var useW = Config.Item("UseWLaneClear").GetValue<bool>();
             var useE = Config.Item("UseELaneClear").GetValue<bool>();
@@ -296,9 +303,6 @@ namespace DevCassio
 
         public static void Freeze()
         {
-            if (mustDebug)
-                Game.PrintChat("Freeze Start");
-
             MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
             if (MinionList.Count == 0)
@@ -419,7 +423,8 @@ namespace DevCassio
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
-
+            
+            // Damage Bar
             Config.Item("EDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("EDamage").GetValue<bool>())
             {
@@ -427,45 +432,28 @@ namespace DevCassio
                 Utility.HpBarDamageIndicator.Enabled = true;
             }
 
+            // Ult Range
             Config.Item("UltRange").ValueChanged += (object sender, OnValueChangeEventArgs e) => { R.Range = e.GetNewValue<Slider>().Value; };
             R.Range = Config.Item("UltRange").GetValue<Slider>().Value;
+
+            // LevelUpManager
+            //var priority = new int[] { 1, 3, 3, 2, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+            //LevelUpManager = new LevelUpManager(priority);
+            //if (Config.Item("AutoLevelUP").GetValue<bool>())
+            //    LevelUpManager.Update();
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
         }
+
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
                 var useAA = Config.Item("UseAACombo").GetValue<bool>();
-
-                if (!useAA)
-                    args.Process = false;
-
-                
+                args.Process = useAA;
             }
-
-            //if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-            //{
-            //    var useQ = Config.Item("UseQCombo").GetValue<bool>();
-            //    var useW = Config.Item("UseWCombo").GetValue<bool>();
-            //    var useAA = Config.Item("UseAACombo").GetValue<bool>();
-
-            //    if (!useAA)
-            //        args.Process = false;
-            //    else if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady())))
-            //            args.Process = false;
-            //}
-            //else
-            //    if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
-            //    {
-            //        var useQ = Config.Item("UseQHarass").GetValue<bool>();
-            //        var useW = Config.Item("UseWHarass").GetValue<bool>();
-
-            //        if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady())))
-            //            args.Process = false;
-            //    }
         }
 
         private static void InitializeSpells()
@@ -486,6 +474,7 @@ namespace DevCassio
             R.SetSkillshot(0.6f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
 
             IgniteManager = new IgniteManager();
+
 
             SpellList.Add(Q);
             SpellList.Add(W);
@@ -644,6 +633,7 @@ namespace DevCassio
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "No-Face Exploit (PacketCast)").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("AutoLevelUP", "Auto Level UP").SetValue(true));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));

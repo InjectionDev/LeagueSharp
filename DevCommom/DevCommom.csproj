@@ -60,6 +60,7 @@
     <Compile Include="IgniteManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="LevelUpManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SkinManager.cs">
       <SubType>Code</SubType>
