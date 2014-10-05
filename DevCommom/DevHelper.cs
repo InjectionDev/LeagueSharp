@@ -95,14 +95,14 @@ namespace DevCommom
                 return true;
         }
 
-        public static bool IsKillable(Obj_AI_Hero source, Obj_AI_Base target, IEnumerable<SpellSlot> spellCombo)
+        public static bool IsKillable(this Obj_AI_Hero source, Obj_AI_Base target, IEnumerable<SpellSlot> spellCombo)
         {
-            return Damage.GetComboDamage(source, target, spellCombo) > target.Health;
+            return Damage.GetComboDamage(source, target, spellCombo) * 0.9 > target.Health;
         }
 
-        public static int CountEnemyInTargetRange(Obj_AI_Hero target, float range)
+        public static int CountEnemyInTargetRange(Obj_AI_Base target, float range)
         {
-            return GetEnemyList().Where(x => target.Distance(x) <= range).Count();
+            return GetEnemyList().Where(x => target.ServerPosition.Distance(x.ServerPosition) <= range).Count();
         }
     }
 }

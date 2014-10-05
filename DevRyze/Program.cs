@@ -181,10 +181,9 @@ namespace DevRyze
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var BarrierGapCloser = Config.Item("BarrierGapCloser").GetValue<bool>();
-            var BarrierGapCloserMinHealth = Config.Item("BarrierGapCloserMinHealth").GetValue<Slider>().Value;
             var WGapCloser = Config.Item("WGapCloser").GetValue<bool>();
             
-            if (BarrierGapCloser && Player.GetHealthPerc() < BarrierGapCloserMinHealth && gapcloser.Sender.IsValidTarget(Player.AttackRange))
+            if (BarrierGapCloser && gapcloser.Sender.IsValidTarget(Player.AttackRange))
             {
                 if (BarrierManager.Cast())
                     Game.PrintChat(string.Format("OnEnemyGapcloser -> BarrierGapCloser on {0} !", gapcloser.Sender.SkinName));
@@ -244,7 +243,7 @@ namespace DevRyze
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             // Cast R if will hit 1+ enemies
-            if (useR && eTarget.IsValidTarget(W.Range) && DevHelper.CountEnemyInTargetRange(eTarget, 300) > 1)
+            if (useR && R.IsReady() && DevHelper.CountEnemyInTargetRange(eTarget, 300) > 1)
             {
                 if (packetCast)
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
@@ -253,8 +252,18 @@ namespace DevRyze
             }
 
             // Cast R for Killable Combo
-            IEnumerable<SpellSlot> spellCombo = new[] { SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R };
-            if (useR && R.IsReady() && DevHelper.IsKillable(Player, eTarget, spellCombo))
+            IEnumerable<SpellSlot> spellCombo = new[] { SpellSlot.Q, SpellSlot.R, SpellSlot.E, SpellSlot.Q, SpellSlot.W, SpellSlot.Q };
+            if (useR && R.IsReady() && Player.IsKillable(eTarget, spellCombo))
+            {
+                if (packetCast)
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
+                else
+                    R.Cast();
+            }
+
+            // Cast on W
+            IEnumerable<SpellSlot> spellComboHard = new[] { SpellSlot.Q, SpellSlot.R, SpellSlot.E, SpellSlot.Q, SpellSlot.W, SpellSlot.Q, SpellSlot.Q };
+            if (useR && R.IsReady() && eTarget.HasBuff("Rune Prision") && Player.IsKillable(eTarget, spellComboHard))
             {
                 if (packetCast)
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
@@ -329,7 +338,7 @@ namespace DevRyze
                 Q.CastOnUnit(eTarget, packetCast);
             }
 
-            if (Player.Distance(eTarget) >= 575 && !DevHelper.IsFacing(eTarget) && W.IsReady() && useW)
+            if (Player.Distance(eTarget) > 500 && eTarget.IsValidTarget(W.Range) && !DevHelper.IsFacing(eTarget) && W.IsReady() && useW)
             {
                 W.CastOnUnit(eTarget, packetCast);
             }
@@ -367,12 +376,13 @@ namespace DevRyze
                     var mob = queryJungle.First();
                     Q.CastOnUnit(mob, packetCast);
                 }
-
-                var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.Q));
+                
+                var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9);
                 if (queryMinion.Count() > 0)
                 {
                     var mob = queryMinion.First();
                     Q.CastOnUnit(mob, packetCast);
+                    MinionList.Remove(mob);
                 }
             }
 
@@ -385,11 +395,12 @@ namespace DevRyze
                     W.CastOnUnit(mob, packetCast);
                 }
 
-                var query = MinionList.Where(x => x.IsValidTarget(W.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.W));
+                var query = MinionList.Where(x => x.IsValidTarget(W.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.W) * 0.9);
                 if (query.Count() > 0)
                 {
                     var mob = query.First();
                     W.CastOnUnit(mob, packetCast);
+                    MinionList.Remove(mob);
                 }
             }
 
@@ -402,11 +413,12 @@ namespace DevRyze
                     E.CastOnUnit(mob, packetCast);
                 }
 
-                var query = MinionList.Where(x => x.IsValidTarget(E.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.E));
+                var query = MinionList.Where(x => x.IsValidTarget(E.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.E) * 0.9);
                 if (query.Count() > 0)
                 {
                     var mob = query.First();
                     E.CastOnUnit(mob, packetCast);
+                    MinionList.Remove(mob);
                 }
             }
 
@@ -466,7 +478,6 @@ namespace DevRyze
 
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloser", "Barrier onGapCloser").SetValue(true));
-            Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloserMinHealth", "Barrier MinHealth").SetValue(new Slider(40, 0, 100)));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("WGapCloser", "W onGapCloser").SetValue(true));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("WInterruptSpell", "W Interrupt Spell").SetValue(true));
 
