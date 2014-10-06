@@ -22,6 +22,7 @@ using SharpDX;
  * + Auto Ult Enemy Under Tower
  * + Auto Ult if will hit X
  * + Jungle Clear
+ * + R to Save Yourself, when MinHealth and Enemy IsFacing
 */
 
 namespace DevCassio
