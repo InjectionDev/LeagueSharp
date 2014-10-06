@@ -130,7 +130,7 @@ namespace DevCassio
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
-                    if (totalComboDamage / 2 < eTarget.Health) // Anti Overkill
+                    if (totalComboDamage * 0.4 < eTarget.Health) // Anti Overkill
                         R.Cast(eTarget.ServerPosition, packetCast);
                     dtBurstComboStart = DateTime.Now;
                 }
@@ -158,6 +158,18 @@ namespace DevCassio
 
             var RMinHit = Config.Item("RMinHit").GetValue<Slider>().Value;
             var RMinHitFacing = Config.Item("RMinHitFacing").GetValue<Slider>().Value;
+
+            var UseRSaveYourself = Config.Item("UseRSaveYourself").GetValue<bool>();
+            var UseRSaveYourselfMinHealth = Config.Item("UseRSaveYourselfMinHealth").GetValue<Slider>().Value;
+
+            if (eTarget.IsValidTarget(R.Range) && R.IsReady() && UseRSaveYourself)
+            {
+                if (Player.GetHealthPerc() < UseRSaveYourselfMinHealth && eTarget.IsFacing())
+                {
+                    R.Cast(eTarget.ServerPosition, packetCast);
+                    Game.PrintChat("Save Yourself!");
+                }
+            }
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
@@ -634,6 +646,8 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseAACombo", "Use AA").SetValue(true));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourself", "Use R Safe Yourself").SetValue(true));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourselfMinHealth", "Use R Safe Min Health").SetValue(new Slider(30, 0, 100)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
@@ -668,7 +682,6 @@ namespace DevCassio
             Config.SubMenu("Ultimate").AddItem(new MenuItem("AssistedUltKey", "Assisted Ult Key").SetValue((new KeyBind("R".ToCharArray()[0], KeyBindType.Press))));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("BlockUlt", "Block Ult will Not Hit").SetValue(true));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseUltUnderTower", "Ult Enemy Under Tower").SetValue(true));
-            
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UltRange", "Ultimate Range").SetValue(new Slider(700, 0, 850)));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("RMinHit", "Min Enemies Hit").SetValue(new Slider(2, 1, 5)));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("RMinHitFacing", "Min Enemies Facing").SetValue(new Slider(1, 1, 5)));
