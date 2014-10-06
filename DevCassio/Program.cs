@@ -114,6 +114,7 @@ namespace DevCassio
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
@@ -126,7 +127,7 @@ namespace DevCassio
                 Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), Player.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
-            if (Q.IsReady(2000) && R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
+            if (Q.IsReady(2000) && R.IsReady() && useR && eTarget.IsValidTarget(R.Range) && eTarget.IsFacing())
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
