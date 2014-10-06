@@ -648,8 +648,8 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseAACombo", "Use AA").SetValue(true));
-            Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourself", "Use R Safe Yourself").SetValue(true));
-            Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourselfMinHealth", "Use R Safe Min Health").SetValue(new Slider(30, 0, 100)));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourself", "Use R Save Yourself").SetValue(true));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourselfMinHealth", "Use R Save MinHealth").SetValue(new Slider(30, 0, 100)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
