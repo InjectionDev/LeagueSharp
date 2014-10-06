@@ -182,7 +182,8 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
-                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                if (Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                    return;
             }
 
             if (Config.Item("UseWCombo").GetValue<bool>())
@@ -226,7 +227,8 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ && Player.GetManaPerc() >= HarassMinMana)
             {
-                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                if (Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                    return;
             }
 
             if (Config.Item("UseWHarass").GetValue<bool>())
