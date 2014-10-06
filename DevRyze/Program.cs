@@ -125,6 +125,7 @@ namespace DevRyze
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
+            Orbwalking.AfterAttack += Orbwalking_AfterAttack;
 
             Config.Item("ComboDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("ComboDamage").GetValue<bool>())
@@ -135,6 +136,41 @@ namespace DevRyze
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
+        }
+
+        static void Orbwalking_AfterAttack(Obj_AI_Base unit, Obj_AI_Base target)
+        {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit ||
+                Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
+            {
+                if (target.IsMinion)
+                {
+                    var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
+                        .Where(x => !x.IsDead && target.NetworkId != x.NetworkId && HealthPrediction.GetHealthPrediction(x, Convert.ToInt32(Player.AttackDelay * 1.1)) <= 0).ToList();
+
+                    if (MinionList.Count() > 0)
+                    { 
+                        var mob = MinionList.First();
+                        if (Q.IsReady() && mob.IsValidTarget(Q.Range))
+                        {
+                            Q.CastOnUnit(mob, packetCast);
+                            MinionList.Remove(mob);
+                        }
+                    }
+
+                    if (MinionList.Count() > 0)
+                    {
+                        var mob = MinionList.First();
+                        if (E.IsReady() && mob.IsValidTarget(E.Range))
+                        {
+                            E.CastOnUnit(mob, packetCast);
+                            MinionList.Remove(mob);
+                        }
+                    } 
+                }
+            }
         }
 
         private static float GetComboDamage(Obj_AI_Hero enemy)
@@ -155,15 +191,15 @@ namespace DevRyze
                     args.Process = false;
             }
             else
-                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
-                {
-                    var useQ = Config.Item("UseQHarass").GetValue<bool>();
-                    var useW = Config.Item("UseWHarass").GetValue<bool>();
-                    var useE = Config.Item("UseEHarass").GetValue<bool>();
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+            {
+                var useQ = Config.Item("UseQHarass").GetValue<bool>();
+                var useW = Config.Item("UseWHarass").GetValue<bool>();
+                var useE = Config.Item("UseEHarass").GetValue<bool>();
 
-                    if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady())))
-                        args.Process = false;
-                }
+                if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady())))
+                    args.Process = false;
+            }
         }
 
         static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
@@ -490,7 +526,7 @@ namespace DevRyze
             Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(40, 1, 100)));
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
-            Config.SubMenu("Freeze").AddItem(new MenuItem("UseQFreeze", "Use Q LastHit").SetValue(true));
+            Config.SubMenu("Freeze").AddItem(new MenuItem("UseQFreeze", "Use Q LastHit").SetValue(false));
             Config.SubMenu("Freeze").AddItem(new MenuItem("ManaFreeze", "Min Mana Q").SetValue(new Slider(40, 1, 100)));
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
