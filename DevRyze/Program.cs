@@ -149,7 +149,7 @@ namespace DevRyze
                 if (target.IsMinion)
                 {
                     var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
-                        .Where(x => !x.IsDead && target.NetworkId != x.NetworkId && HealthPrediction.LaneClearHealthPrediction(x, (int)(Player.AttackDelay * 1000 * 1.1)) <= 0).ToList();
+                        .Where(x => !x.IsDead && target.ServerPosition.Distance(x.ServerPosition) > 5 && HealthPrediction.LaneClearHealthPrediction(x, (int)(Player.AttackDelay * 1000 * 1.1)) <= 0).ToList();
 
                     if (MinionList.Count() > 0)
                     { 
