@@ -166,9 +166,7 @@ namespace DevCassio
                 var enemiesFacing = enemiesHit.Where(x => x.IsFacing()).ToList();
 
                 if (mustDebug)
-                {
                     Game.PrintChat("Hit:{0} Facing:{1}", enemiesHit.Count(), enemiesFacing.Count());
-                }
 
                 if (enemiesHit.Count() >= RMinHit && enemiesFacing.Count() >= RMinHitFacing)
                     R.Cast(castPred.CastPosition, packetCast);
@@ -190,7 +188,7 @@ namespace DevCassio
             if (Config.Item("UseWCombo").GetValue<bool>())
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range)));
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && !Q.IsReady() && useW)
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -234,7 +232,7 @@ namespace DevCassio
             if (Config.Item("UseWHarass").GetValue<bool>())
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range)));
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && Player.GetManaPerc() >= HarassMinMana)
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && Player.GetManaPerc() >= HarassMinMana && !Q.IsReady())
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }

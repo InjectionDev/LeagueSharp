@@ -138,6 +138,40 @@ namespace DevRyze
                 Game.PrintChat("InitializeAttachEvents Finish");
         }
 
+        private static void CheckAALastHit()
+        {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (Environment.TickCount < Orbwalking.LastAATick + (Player.AttackDelay * 1000) + (Game.Ping / 2))
+            {
+                int timeNextAA = (int)(Orbwalking.LastAATick + (Player.AttackDelay * 1000) + (Game.Ping / 2)) - Environment.TickCount;
+
+                var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
+                    .Where(x => !x.IsDead && HealthPrediction.LaneClearHealthPrediction(x, (int)(timeNextAA * 1.1)) <= 0).ToList();
+
+                if (MinionList.Count() > 0)
+                {
+                    var mob = MinionList.First();
+                    if (Q.IsReady() && mob.IsValidTarget(Q.Range))
+                    {
+                        Q.CastOnUnit(mob, packetCast);
+                        MinionList.Remove(mob);
+                    }
+                }
+
+                if (MinionList.Count() > 0)
+                {
+                    var mob = MinionList.First();
+                    if (E.IsReady() && mob.IsValidTarget(E.Range))
+                    {
+                        E.CastOnUnit(mob, packetCast);
+                        MinionList.Remove(mob);
+                    }
+                }
+
+            }
+        }
+
         static void Orbwalking_AfterAttack(Obj_AI_Base unit, Obj_AI_Base target)
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
@@ -145,7 +179,6 @@ namespace DevRyze
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit ||
                 Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
             {
-                
                 if (target.IsMinion)
                 {
                     var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
@@ -169,7 +202,7 @@ namespace DevRyze
                             E.CastOnUnit(mob, packetCast);
                             MinionList.Remove(mob);
                         }
-                    } 
+                    }
                 }
             }
         }
