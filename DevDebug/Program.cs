@@ -34,6 +34,8 @@ namespace DevDebug
         {
             Game.OnGameUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
+
+            
         }
 
         static void Drawing_OnDraw(EventArgs args)
