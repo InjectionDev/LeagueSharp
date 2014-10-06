@@ -171,7 +171,7 @@ namespace DevCassio
                 if (enemiesHit.Count() >= RMinHit && enemiesFacing.Count() >= RMinHitFacing)
                     R.Cast(castPred.CastPosition, packetCast);
             }
-
+                
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
                 if (eTarget.HasBuffOfType(BuffType.Poison) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
@@ -278,7 +278,7 @@ namespace DevCassio
 
             }
 
-            if (W.IsReady() && useW)
+            if (W.IsReady() && useW && !Q.IsReady())
             {
                 var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All).ToList();
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
