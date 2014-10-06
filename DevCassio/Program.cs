@@ -113,7 +113,8 @@ namespace DevCassio
             double totalComboDamage = 0;
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.W);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
