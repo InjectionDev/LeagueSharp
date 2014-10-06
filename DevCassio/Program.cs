@@ -253,30 +253,55 @@ namespace DevCassio
 
             if (Q.IsReady() && useQ)
             {
-                var allMinionsQ = MinionManager.GetMinions(Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All);
+                var allMinionsQ = MinionManager.GetMinions(Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All).ToList();
                 var allMinionsQNonPoisoned = allMinionsQ.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsQNonPoisoned, Q.Width * 0.8f);
-                var farmAll = Q.GetCircularFarmLocation(allMinionsQ, Q.Width * 0.8f);
+                if (allMinionsQNonPoisoned.Count > 0)
+                {
+                    var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsQNonPoisoned, Q.Width * 0.8f);
+                    if (farmNonPoisoned.MinionsHit >= 3)
+                    {
+                        Q.Cast(farmNonPoisoned.Position, packetCast);
+                        return;
+                    }
+                }
 
-                if (farmNonPoisoned.MinionsHit >= 3)
-                    Q.Cast(farmNonPoisoned.Position, packetCast);
-                else if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
-                    Q.Cast(farmAll.Position, packetCast);
+                if (allMinionsQ.Count > 0)
+                {
+                    var farmAll = Q.GetCircularFarmLocation(allMinionsQ, Q.Width * 0.8f);
+                    if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
+                    {
+                        Q.Cast(farmAll.Position, packetCast);
+                        return;
+                    }
+                }
+
             }
 
             if (W.IsReady() && useW)
             {
-                var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All);
+                var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All).ToList();
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                var farmNonPoisoned = W.GetCircularFarmLocation(allMinionsWNonPoisoned, W.Width);
-                var farmAll = W.GetCircularFarmLocation(allMinionsW, W.Width);
+                if (allMinionsWNonPoisoned.Count > 0)
+                {
+                    var farmNonPoisoned = W.GetCircularFarmLocation(allMinionsWNonPoisoned, W.Width * 0.8f);
+                    if (farmNonPoisoned.MinionsHit >= 3)
+                    {
+                        W.Cast(farmNonPoisoned.Position, packetCast);
+                        return;
+                    }
+                }
 
-                if (farmNonPoisoned.MinionsHit >= 3)
-                    W.Cast(farmNonPoisoned.Position, packetCast);
-                else if (farmAll.MinionsHit >= 2 || allMinionsW.Count == 1)
-                    W.Cast(farmAll.Position, packetCast);
+                if (allMinionsW.Count > 0)
+                {
+                    var farmAll = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
+                    if (farmAll.MinionsHit >= 2 || allMinionsW.Count == 1)
+                    {
+                        W.Cast(farmAll.Position, packetCast);
+                        return;
+                    }
+                }
             }
 
             if (E.IsReady() && useE)
