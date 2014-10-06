@@ -426,8 +426,24 @@ namespace DevRyze
 
         public static void Freeze()
         {
+            var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
+
             if (mustDebug)
                 Game.PrintChat("Freeze Start");
+
+            var useQ = Config.Item("UseQFreeze").GetValue<bool>();
+            var ManaLaneClear = Config.Item("ManaFreeze").GetValue<Slider>().Value;
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (Q.IsReady() && useQ && Player.GetManaPerc() > ManaLaneClear)
+            {
+                var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9);
+                if (queryMinion.Count() > 0)
+                {
+                    var mob = queryMinion.First();
+                    Q.CastOnUnit(mob, packetCast);
+                }
+            }
         }
 
         static void Drawing_OnDraw(EventArgs args)
@@ -472,6 +488,10 @@ namespace DevRyze
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(40, 1, 100)));
+
+            Config.AddSubMenu(new Menu("Freeze", "Freeze"));
+            Config.SubMenu("Freeze").AddItem(new MenuItem("UseQFreeze", "Use Q LastHit").SetValue(true));
+            Config.SubMenu("Freeze").AddItem(new MenuItem("ManaFreeze", "Min Mana Q").SetValue(new Slider(40, 1, 100)));
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
