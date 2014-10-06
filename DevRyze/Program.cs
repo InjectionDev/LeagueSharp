@@ -145,10 +145,11 @@ namespace DevRyze
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit ||
                 Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
             {
+                
                 if (target.IsMinion)
                 {
                     var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
-                        .Where(x => !x.IsDead && target.NetworkId != x.NetworkId && HealthPrediction.GetHealthPrediction(x, Convert.ToInt32(Player.AttackDelay * 1.1)) <= 0).ToList();
+                        .Where(x => !x.IsDead && target.NetworkId != x.NetworkId && HealthPrediction.LaneClearHealthPrediction(x, Convert.ToInt32(Player.AttackDelay * 1000 * 1.1)) <= 0).ToList();
 
                     if (MinionList.Count() > 0)
                     { 
