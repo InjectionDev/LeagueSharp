@@ -431,8 +431,6 @@ namespace DevCassio
             {
                 if (eTarget.IsValidTarget(R.Range) && eTarget.IsUnderEnemyTurret() && R.IsReady())
                 {
-                    //if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                    //    Game.PrintChat("Ult Under Tower!");
                     R.Cast(eTarget.ServerPosition, packetCast);
                 }
             }
@@ -448,8 +446,6 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady())
             {
-                //if (R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                //    Game.PrintChat(string.Format("AssistedUlt fired"));
                 R.Cast(eTarget.ServerPosition, packetCast);
             }
 
@@ -637,8 +633,6 @@ namespace DevCassio
             if (RAntiGapcloser && Player.GetHealthPerc() <= RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range) && R.IsReady())
             {
                 R.Cast(gapcloser.Sender.ServerPosition, packetCast);
-                //if (R.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                //    Game.PrintChat(string.Format("OnEnemyGapcloser -> RAntiGapcloser on {0} !", gapcloser.Sender.SkinName));
             }
         }
 
