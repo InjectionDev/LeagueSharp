@@ -11,7 +11,8 @@ namespace DevCommom
     public class IgniteManager
     {
         public bool HasIgnite;
-        public SpellDataInst IgniteSpell = null;
+
+        private SpellDataInst IgniteSpell = null;
 
         public IgniteManager()
         {

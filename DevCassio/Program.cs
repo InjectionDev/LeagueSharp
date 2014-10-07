@@ -45,6 +45,7 @@ namespace DevCassio
         public static LevelUpManager LevelUpManager;
 
         private static DateTime dtBurstComboStart = DateTime.MinValue;
+        private static DateTime dtLastQCast = DateTime.MinValue;
 
         public static bool mustDebug = false;
 
@@ -211,13 +212,16 @@ namespace DevCassio
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
                 if (Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                {
+                    dtLastQCast = DateTime.Now;
                     return;
+                }
             }
 
             if (useW)
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range)));
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && !Q.IsReady() && useW)
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && !Q.IsReady() && useW && DateTime.Now > dtLastQCast.AddMilliseconds(Q.Delay * 1000))
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -255,13 +259,16 @@ namespace DevCassio
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
                 if (Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                {
+                    dtLastQCast = DateTime.Now;
                     return;
+                }
             }
 
             if (useW)
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range)));
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && !Q.IsReady())
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && DateTime.Now > dtLastQCast.AddMilliseconds(Q.Delay * 1000))
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -464,6 +471,10 @@ namespace DevCassio
                 InitializeAttachEvents();
 
                 Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+
+                if (!AssemblyUtil.IsLastVersion())
+                    Game.PrintChat(string.Format("<font color='#FF0000'>DevCassio NEW VERSION available! Tap F8 to update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
+
             }
             catch(Exception ex)
             {

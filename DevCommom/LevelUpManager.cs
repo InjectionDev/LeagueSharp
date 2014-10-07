@@ -12,6 +12,7 @@ namespace DevCommom
     {
         private int[] spellPriorityList;
         private int lastLevel = 0;
+
         public LevelUpManager(int[] pSpellPriorityList)
         {
             this.spellPriorityList = pSpellPriorityList;
