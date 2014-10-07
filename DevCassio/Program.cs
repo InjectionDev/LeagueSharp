@@ -118,6 +118,7 @@ namespace DevCassio
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
