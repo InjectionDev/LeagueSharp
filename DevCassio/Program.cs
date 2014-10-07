@@ -336,20 +336,31 @@ namespace DevCassio
 
                 foreach (var minion in MinionList)
                 {
-                    if (minion.IsValidTarget(E.Range) && minion.HasBuffOfType(BuffType.Poison))
+                    var buffEndTime = GetPoisonBuffEndTime(minion);
+
+                    if (buffEndTime >= (Game.Time + E.Delay))
                     {
                         if (UseELastHitLaneClear)
                         {
                             if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > minion.Health)
                                 E.CastOnUnit(minion, packetCast);
                         }
-                        else    
+                        else
                         {
                             E.CastOnUnit(minion, packetCast);
                         }
                     }
                 }
             }
+        }
+
+        private static float GetPoisonBuffEndTime(Obj_AI_Base minion)
+        {
+            var buffEndTime = minion.Buffs.OrderByDescending(buff => buff.EndTime - Game.Time)
+                    .Where(buff => buff.Type == BuffType.Poison)
+                    .Select(buff => buff.EndTime)
+                    .FirstOrDefault();
+            return buffEndTime;
         }
 
         public static void Freeze()
@@ -364,17 +375,20 @@ namespace DevCassio
 
             if (useE)
             {
-                foreach (var minion in MinionList)
+                foreach (var minion in MinionList.Where(x => x.HasBuffOfType(BuffType.Poison)).ToList())
                 {
-                    if (E.IsReady() && Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > minion.Health && minion.IsValidTarget(E.Range))
+                    var buffEndTime = GetPoisonBuffEndTime(minion);
+
+                    if (E.IsReady() && buffEndTime >= (Game.Time + E.Delay) && minion.IsValidTarget(E.Range))
                     {
-                        if (minion.HasBuffOfType(BuffType.Poison))
+                        if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > minion.Health)
                         {
                             E.CastOnUnit(minion, packetCast);
                         }
                     }
                 }
             }
+
         }
 
         private static void JungleClear()
@@ -519,7 +533,7 @@ namespace DevCassio
             W.SetSkillshot(0.5f, 150, 2500, false, SkillshotType.SkillshotCircle);
 
             E = new Spell(SpellSlot.E, 700);
-            E.SetTargetted(0.1f, float.MaxValue);
+            E.SetTargetted(0.2f, float.MaxValue);
 
             R = new Spell(SpellSlot.R, 850);
             R.SetSkillshot(0.6f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
@@ -677,7 +691,7 @@ namespace DevCassio
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELastHitLaneClear", "Use E Only LastHit").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearMinMana", "LaneClear Min Mana").SetValue(new Slider(40, 0, 100)));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearMinMana", "LaneClear Min Mana").SetValue(new Slider(25, 0, 100)));
 
             Config.AddSubMenu(new Menu("JungleClear", "JungleClear"));
             Config.SubMenu("JungleClear").AddItem(new MenuItem("UseQJungleClear", "Use Q").SetValue(true));
