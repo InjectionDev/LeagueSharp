@@ -35,7 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Evade">
-      <HintPath>C:\Users\Daniel\Desktop\lsharp\System\Evade.dll</HintPath>
+      <HintPath>..\..\..\OneDrive\Projetos\LSharp\System\Evade.dll</HintPath>
     </Reference>
     <Reference Include="LeagueSharp">
       <HintPath>C:\Users\Daniel\Desktop\lsharp\System\LeagueSharp.dll</HintPath>
