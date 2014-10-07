@@ -251,7 +251,7 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
-                if (eTarget.HasBuffOfType(BuffType.Poison) || Damage.GetSpellDamage(Player, eTarget, SpellSlot.E) > eTarget.Health)
+                if (eTarget.HasBuffOfType(BuffType.Poison) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
                 {
                     E.CastOnUnit(eTarget, packetCast);
                 }
