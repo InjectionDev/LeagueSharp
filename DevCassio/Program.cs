@@ -46,7 +46,7 @@ namespace DevCassio
 
         private static DateTime dtBurstComboStart = DateTime.MinValue;
 
-        public static bool mustDebug = true;
+        public static bool mustDebug = false;
 
 
         static void Main(string[] args)
