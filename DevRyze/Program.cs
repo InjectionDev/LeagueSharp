@@ -38,6 +38,8 @@ namespace DevRyze
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
 
+        private static List<Obj_AI_Base> MinionListToIgnore;
+
         private static bool mustDebug = false;
 
 
@@ -80,10 +82,16 @@ namespace DevRyze
 
             IgniteManager = new IgniteManager();
             BarrierManager = new BarrierManager();
+            MinionListToIgnore = new List<Obj_AI_Base>();
 
             Q = new Spell(SpellSlot.Q, 630);
+            Q.SetTargetted(0.1f, float.MaxValue);
+
             W = new Spell(SpellSlot.W, 600);
+
             E = new Spell(SpellSlot.E, 600);
+            E.SetTargetted(0.1f, float.MaxValue);
+
             R = new Spell(SpellSlot.R);
 
             SpellList.Add(Q);
@@ -138,6 +146,7 @@ namespace DevRyze
                 Game.PrintChat("InitializeAttachEvents Finish");
         }
 
+        // same logic of Orbwalking_AfterAttack but without callback.. TODO: test it
         private static void CheckAALastHit()
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
@@ -182,7 +191,9 @@ namespace DevRyze
                 if (target.IsMinion)
                 {
                     var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
-                        .Where(x => !x.IsDead && target.NetworkId != x.NetworkId && HealthPrediction.LaneClearHealthPrediction(x, (int)(Player.AttackDelay * 1000 * 1.1)) <= 0).ToList();
+                        .Where(x => 
+                            !x.IsDead && target.NetworkId != x.NetworkId && !MinionListToIgnore.Contains(x) &&
+                            HealthPrediction.LaneClearHealthPrediction(x, (int)(Player.AttackDelay * 1000 * 1.1)) <= 0).ToList();
 
                     if (MinionList.Count() > 0)
                     { 
@@ -190,6 +201,7 @@ namespace DevRyze
                         if (Q.IsReady() && mob.IsValidTarget(Q.Range))
                         {
                             Q.CastOnUnit(mob, packetCast);
+                            MinionListToIgnore.Add(mob);
                             MinionList.Remove(mob);
                         }
                     }
@@ -200,7 +212,7 @@ namespace DevRyze
                         if (E.IsReady() && mob.IsValidTarget(E.Range))
                         {
                             E.CastOnUnit(mob, packetCast);
-                            MinionList.Remove(mob);
+                            MinionListToIgnore.Add(mob);
                         }
                     }
                 }
@@ -426,7 +438,9 @@ namespace DevRyze
 
         public static void WaveClear()
         {
-            var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
+            var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
+                .Where(x => !MinionListToIgnore.Contains(x)).ToList();
+
             var JungleList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
 
             if (mustDebug)
@@ -446,12 +460,13 @@ namespace DevRyze
                     var mob = queryJungle.First();
                     Q.CastOnUnit(mob, packetCast);
                 }
-                
-                var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9);
+
+                var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9);
                 if (queryMinion.Count() > 0)
                 {
                     var mob = queryMinion.First();
                     Q.CastOnUnit(mob, packetCast);
+                    MinionListToIgnore.Add(mob);
                     MinionList.Remove(mob);
                 }
             }
@@ -465,11 +480,12 @@ namespace DevRyze
                     W.CastOnUnit(mob, packetCast);
                 }
 
-                var query = MinionList.Where(x => x.IsValidTarget(W.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.W) * 0.9);
+                var query = MinionList.Where(x => x.IsValidTarget(W.Range) && HealthPrediction.LaneClearHealthPrediction(x, (int)W.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.W) * 0.9);
                 if (query.Count() > 0)
                 {
                     var mob = query.First();
                     W.CastOnUnit(mob, packetCast);
+                    MinionListToIgnore.Add(mob);
                     MinionList.Remove(mob);
                 }
             }
@@ -483,11 +499,12 @@ namespace DevRyze
                     E.CastOnUnit(mob, packetCast);
                 }
 
-                var query = MinionList.Where(x => x.IsValidTarget(E.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.E) * 0.9);
+                var query = MinionList.Where(x => x.IsValidTarget(E.Range) && HealthPrediction.LaneClearHealthPrediction(x, (int)E.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.E) * 0.9);
                 if (query.Count() > 0)
                 {
                     var mob = query.First();
                     E.CastOnUnit(mob, packetCast);
+                    MinionListToIgnore.Add(mob);
                     MinionList.Remove(mob);
                 }
             }
@@ -496,7 +513,8 @@ namespace DevRyze
 
         public static void Freeze()
         {
-            var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
+            var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
+                .Where(x => !MinionListToIgnore.Contains(x));
 
             if (mustDebug)
                 Game.PrintChat("Freeze Start");
@@ -507,11 +525,12 @@ namespace DevRyze
 
             if (Q.IsReady() && useQ && Player.GetManaPerc() > ManaLaneClear)
             {
-                var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && x.Health < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9);
+                var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9);
                 if (queryMinion.Count() > 0)
                 {
                     var mob = queryMinion.First();
                     Q.CastOnUnit(mob, packetCast);
+                    MinionListToIgnore.Add(mob);
                 }
             }
         }

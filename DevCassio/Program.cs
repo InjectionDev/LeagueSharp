@@ -135,7 +135,7 @@ namespace DevCassio
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
-                    if (totalComboDamage * 0.4 < eTarget.Health) // Anti Overkill
+                    if (totalComboDamage * 0.3 < eTarget.Health) // Anti OverKill
                     {
                         if (mustDebug)
                             Game.PrintChat("BurstCombo R");
