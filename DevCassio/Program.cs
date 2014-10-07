@@ -295,6 +295,7 @@ namespace DevCassio
                     if (farmNonPoisoned.MinionsHit >= 3)
                     {
                         Q.Cast(farmNonPoisoned.Position, packetCast);
+                        dtLastQCast = DateTime.Now;
                         return;
                     }
                 }
@@ -305,13 +306,13 @@ namespace DevCassio
                     if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
                     {
                         Q.Cast(farmAll.Position, packetCast);
+                        dtLastQCast = DateTime.Now;
                         return;
                     }
                 }
-
             }
 
-            if (W.IsReady() && useW && !Q.IsReady() && Player.GetManaPerc() >= LaneClearMinMana)
+            if (W.IsReady() && useW && !Q.IsReady() && Player.GetManaPerc() >= LaneClearMinMana && DateTime.Now > dtLastQCast.AddMilliseconds(Q.Delay * 1000))
             {
                 var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All).ToList();
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
