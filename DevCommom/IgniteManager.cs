@@ -34,7 +34,7 @@ namespace DevCommom
 
         public bool IsReady()
         {
-            return HasIgnite && this.IgniteSpell.State == SpellState.Ready && ObjectManager.Player.CanCast;
+            return HasIgnite && this.IgniteSpell.State == SpellState.Ready;
         }
 
         public bool CanKill(Obj_AI_Hero enemy)

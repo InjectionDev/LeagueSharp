@@ -200,7 +200,9 @@ namespace DevCassio
                 
             if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
             {
-                if (eTarget.HasBuffOfType(BuffType.Poison) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
+                var buffEndTime = GetPoisonBuffEndTime(eTarget);
+
+                if ((eTarget.HasBuffOfType(BuffType.Poison) && buffEndTime >= (Game.Time + E.Delay)) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
                 {
                     E.CastOnUnit(eTarget, packetCast);
                 }
@@ -263,9 +265,6 @@ namespace DevCassio
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
-
-            if (mustDebug)
-                Game.PrintChat("Harass Finish");
         }
 
         public static void WaveClear()
@@ -334,7 +333,7 @@ namespace DevCassio
             {
                 MinionList = MinionManager.GetMinions(Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
-                foreach (var minion in MinionList)
+                foreach (var minion in MinionList.Where(x => x.HasBuffOfType(BuffType.Poison)).ToList())
                 {
                     var buffEndTime = GetPoisonBuffEndTime(minion);
 
@@ -354,9 +353,9 @@ namespace DevCassio
             }
         }
 
-        private static float GetPoisonBuffEndTime(Obj_AI_Base minion)
+        private static float GetPoisonBuffEndTime(Obj_AI_Base target)
         {
-            var buffEndTime = minion.Buffs.OrderByDescending(buff => buff.EndTime - Game.Time)
+            var buffEndTime = target.Buffs.OrderByDescending(buff => buff.EndTime - Game.Time)
                     .Where(buff => buff.Type == BuffType.Poison)
                     .Select(buff => buff.EndTime)
                     .FirstOrDefault();
@@ -445,8 +444,6 @@ namespace DevCassio
                 R.Cast(eTarget.ServerPosition, packetCast);
             }
 
-            if (mustDebug)
-                Game.PrintChat("CastAssistedUlt Finish");
         }
 
         private static void onGameLoad(EventArgs args)
