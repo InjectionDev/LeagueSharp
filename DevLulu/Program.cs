@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+using Evade;
+
 /*
  * ##### DevLulu Mods #####
  * + Support Mode and AP Carry Mode with separated logic
@@ -58,7 +60,7 @@ namespace DevLulu
 
             InitializeMainMenu();
 
-            InitializeAttachEvents();
+            //InitializeAttachEvents();
 
             Game.PrintChat(string.Format("<font color='#F7A100'>DevLulu Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
@@ -417,21 +419,21 @@ namespace DevLulu
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(40, 1, 100)));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(25, 1, 100)));
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
             Config.SubMenu("Freeze").AddItem(new MenuItem("UseQFreeze", "Use Q LastHit").SetValue(true));
-            Config.SubMenu("Freeze").AddItem(new MenuItem("ManaFreeze", "Min Mana Q").SetValue(new Slider(40, 1, 100)));
+            Config.SubMenu("Freeze").AddItem(new MenuItem("ManaFreeze", "Min Mana Q").SetValue(new Slider(25, 1, 100)));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseRAlly", "Use R Ally").SetValue(true));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseRAllyMinHealth", "R Ally if Min Health").SetValue(new Slider(30, 1, 100)));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseRAllyMinHealth", "Ally MinHealth").SetValue(new Slider(30, 1, 100)));
 
             Config.AddSubMenu(new Menu("HelpAlly", "Help Ally"));
             Config.SubMenu("HelpAlly").AddItem(new MenuItem("HelpAlly", "Help Ally").SetValue(true));
             Config.SubMenu("HelpAlly").AddItem(new MenuItem("UseWHelpAlly", "Use W").SetValue(true));
             Config.SubMenu("HelpAlly").AddItem(new MenuItem("UseEHelpAlly", "Use E").SetValue(true));
-            Config.SubMenu("HelpAlly").AddItem(new MenuItem("AllyMinHealth", "Help Ally if Min Health").SetValue(new Slider(50, 1, 100)));
+            Config.SubMenu("HelpAlly").AddItem(new MenuItem("AllyMinHealth", "Help Ally MinHealth").SetValue(new Slider(50, 1, 100)));
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
