@@ -46,7 +46,7 @@ namespace DevCassio
 
         private static DateTime dtBurstComboStart = DateTime.MinValue;
 
-        public static bool mustDebug = false;
+        public static bool mustDebug = true;
 
 
         static void Main(string[] args)
@@ -117,7 +117,6 @@ namespace DevCassio
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
@@ -130,18 +129,29 @@ namespace DevCassio
                 Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), Player.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
-            if (Q.IsReady(2000) && R.IsReady() && useR && eTarget.IsValidTarget(R.Range) && eTarget.IsFacing())
+            if (R.IsReady() && useR && eTarget.IsValidTarget(R.Range) && eTarget.IsFacing(Player))
             {
                 if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
                     if (totalComboDamage * 0.4 < eTarget.Health) // Anti Overkill
+                    {
+                        if (mustDebug)
+                            Game.PrintChat("BurstCombo R");
                         R.Cast(eTarget.ServerPosition, packetCast);
+                    }
+                    else
+                    {
+                        if (mustDebug)
+                            Game.PrintChat("BurstCombo OverKill");
+                    }
                     dtBurstComboStart = DateTime.Now;
                 }
             }
 
-            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now)
+            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now && IgniteManager.IsReady())
             {
+                if (mustDebug)
+                    Game.PrintChat("Ignite");
                 IgniteManager.Cast(eTarget);
             }
         }
@@ -168,7 +178,7 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && UseRSaveYourself)
             {
-                if (Player.GetHealthPerc() < UseRSaveYourselfMinHealth && eTarget.IsFacing())
+                if (Player.GetHealthPerc() < UseRSaveYourselfMinHealth && eTarget.IsFacing(Player))
                 {
                     R.Cast(eTarget.ServerPosition, packetCast);
                     Game.PrintChat("Save Yourself!");
@@ -179,7 +189,7 @@ namespace DevCassio
             {
                 var castPred = R.GetPrediction(eTarget, true, R.Range);       
                 var enemiesHit = DevHelper.GetEnemyList().Where(x => R.WillHit(x, castPred.CastPosition)).ToList();
-                var enemiesFacing = enemiesHit.Where(x => x.IsFacing()).ToList();
+                var enemiesFacing = enemiesHit.Where(x => x.IsFacing(Player)).ToList();
 
                 if (mustDebug)
                     Game.PrintChat("Hit:{0} Facing:{1}", enemiesHit.Count(), enemiesFacing.Count());
@@ -202,7 +212,7 @@ namespace DevCassio
                     return;
             }
 
-            if (Config.Item("UseWCombo").GetValue<bool>())
+            if (useW)
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range)));
 
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && !Q.IsReady() && useW)
@@ -228,7 +238,6 @@ namespace DevCassio
             var useW = Config.Item("UseWHarass").GetValue<bool>();
             var useE = Config.Item("UseEHarass").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            var HarassMinMana = Config.Item("HarassMinMana").GetValue<Slider>().Value;
 
             if (mustDebug)
                 Game.PrintChat("Harass Target -> " + eTarget.SkinName);
@@ -241,16 +250,16 @@ namespace DevCassio
                 }
             }
 
-            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ && Player.GetManaPerc() >= HarassMinMana)
+            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
                 if (Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
                     return;
             }
 
-            if (Config.Item("UseWHarass").GetValue<bool>())
+            if (useW)
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range)));
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && Player.GetManaPerc() >= HarassMinMana && !Q.IsReady())
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW && !Q.IsReady())
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -266,10 +275,11 @@ namespace DevCassio
             var useE = Config.Item("UseELaneClear").GetValue<bool>();
             var UseELastHitLaneClear = Config.Item("UseELastHitLaneClear").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var LaneClearMinMana = Config.Item("LaneClearMinMana").GetValue<Slider>().Value;
 
-            if (Q.IsReady() && useQ)
+            if (Q.IsReady() && useQ && Player.GetManaPerc() >= LaneClearMinMana)
             {
-                var allMinionsQ = MinionManager.GetMinions(Player.ServerPosition, Q.Range + Q.Width, MinionTypes.All).ToList();
+                var allMinionsQ = MinionManager.GetMinions(Player.Position, Q.Range + Q.Width, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health).ToList();
                 var allMinionsQNonPoisoned = allMinionsQ.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
                 if (allMinionsQNonPoisoned.Count > 0)
@@ -294,7 +304,7 @@ namespace DevCassio
 
             }
 
-            if (W.IsReady() && useW && !Q.IsReady())
+            if (W.IsReady() && useW && !Q.IsReady() && Player.GetManaPerc() >= LaneClearMinMana)
             {
                 var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All).ToList();
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
@@ -320,7 +330,7 @@ namespace DevCassio
                 }
             }
 
-            if (E.IsReady() && useE)
+            if (E.IsReady() && useE && Player.GetManaPerc() >= LaneClearMinMana)
             {
                 MinionList = MinionManager.GetMinions(Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
@@ -651,13 +661,13 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseAACombo", "Use AA").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourself", "Use R Save Yourself").SetValue(true));
-            Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourselfMinHealth", "Use R Save MinHealth").SetValue(new Slider(30, 0, 100)));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourselfMinHealth", "Use R Save MinHealth").SetValue(new Slider(25, 0, 100)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
-            Config.SubMenu("Harass").AddItem(new MenuItem("HarassMinMana", "Harras Min Mana").SetValue(new Slider(10, 0, 100)));
+            
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
             Config.SubMenu("Freeze").AddItem(new MenuItem("UseEFreeze", "Use E").SetValue(true));
@@ -667,6 +677,7 @@ namespace DevCassio
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELastHitLaneClear", "Use E Only LastHit").SetValue(true));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearMinMana", "LaneClear Min Mana").SetValue(new Slider(40, 0, 100)));
 
             Config.AddSubMenu(new Menu("JungleClear", "JungleClear"));
             Config.SubMenu("JungleClear").AddItem(new MenuItem("UseQJungleClear", "Use Q").SetValue(true));

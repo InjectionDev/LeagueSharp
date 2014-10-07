@@ -87,12 +87,15 @@ namespace DevCommom
             return Vector2.DistanceSquared(source.ServerPosition.To2D(), target.ServerPosition.To2D());
         }
 
-        public static bool IsFacing(this Obj_AI_Base enemy)
+        public static bool IsFacing(this Obj_AI_Base source, Obj_AI_Base target)
         {
-            if (enemy.IsValid && enemy.Path.Count() > 0 && enemy.Path[0].Distance(ObjectManager.Player.ServerPosition) > ObjectManager.Player.Distance(enemy))
+            if (!source.IsValid || !target.IsValid)
                 return false;
-            else 
+
+            if (source.Path.Count() > 0 && source.Path[0].Distance(target.ServerPosition) < target.Distance(source))
                 return true;
+            else
+                return false;
         }
 
         public static bool IsKillable(this Obj_AI_Hero source, Obj_AI_Base target, IEnumerable<SpellSlot> spellCombo)
