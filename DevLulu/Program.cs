@@ -62,9 +62,9 @@ namespace DevLulu
 
             //InitializeAttachEvents();
 
-            Game.PrintChat(string.Format("<font color='#F7A100'>DevLulu Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+            //Game.PrintChat(string.Format("<font color='#F7A100'>DevLulu Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
-            Game.PrintChat(string.Format("<font color='#F7A100'>DevLulu: THIS ASSEMBLY IS NOT FINISHED YET!!!</font>"));
+            Game.PrintChat(string.Format("<font color='#FF0000'>DevLulu: THIS ASSEMBLY IS NOT FINISHED YET!!!</font>"));
         }
 
         private static void InitializeAttachEvents()
