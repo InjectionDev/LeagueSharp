@@ -363,7 +363,7 @@ namespace DevRyze
                 Q.CastOnUnit(eTarget, packetCast);
             }
 
-            if (Player.Distance(eTarget) >= 575 && !DevHelper.IsFacing(eTarget) && W.IsReady() && useW)
+            if (Player.Distance(eTarget) >= 575 && !eTarget.IsFacing(Player) && W.IsReady() && useW)
             {
                 W.CastOnUnit(eTarget, packetCast);
                 return;
@@ -408,7 +408,7 @@ namespace DevRyze
                 Q.CastOnUnit(eTarget, packetCast);
             }
 
-            if (Player.Distance(eTarget) > 500 && eTarget.IsValidTarget(W.Range) && !DevHelper.IsFacing(eTarget) && W.IsReady() && useW)
+            if (Player.Distance(eTarget) > 500 && eTarget.IsValidTarget(W.Range) && !eTarget.IsFacing(Player) && W.IsReady() && useW)
             {
                 W.CastOnUnit(eTarget, packetCast);
             }
