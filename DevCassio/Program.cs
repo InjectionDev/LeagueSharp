@@ -204,7 +204,7 @@ namespace DevCassio
             {
                 var buffEndTime = GetPoisonBuffEndTime(eTarget);
 
-                if ((eTarget.HasBuffOfType(BuffType.Poison) && buffEndTime >= (Game.Time + E.Delay)) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
+                if ((eTarget.HasBuffOfType(BuffType.Poison) && buffEndTime > (Game.Time + E.Delay)) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
                 {
                     E.CastOnUnit(eTarget, packetCast);
                 }
@@ -346,11 +346,11 @@ namespace DevCassio
                 {
                     var buffEndTime = GetPoisonBuffEndTime(minion);
 
-                    if (buffEndTime >= (Game.Time + E.Delay))
+                    if (buffEndTime > (Game.Time + E.Delay))
                     {
                         if (UseELastHitLaneClear)
                         {
-                            if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > minion.Health)
+                            if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
                                 E.CastOnUnit(minion, packetCast);
                         }
                         else
@@ -387,9 +387,9 @@ namespace DevCassio
                 {
                     var buffEndTime = GetPoisonBuffEndTime(minion);
 
-                    if (E.IsReady() && buffEndTime >= (Game.Time + E.Delay) && minion.IsValidTarget(E.Range))
+                    if (E.IsReady() && buffEndTime > (Game.Time + E.Delay) && minion.IsValidTarget(E.Range))
                     {
-                        if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > minion.Health)
+                        if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
                         {
                             E.CastOnUnit(minion, packetCast);
                         }
