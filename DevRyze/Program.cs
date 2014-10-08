@@ -85,12 +85,12 @@ namespace DevRyze
             MinionListToIgnore = new List<Obj_AI_Base>();
 
             Q = new Spell(SpellSlot.Q, 630);
-            Q.SetTargetted(0.1f, float.MaxValue);
+            Q.SetTargetted(0.2f, float.MaxValue);
 
             W = new Spell(SpellSlot.W, 600);
 
             E = new Spell(SpellSlot.E, 600);
-            E.SetTargetted(0.1f, float.MaxValue);
+            E.SetTargetted(0.2f, float.MaxValue);
 
             R = new Spell(SpellSlot.R);
 
