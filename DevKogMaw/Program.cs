@@ -507,6 +507,9 @@ namespace DevKogMaw
 
         private static void JungleStealAlert()
         {
+            if (!R.IsReady())
+                return;
+
             string[] monsterNames = { "LizardElder", "AncientGolem", "Worm", "Dragon" };
             var mobs = MinionManager.GetMinions(Player.ServerPosition, 5000, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
 
@@ -516,7 +519,7 @@ namespace DevKogMaw
                 x.IsValid &&
                 DevHelper.GetEnemyList().Any(enemy => x.Distance(enemy.ServerPosition) < 2000));
 
-            if (query.Count() > 0)
+            if (R.IsReady() && query.Count() > 0)
             {
                 var mob = query.FirstOrDefault();
 
@@ -536,6 +539,9 @@ namespace DevKogMaw
 
         private static void JungleSteal()
         {
+            if (!R.IsReady())
+                return;
+
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             string[] monsterNames = { "LizardElder", "AncientGolem", "Worm", "Dragon" };
@@ -547,7 +553,7 @@ namespace DevKogMaw
                 x.Health < Player.GetSpellDamage(x, SpellSlot.R) &&
                 DevHelper.GetEnemyList().Any(enemy => x.Distance(enemy.ServerPosition) < 1000));
 
-            if (query.Count() > 0)
+            if (R.IsReady() && query.Count() > 0)
             {
                 var mob = query.FirstOrDefault();
                 R.Cast(mob.ServerPosition, packetCast);
