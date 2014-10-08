@@ -14,7 +14,7 @@ namespace DevCommom
         {
             using (WebClient webClient = new WebClient())
             {
-                var url = string.Format(@"https://raw.githubusercontent.com/InjectionDev/LeagueSharp/master/{0}/Properties/AssemblyInfo.cs", Assembly.GetExecutingAssembly().GetName());
+                var url = string.Format(@"https://raw.githubusercontent.com/InjectionDev/LeagueSharp/master/{0}/Properties/AssemblyInfo.cs", Assembly.GetExecutingAssembly().GetName().Name);
                 var response = webClient.DownloadString(url);
 
                 if (response.Contains("AssemblyVersion"))
