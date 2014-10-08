@@ -470,8 +470,10 @@ namespace DevCassio
 
                 Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
-                if (!AssemblyUtil.IsLastVersion())
-                    Game.PrintChat(string.Format("<font color='#FF0000'>DevCassio NEW VERSION available! Tap F8 to update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                //if (AssemblyUtil.IsLastVersion())
+                //    Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                //else
+                //    Game.PrintChat(string.Format("<font color='#FF0000'>DevCassio NEW VERSION available! Tap F8 to update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
             }
             catch(Exception ex)
