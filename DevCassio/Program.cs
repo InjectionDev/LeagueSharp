@@ -338,7 +338,7 @@ namespace DevCassio
                 }
             }
 
-            if (E.IsReady() && useE && Player.GetManaPerc() >= LaneClearMinMana)
+            if (E.IsReady() && useE)
             {
                 MinionList = MinionManager.GetMinions(Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
@@ -353,7 +353,7 @@ namespace DevCassio
                             if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
                                 E.CastOnUnit(minion, packetCast);
                         }
-                        else
+                        else if (Player.GetManaPerc() >= LaneClearMinMana)
                         {
                             E.CastOnUnit(minion, packetCast);
                         }
