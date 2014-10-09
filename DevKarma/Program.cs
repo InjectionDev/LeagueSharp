@@ -18,7 +18,7 @@ using System.Threading.Tasks;
  * + Shield/Heal Allies
 */
 
-namespace DevLulu
+namespace DevKarma
 {
     public class Program
     {
@@ -346,15 +346,15 @@ namespace DevLulu
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarassHeal", "Priorize W to Heal").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHealMinHealthHarass", "W Heal Min Health").SetValue(new Slider(50, 1, 100)));
 
-            Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(25, 1, 100)));
+            //Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
+            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
+            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
+            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
+            //Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(25, 1, 100)));
 
-            Config.AddSubMenu(new Menu("Freeze", "Freeze"));
-            Config.SubMenu("Freeze").AddItem(new MenuItem("UseQFreeze", "Use Q LastHit").SetValue(true));
-            Config.SubMenu("Freeze").AddItem(new MenuItem("ManaFreeze", "Min Mana Q").SetValue(new Slider(25, 1, 100)));
+            //Config.AddSubMenu(new Menu("Freeze", "Freeze"));
+            //Config.SubMenu("Freeze").AddItem(new MenuItem("UseQFreeze", "Use Q LastHit").SetValue(true));
+            //Config.SubMenu("Freeze").AddItem(new MenuItem("ManaFreeze", "Min Mana Q").SetValue(new Slider(25, 1, 100)));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseRAlly", "Use R Ally").SetValue(true));
