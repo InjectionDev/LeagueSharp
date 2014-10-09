@@ -287,7 +287,7 @@ namespace DevBrand
                 if (allMinionsW.Count > 0)
                 {
                     var farm = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
-                    if (farm.MinionsHit >= 3)
+                    if (farm.MinionsHit >= 2)
                     {
                         W.Cast(farm.Position, packetCast);
                         return;
@@ -295,20 +295,7 @@ namespace DevBrand
                 }
             }
 
-            if (E.IsReady() && useW && Player.GetManaPerc() >= ManaLaneClear)
-            {
-                var allMinionsE = MinionManager.GetMinions(Player.ServerPosition, E.Range + E.Width, MinionTypes.All).ToList();
 
-                if (allMinionsE.Count > 0)
-                {
-                    var farm = E.GetCircularFarmLocation(allMinionsE, E.Width * 0.8f);
-                    if (farm.MinionsHit >= 3)
-                    {
-                        E.Cast(farm.Position, packetCast);
-                        return;
-                    }
-                }
-            }
         }
 
         private static void InitializeSkinManager()
@@ -410,7 +397,7 @@ namespace DevBrand
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(true));
-            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
+            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(30, 1, 100)));
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
