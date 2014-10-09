@@ -15,6 +15,7 @@ using System.Threading.Tasks;
  * + SBTW Assembly
  * + Ult Combo Logic
  * + Ult when X enemies in R Range
+ * + Smart E usage on minions to harras (work in progress)
  * + Skin Hack
 */
 
