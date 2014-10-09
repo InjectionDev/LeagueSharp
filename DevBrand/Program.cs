@@ -13,7 +13,8 @@ using System.Threading.Tasks;
  * ##### DevBrand Mods #####
  * 
  * + SBTW Assembly
- * + E + Passive on minions to spreads fire on Enemy
+ * + Ult Combo Logic
+ * + Ult when X enemies in R Range
  * + Skin Hack
 */
 
@@ -31,9 +32,11 @@ namespace DevBrand
         public static Spell W;
         public static Spell E;
         public static Spell R;
-        public static SkinManager SkinManager;
-        public static IgniteManager IgniteManager;
-        public static BarrierManager BarrierManager;
+        public static SkinManager skinManager;
+        public static IgniteManager igniteManager;
+        public static BarrierManager barrierManager;
+
+        private static DateTime dtBurstComboStart = DateTime.MinValue;
 
         private static bool mustDebug = false;
 
@@ -94,7 +97,7 @@ namespace DevBrand
 
             if (BarrierGapCloser && gapcloser.Sender.IsValidTarget(Player.AttackRange) && Player.GetHealthPerc() < BarrierGapCloserMinHealth)
             {
-                if (BarrierManager.Cast())
+                if (barrierManager.Cast())
                     Game.PrintChat(string.Format("OnEnemyGapcloser -> BarrierGapCloser on {0} !", gapcloser.Sender.SkinName));
             }
 
@@ -112,13 +115,14 @@ namespace DevBrand
                 switch (Orbwalker.ActiveMode)
                 {
                     case Orbwalking.OrbwalkingMode.Combo:
+                        BurstCombo();
                         Combo();
                         break;
                     case Orbwalking.OrbwalkingMode.Mixed:
                         Harass();
                         break;
                     case Orbwalking.OrbwalkingMode.LaneClear:
-                        //WaveClear();
+                        WaveClear();
                         break;
                     case Orbwalking.OrbwalkingMode.LastHit:
                         //Freeze();
@@ -127,7 +131,7 @@ namespace DevBrand
                         break;
                 }
 
-                SkinManager.Update();
+                skinManager.Update();
             }
             catch (Exception ex)
             {
@@ -135,6 +139,72 @@ namespace DevBrand
             }
         }
 
+        public static void BurstCombo()
+        {
+            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
+            var useQ = Config.Item("UseQCombo").GetValue<bool>();
+            var useW = Config.Item("UseWCombo").GetValue<bool>();
+            var useE = Config.Item("UseECombo").GetValue<bool>();
+            var useR = Config.Item("UseRCombo").GetValue<bool>();
+            var useIgnite = Config.Item("UseIgnite").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var UseRMinEnemies = Config.Item("UseRMinEnemies").GetValue<Slider>().Value;
+            
+
+            double totalComboDamage = 0;
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.W);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
+            totalComboDamage += igniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
+
+            double totalManaCost = 0;
+            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
+            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.W).ManaCost;
+
+            if (mustDebug)
+            {
+                Game.PrintChat("BurstCombo Damage {0}/{1} {2}", Convert.ToInt32(totalComboDamage), Convert.ToInt32(eTarget.Health), eTarget.Health < totalComboDamage ? "BustKill" : "Harras");
+                Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), Player.Mana >= totalManaCost ? "Mana OK" : "No Mana");
+            }
+
+            if (R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
+            {
+                if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
+                {
+                    if (totalComboDamage * 0.3 < eTarget.Health) // Anti OverKill
+                    {
+                        if (mustDebug)
+                            Game.PrintChat("BurstCombo R");
+                        R.CastOnUnit(eTarget, packetCast);
+                    }
+                    else
+                    {
+                        if (mustDebug)
+                            Game.PrintChat("BurstCombo OverKill");
+                    }
+                    dtBurstComboStart = DateTime.Now;
+                }
+            }
+
+            if (R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
+            {
+                var enemiesInRange = DevHelper.GetEnemyList().Where(x => x.Distance(eTarget) < 400);
+                if (enemiesInRange.Count() >= UseRMinEnemies)
+                    R.CastOnUnit(eTarget, packetCast);
+            }
+
+            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now && igniteManager.IsReady())
+            {
+                if (mustDebug)
+                    Game.PrintChat("Ignite");
+                igniteManager.Cast(eTarget);
+            }
+        }
 
         public static void Combo()
         {
@@ -164,9 +234,9 @@ namespace DevBrand
                 E.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (IgniteManager.CanKill(eTarget))
+            if (igniteManager.CanKill(eTarget))
             {
-                if (IgniteManager.Cast(eTarget))
+                if (igniteManager.Cast(eTarget))
                     Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
             }
         }
@@ -200,19 +270,59 @@ namespace DevBrand
             }
         }
 
+        public static void WaveClear()
+        {
+            var useQ = Config.Item("UseQLaneClear").GetValue<bool>();
+            var useW = Config.Item("UseWLaneClear").GetValue<bool>();
+            var useE = Config.Item("UseELaneClear").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var ManaLaneClear = Config.Item("ManaLaneClear").GetValue<Slider>().Value;
+
+
+            if (W.IsReady() && useW && Player.GetManaPerc() >= ManaLaneClear)
+            {
+                var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All).ToList();
+
+                if (allMinionsW.Count > 0)
+                {
+                    var farm = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
+                    if (farm.MinionsHit >= 3)
+                    {
+                        W.Cast(farm.Position, packetCast);
+                        return;
+                    }
+                }
+            }
+
+            if (E.IsReady() && useW && Player.GetManaPerc() >= ManaLaneClear)
+            {
+                var allMinionsE = MinionManager.GetMinions(Player.ServerPosition, E.Range + E.Width, MinionTypes.All).ToList();
+
+                if (allMinionsE.Count > 0)
+                {
+                    var farm = E.GetCircularFarmLocation(allMinionsE, E.Width * 0.8f);
+                    if (farm.MinionsHit >= 3)
+                    {
+                        E.Cast(farm.Position, packetCast);
+                        return;
+                    }
+                }
+            }
+        }
+
         private static void InitializeSkinManager()
         {
-            SkinManager = new SkinManager();
-            SkinManager.Add("Apocalyptic Brand");
-            SkinManager.Add("Vandal Brand");
-            SkinManager.Add("Cryocore Brand");
-            SkinManager.Add("Zombie Brand");
+            skinManager = new SkinManager();
+            skinManager.Add("Apocalyptic Brand");
+            skinManager.Add("Vandal Brand");
+            skinManager.Add("Cryocore Brand");
+            skinManager.Add("Zombie Brand");
         }
 
         private static void InitializeSpells()
         {
-            IgniteManager = new IgniteManager();
-            BarrierManager = new BarrierManager();
+            igniteManager = new IgniteManager();
+            barrierManager = new BarrierManager();
 
             Q = new Spell(SpellSlot.Q, 1100);
             Q.SetSkillshot(0.25f, 60, 1600, true, SkillshotType.SkillshotLine);
@@ -289,26 +399,18 @@ namespace DevBrand
             Config.SubMenu("Combo").AddItem(new MenuItem("UseWCombo", "Use W").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseECombo", "Use E").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
-            Config.SubMenu("Combo").AddItem(new MenuItem("UseWComboHeal", "Priorize W to Heal").SetValue(true));
-            Config.SubMenu("Combo").AddItem(new MenuItem("UseWHealMinHealth", "W Heal Min Health").SetValue(new Slider(40, 1, 100)));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseRMinEnemies", "Use R if Hit X").SetValue(new Slider(2, 1, 5)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
-            Config.SubMenu("Harass").AddItem(new MenuItem("UseRHarass", "Use R").SetValue(false));
-            Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarassHeal", "Priorize W to Heal").SetValue(true));
-            Config.SubMenu("Harass").AddItem(new MenuItem("UseWHealMinHealthHarass", "W Heal Min Health").SetValue(new Slider(50, 1, 100)));
 
-            //Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
-            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
-            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
-            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
-            //Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(25, 1, 100)));
-
-            //Config.AddSubMenu(new Menu("Freeze", "Freeze"));
-            //Config.SubMenu("Freeze").AddItem(new MenuItem("UseQFreeze", "Use Q LastHit").SetValue(true));
-            //Config.SubMenu("Freeze").AddItem(new MenuItem("ManaFreeze", "Min Mana Q").SetValue(new Slider(25, 1, 100)));
+            Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
+            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(false));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(true));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(30, 1, 100)));
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
@@ -324,7 +426,7 @@ namespace DevBrand
             Config.SubMenu("Drawings").AddItem(new MenuItem("RRange", "R Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
             Config.SubMenu("Drawings").AddItem(new MenuItem("ComboDamage", "Drawings on HPBar").SetValue(true));
 
-            SkinManager.AddToMenu(ref Config);
+            skinManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
         }

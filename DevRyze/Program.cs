@@ -297,7 +297,14 @@ namespace DevRyze
                         Freeze();
                         break;
                     default:
-                        break;
+                        {
+                            if (Config.Item("UseHarassAlways").GetValue<bool>())
+                            {
+                                Harass();
+                            }
+                            break;
+                        }
+                       
                 }
 
                 SkinManager.Update();
@@ -571,6 +578,7 @@ namespace DevRyze
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
+            Config.SubMenu("Harass").AddItem(new MenuItem("UseHarassAlways", "Keep Harras Always ON").SetValue(false));
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
