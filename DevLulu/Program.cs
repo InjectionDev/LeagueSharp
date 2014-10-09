@@ -12,6 +12,7 @@ using Evade;
 
 /*
  * ##### DevLulu Mods #####
+ * 
  * + Support Mode and AP Carry Mode with separated logic
  * + E + Q Combo ! (Use enemy/ally/minion to hit target)
  * + E/R Interrupt Spells
@@ -75,6 +76,8 @@ namespace DevLulu
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
 
+            Game.OnGameProcessPacket += Game_OnGameProcessPacket;
+
             Evade.SkillshotDetector.OnDetectSkillshot += SkillshotDetector_OnDetectSkillshot;
 
             Config.Item("ComboDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
@@ -83,6 +86,48 @@ namespace DevLulu
                 Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
                 Utility.HpBarDamageIndicator.Enabled = true;
             }
+        }
+
+        static void Game_OnGameProcessPacket(GamePacketEventArgs args)
+        {
+            if (args.PacketData[0] == 0xB7)
+            {
+                var packet = new GamePacket(args.PacketData);
+                packet.Position = 1;
+                var targetbuff = ObjectManager.GetUnitByNetworkId<Obj_AI_Base>(packet.ReadInteger());
+
+                ProcessGainBuff(targetbuff);
+                return;
+            }
+            //if (args.PacketData[0] == 0x7B)
+            //{
+            //    ProcessLoseBuff();
+            //    return;
+            //}
+        }
+
+        private static void ProcessGainBuff(Obj_AI_Base unit)
+        {
+            if (mustDebug)
+            {
+                Game.PrintChat("ProcessGainBuff -> " + unit.BaseSkinName);
+                foreach(var buff in unit.Buffs.Where(buff => buff.IsActive))
+                    Game.PrintChat(string.Format("{0} Buff -> {1} {2}", unit.BaseSkinName, buff.Name, buff.Count));
+            }
+
+            if (!unit.IsMe && unit.HasBuff("luluE"))
+            {
+                var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+                var queryEnemyList = DevHelper.GetEnemyList().Where(x => x.Distance(unit) < Q.Range).OrderBy(x => x.Health).ToList();
+                if (queryEnemyList.Count() > 0)
+                {
+                    var enemy = queryEnemyList.First();
+                    var pred = Q.GetPrediction(enemy);
+                    Q.Cast(pred.CastPosition, packetCast);
+                }
+            }
+
         }
 
         static void SkillshotDetector_OnDetectSkillshot(Evade.Skillshot skillshot)
@@ -99,7 +144,10 @@ namespace DevLulu
             {
                 if (UseEHelpAlly && E.IsReady())
                 {
-                    var AllyList = DevCommom.DevHelper.GetAllyList().Where(x => Player.Distance(x) < E.Range && skillshot.IsDanger(x.ServerPosition.To2D())).OrderBy(x => x.Health);
+                    var AllyList = DevCommom.DevHelper.GetAllyList()
+                        .Where(ally => Player.Distance(ally) < E.Range && skillshot.IsDanger(ally.ServerPosition.To2D()))
+                        .OrderBy(ally => ally.Health);
+
                     if (AllyList.Count() > 0)
                     {
                         var ally = AllyList.First();
@@ -145,7 +193,6 @@ namespace DevLulu
                 case Orbwalking.OrbwalkingMode.Combo:
                     //BurstCombo();
                     Combo();
-                    ComboEQ();
                     break;
                 case Orbwalking.OrbwalkingMode.Mixed:
                     Harass();
@@ -208,7 +255,7 @@ namespace DevLulu
             }
         }
 
-        public static void ComboEQ()
+        public static void CastEQ()
         {
             var eTarget = SimpleTs.GetTarget(Q.Range * 2, SimpleTs.DamageType.Magical);
 
@@ -224,37 +271,101 @@ namespace DevLulu
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var EnemyList = DevHelper.GetEnemyList().Where(x => Player.Distance(x) < E.Range);
-            var queryEnemyList = EnemyList.Where(x => x.Distance(eTarget) < Q.Range).ToList();
-            if (queryEnemyList.Count() > 0)
+            var enemyList = DevHelper.GetEnemyList()
+                .Where(x => eTarget.NetworkId != x.NetworkId && Player.Distance(x) < E.Range && x.Distance(eTarget) < Q.Range).ToList();
+            if (enemyList.Count() > 0)
             {
-                var unit = queryEnemyList.First();
+                var unit = enemyList.First();
                 E.CastOnUnit(unit, packetCast);
-                Utility.DelayAction.Add(Game.Ping, () => Q.Cast(eTarget.ServerPosition, packetCast));  // todo: use process spell event
+                // Wait for ProcessGainBuff
                 return;
             }
 
-            var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x) < E.Range);
-            var queryAllyList = AllyList.Where(x => x.Distance(eTarget) < Q.Range).ToList();
-            if (queryAllyList.Count() > 0)
+            var allyList = DevHelper.GetAllyList()
+                .Where(x => Player.Distance(x) < E.Range && x.Distance(eTarget) < Q.Range).ToList();
+            if (allyList.Count() > 0)
             {
-                var unit = queryEnemyList.First();
+                var unit = allyList.First();
                 E.CastOnUnit(unit, packetCast);
-                Utility.DelayAction.Add(Game.Ping, () => Q.Cast(eTarget.ServerPosition, packetCast));
+                // Wait for ProcessGainBuff
                 return;
             }
 
-            var MinionList = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.All, MinionOrderTypes.Health);
-            var queryMinionList = MinionList.Where(x => x.Distance(eTarget) < Q.Range).ToList();
-            if (queryMinionList.Count() > 0)
+            var minionList = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.All, MinionOrderTypes.Health)
+                .Where(x => x.Distance(eTarget) < Q.Range).OrderByDescending(x => x.Health).ToList();
+            if (minionList.Count() > 0)
             {
-                var unit = queryEnemyList.First();
+                var unit = minionList.First();
                 E.CastOnUnit(unit, packetCast);
-                Utility.DelayAction.Add(Game.Ping, () => Q.Cast(eTarget.ServerPosition, packetCast));
+                // Wait for ProcessGainBuff
                 return;
             }
         }
 
+        public static void CastWAlly()
+        {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            var allyList = DevHelper.GetAllyList()
+                .Where(ally => Player.Distance(ally) < W.Range && W.IsReady() && ally.GetNearestEnemy().Distance(ally) < ally.AttackRange)
+                .OrderBy(ally => ally.Health);
+
+            if (allyList.Count() > 0)
+            {
+                var ally = allyList.First();
+                W.CastOnUnit(ally, packetCast);
+            }
+        }
+
+        public static void CastWEnemy()
+        {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            var eTarget = SimpleTs.GetTarget(W.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady())
+            {
+                W.CastOnUnit(eTarget, packetCast);
+            }
+        }
+
+        public static void CastEAlly()
+        {
+            // SkillshotDetector_OnDetectSkillshot logic
+        }
+
+        public static void CastEEnemy()
+        {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
+            if (eTarget.IsValidTarget(E.Range) && E.IsReady())
+            {
+                E.CastOnUnit(eTarget, packetCast);
+            }
+        }
+
+        public static void CastQ()
+        {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
+            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady())
+            {
+                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+            }
+        }
 
         public static void Combo()
         {
@@ -269,25 +380,25 @@ namespace DevLulu
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
+            if (IsSupportMode)
             {
-                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                CastWAlly();
+                CastEAlly();
+                CastQ();
+                CastEQ();
             }
-
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
+            else
             {
-                W.CastOnUnit(eTarget, packetCast);
-            }
+                CastQ();
+                CastWEnemy();
+                CastEEnemy();
+                CastEQ();
 
-            if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
-            {
-                E.CastOnUnit(eTarget, packetCast);
-            }
-
-            if (IgniteManager.CanKill(eTarget))
-            {
-                if (IgniteManager.Cast(eTarget))
-                    Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
+                if (IgniteManager.CanKill(eTarget))
+                {
+                    if (IgniteManager.Cast(eTarget))
+                        Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
+                }
             }
         }
 
@@ -303,20 +414,21 @@ namespace DevLulu
             var useE = Config.Item("UseEHarass").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
+            if (IsSupportMode)
             {
-                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                CastWAlly();
+                CastEAlly();
+                CastQ();
+                CastEQ();
+            }
+            else
+            {
+                CastQ();
+                CastWEnemy();
+                CastEEnemy();
+                CastEQ();
             }
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
-            {
-                W.CastOnUnit(eTarget, packetCast);
-            }
-
-            if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
-            {
-                E.CastOnUnit(eTarget, packetCast);
-            }
         }
 
         private static void InitializeSkinManager()
@@ -338,13 +450,13 @@ namespace DevLulu
             Q.SetSkillshot(0.2f, 60, 1450, false, SkillshotType.SkillshotLine);
 
             W = new Spell(SpellSlot.W, 650);
-            W.SetTargetted(0.1f, float.MaxValue);
+            W.SetTargetted(0.2f, float.MaxValue);
 
             E = new Spell(SpellSlot.E, 650);
-            E.SetTargetted(0.1f, float.MaxValue);
+            E.SetTargetted(0.2f, float.MaxValue);
 
             R = new Spell(SpellSlot.R, 900);
-            R.SetTargetted(0.1f, float.MaxValue);
+            R.SetTargetted(0.2f, float.MaxValue);
 
             SpellList.Add(Q);
             SpellList.Add(W);
@@ -354,6 +466,9 @@ namespace DevLulu
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
+            if (args.Target.IsMinion && IsSupportMode && Player.GetNearestAlly().Distance(Player) < 1000)
+                args.Process = false;
+
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
                 var useQ = Config.Item("UseQCombo").GetValue<bool>();
@@ -393,6 +508,10 @@ namespace DevLulu
             return (float)Damage.GetComboDamage(Player, enemy, spellCombo);
         }
 
+        private static bool IsSupportMode {
+            get { return Config.Item("UseQHarass").GetValue<bool>(); }
+        }
+
         private static void InitializeMainMenu()
         {
             Config = new Menu("DevLulu", "DevLulu", true);
@@ -403,6 +522,9 @@ namespace DevLulu
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
             Orbwalker = new Orbwalking.Orbwalker(Config.SubMenu("Orbwalking"));
+
+            Config.AddSubMenu(new Menu("Mode", "Mode"));
+            Config.SubMenu("Mode").AddItem(new MenuItem("SupportMode", "Support Mode").SetValue(true));
 
             Config.AddSubMenu(new Menu("Combo", "Combo"));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseQCombo", "Use Q").SetValue(true));

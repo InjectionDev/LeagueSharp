@@ -31,7 +31,15 @@ namespace DevCommom
         public static Obj_AI_Hero GetNearestEnemy(this Obj_AI_Base unit)
         {
             return ObjectManager.Get<Obj_AI_Hero>()
-                .Where(x => x.IsEnemy && x.IsValid)
+                .Where(x => x.IsEnemy && x.IsValid && x.NetworkId != unit.NetworkId)
+                .OrderBy(x => unit.ServerPosition.Distance(x.ServerPosition))
+                .FirstOrDefault();
+        }
+
+        public static Obj_AI_Hero GetNearestAlly(this Obj_AI_Base unit)
+        {
+            return ObjectManager.Get<Obj_AI_Hero>()
+                .Where(x => x.IsAlly && x.IsValid && x.NetworkId != unit.NetworkId)
                 .OrderBy(x => unit.ServerPosition.Distance(x.ServerPosition))
                 .FirstOrDefault();
         }

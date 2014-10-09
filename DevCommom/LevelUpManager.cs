@@ -16,6 +16,13 @@ namespace DevCommom
         public LevelUpManager(int[] pSpellPriorityList)
         {
             this.spellPriorityList = pSpellPriorityList;
+
+            Game.OnGameUpdate += Game_OnGameUpdate;
+        }
+
+        void Game_OnGameUpdate(EventArgs args)
+        {
+            Update();
         }
 
         public void Update()

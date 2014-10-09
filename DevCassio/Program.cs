@@ -40,13 +40,15 @@ namespace DevCassio
         public static Spell E;
         public static Spell R;
         public static List<Obj_AI_Base> MinionList;
-        public static SkinManager SkinManager;
-        public static IgniteManager IgniteManager;
-        public static LevelUpManager LevelUpManager;
+        public static SkinManager skinManager;
+        public static IgniteManager igniteManager;
+        public static LevelUpManager levelUpManager;
+        private static AssemblyUtil assemblyUtil;
 
         private static DateTime dtBurstComboStart = DateTime.MinValue;
         private static DateTime dtLastQCast = DateTime.MinValue;
 
+       
         public static bool mustDebug = false;
 
 
@@ -85,7 +87,7 @@ namespace DevCassio
                 //if (Config.Item("AutoLevelUP").GetValue<bool>())
                 //    LevelUpManager.Update();
 
-                SkinManager.Update();
+                skinManager.Update();
 
             }
             catch (Exception ex)
@@ -119,7 +121,7 @@ namespace DevCassio
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
-            totalComboDamage += IgniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
+            totalComboDamage += igniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
@@ -150,11 +152,11 @@ namespace DevCassio
                 }
             }
 
-            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now && IgniteManager.IsReady())
+            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now && igniteManager.IsReady())
             {
                 if (mustDebug)
                     Game.PrintChat("Ignite");
-                IgniteManager.Cast(eTarget);
+                igniteManager.Cast(eTarget);
             }
         }
 
@@ -215,7 +217,6 @@ namespace DevCassio
                 if (Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
                 {
                     dtLastQCast = DateTime.Now;
-                    return;
                 }
             }
 
@@ -227,9 +228,9 @@ namespace DevCassio
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (IgniteManager.HasIgnite && IgniteManager.IsReady() && IgniteManager.CanKill(eTarget))
+            if (igniteManager.HasIgnite && igniteManager.IsReady() && igniteManager.CanKill(eTarget))
             {
-                IgniteManager.Cast(eTarget);
+                igniteManager.Cast(eTarget);
             }
 
         }
@@ -470,10 +471,9 @@ namespace DevCassio
 
                 Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
-                //if (AssemblyUtil.IsLastVersion())
-                //    Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
-                //else
-                //    Game.PrintChat(string.Format("<font color='#FF0000'>DevCassio NEW VERSION available! Tap F8 to update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                //assemblyUtil = new AssemblyUtil();
+                //assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
+                //assemblyUtil.GetLastVersionAsync();
 
             }
             catch(Exception ex)
@@ -481,6 +481,17 @@ namespace DevCassio
                 Console.WriteLine(ex.ToString());
                 if (mustDebug)
                     Game.PrintChat(ex.ToString());
+            }
+        }
+
+        static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
+        {
+            if (args.IsSuccess)
+            {
+                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                    Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                else
+                    Game.PrintChat(string.Format("<font color='#FF0000'>DevCassio NEW VERSION available! Tap F8 to update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
             }
         }
 
@@ -546,7 +557,7 @@ namespace DevCassio
             R = new Spell(SpellSlot.R, 850);
             R.SetSkillshot(0.6f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
 
-            IgniteManager = new IgniteManager();
+            igniteManager = new IgniteManager();
 
 
             SpellList.Add(Q);
@@ -563,12 +574,12 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("InitializeSkinManager Start");
 
-            SkinManager = new SkinManager();
-            SkinManager.Add("Cassio");
-            SkinManager.Add("Desperada Cassio");
-            SkinManager.Add("Siren Cassio");
-            SkinManager.Add("Mythic Cassio");
-            SkinManager.Add("Jade Fang Cassio");
+            skinManager = new SkinManager();
+            skinManager.Add("Cassio");
+            skinManager.Add("Desperada Cassio");
+            skinManager.Add("Siren Cassio");
+            skinManager.Add("Mythic Cassio");
+            skinManager.Add("Jade Fang Cassio");
 
             if (mustDebug)
                 Game.PrintChat("InitializeSkinManager Finish");
@@ -728,7 +739,7 @@ namespace DevCassio
             Config.SubMenu("Drawings").AddItem(new MenuItem("RRange", "R Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
             Config.SubMenu("Drawings").AddItem(new MenuItem("EDamage", "Show E Damage on HPBar").SetValue(true));
 
-            SkinManager.AddToMenu(ref Config);
+            skinManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
 
