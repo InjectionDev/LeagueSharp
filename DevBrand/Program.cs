@@ -64,8 +64,6 @@ namespace DevBrand
                 InitializeAttachEvents();
 
                 Game.PrintChat(string.Format("<font color='#F7A100'>DevBrand Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
-
-                Game.PrintChat(string.Format("<font color='#FF0000'>DevBrand: THIS ASSEMBLY IS NOT FINISHED YET!!!</font>"));
             }
             catch (Exception ex)
             {
