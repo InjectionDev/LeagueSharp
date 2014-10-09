@@ -547,9 +547,12 @@ namespace DevRyze
             foreach (var spell in SpellList)
             {
                 var menuItem = Config.Item(spell.Slot + "Range").GetValue<Circle>();
-                if (menuItem.Active && spell.IsReady())
+                if (menuItem.Active)
                 {
-                    Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
+                    if (spell.IsReady())
+                        Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Green);
+                    else
+                        Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Red);
                 }
             }
         }
