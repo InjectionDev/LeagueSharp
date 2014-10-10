@@ -325,7 +325,7 @@ namespace DevTwitch
             Q = new Spell(SpellSlot.Q);
 
             W = new Spell(SpellSlot.W, 950);
-            W.SetSkillshot(0.25f, 120f, 1400f, true, SkillshotType.SkillshotCircle);
+            W.SetSkillshot(0.25f, 270f, 1400f, false, SkillshotType.SkillshotCircle);
 
             E = new Spell(SpellSlot.E, 1200);
             E.SetTargetted(025f, float.MaxValue);
