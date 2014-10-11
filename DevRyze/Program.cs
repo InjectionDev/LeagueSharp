@@ -91,6 +91,8 @@ namespace DevRyze
             }
         }
 
+
+
         private static void InitializeSpells()
         {
             if (mustDebug)

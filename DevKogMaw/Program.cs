@@ -129,7 +129,10 @@ namespace DevKogMaw
 
             if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
             {
-                W.Cast();
+                if (packetCast)
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.W)).Send();
+                else
+                    W.Cast();
                 Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
             }
 
@@ -349,7 +352,7 @@ namespace DevKogMaw
                 if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
                     Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
                 else
-                    Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw NEW VERSION available! Tap F8 to update! {0} -> {1}</font>", Assembly.GetExecutingAssembly().GetName().Version, args.CurrentVersion));
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw NEW VERSION available! Update DevCommom and DevKogMaw! {0} -> {1}</font>", Assembly.GetExecutingAssembly().GetName().Version, args.CurrentVersion));
             }
         }
 

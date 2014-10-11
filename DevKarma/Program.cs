@@ -35,6 +35,7 @@ namespace DevKarma
         public static SkinManager SkinManager;
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
+        public static AssemblyUtil assemblyUtil;
 
         private static bool mustDebug = false;
 
@@ -60,11 +61,26 @@ namespace DevKarma
 
                 InitializeAttachEvents();
 
-                Game.PrintChat(string.Format("<font color='#F7A100'>DevKarma Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevKarma Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+
+                assemblyUtil = new AssemblyUtil();
+                assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
+                assemblyUtil.GetLastVersionAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+            }
+        }
+
+        static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
+        {
+            if (args.IsSuccess)
+            {
+                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevKarma You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                else
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevKarma NEW VERSION available! Update DevCommom and DevKarma! {0} -> {1}</font>", Assembly.GetExecutingAssembly().GetName().Version, args.CurrentVersion));
             }
         }
 

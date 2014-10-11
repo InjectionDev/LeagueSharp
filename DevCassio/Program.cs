@@ -43,7 +43,7 @@ namespace DevCassio
         public static SkinManager skinManager;
         public static IgniteManager igniteManager;
         public static LevelUpManager levelUpManager;
-        private static AssemblyUtil assemblyUtil;
+        public static AssemblyUtil assemblyUtil;
 
         private static DateTime dtBurstComboStart = DateTime.MinValue;
         private static DateTime dtLastQCast = DateTime.MinValue;
@@ -469,11 +469,11 @@ namespace DevCassio
 
                 InitializeAttachEvents();
 
-                Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevCassio Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
-                //assemblyUtil = new AssemblyUtil();
-                //assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
-                //assemblyUtil.GetLastVersionAsync();
+                assemblyUtil = new AssemblyUtil();
+                assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
+                assemblyUtil.GetLastVersionAsync();
 
             }
             catch(Exception ex)
@@ -489,9 +489,9 @@ namespace DevCassio
             if (args.IsSuccess)
             {
                 if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
-                    Game.PrintChat(string.Format("<font color='#F7A100'>DevCassio You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevCassio You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
                 else
-                    Game.PrintChat(string.Format("<font color='#FF0000'>DevCassio NEW VERSION available! Tap F8 to update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevCassio NEW VERSION available! Update DevCommom and DevCassio!</font>", Assembly.GetExecutingAssembly().GetName().Version));
             }
         }
 
