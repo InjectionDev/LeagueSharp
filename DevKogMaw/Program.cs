@@ -40,6 +40,7 @@ namespace DevKogMaw
         public static SkinManager SkinManager;
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
+        public static AssemblyUtil assemblyUtil;
 
         private static DateTime dtLastJungleStealAlert = DateTime.Now;
         private static DateTime dtLastJungleSteal = DateTime.Now;
@@ -327,13 +328,28 @@ namespace DevKogMaw
 
                 InitializeAttachEvents();
 
-                Game.PrintChat(string.Format("<font color='#F7A100'>DevKogMaw Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+
+                assemblyUtil = new AssemblyUtil();
+                assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
+                assemblyUtil.GetLastVersionAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 if (mustDebug)
                     Game.PrintChat(ex.Message);
+            }
+        }
+
+        static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
+        {
+            if (args.IsSuccess)
+            {
+                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                else
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw NEW VERSION available! Tap F8 to update! {0} -> {1}</font>", Assembly.GetExecutingAssembly().GetName().Version, args.CurrentVersion));
             }
         }
 
@@ -488,9 +504,22 @@ namespace DevKogMaw
             foreach (var spell in SpellList)
             {
                 var menuItem = Config.Item(spell.Slot + "Range").GetValue<Circle>();
-                if (menuItem.Active && spell.IsReady() && spell.Slot != SpellSlot.W)
+                if (menuItem.Active && spell.IsReady())
                 {
-                    Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
+                    if (spell.Slot == SpellSlot.W)
+                    {
+                        if (spell.IsReady())
+                            Utility.DrawCircle(ObjectManager.Player.Position, Player.AttackRange + spell.Range, System.Drawing.Color.Green);
+                        else
+                            Utility.DrawCircle(ObjectManager.Player.Position, Player.AttackRange + spell.Range, System.Drawing.Color.Red);
+                    }
+                    else
+                    {
+                        if (spell.IsReady())
+                            Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Green);
+                        else
+                            Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Red);
+                    }
                 }
             }
         }
