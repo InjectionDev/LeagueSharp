@@ -40,9 +40,9 @@ namespace DevTwitch
         public static SkinManager SkinManager;
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
+        public static AssemblyUtil assemblyUtil;
 
-
-        private static bool mustDebug = false;
+        private static bool mustDebug = true;
 
 
         static void Main(string[] args)
@@ -281,6 +281,10 @@ namespace DevTwitch
 
                 //Game.PrintChat(string.Format("<font color='#F7A100'>DevTwitch Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
+                assemblyUtil = new AssemblyUtil();
+                assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
+                assemblyUtil.GetLastVersionAsync();
+
                 Game.PrintChat(string.Format("<font color='#FF0000'>DevTwitch: THIS ASSEMBLY IS NOT FINISHED YET!!!</font>"));
             }
             catch (Exception ex)
@@ -288,6 +292,17 @@ namespace DevTwitch
                 Console.WriteLine(ex.ToString());
                 if (mustDebug)
                     Game.PrintChat(ex.Message);
+            }
+        }
+
+        static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
+        {
+            if (args.IsSuccess)
+            {
+                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                    Game.PrintChat(string.Format("<font color='#F7A100'>DevTwitch You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                else
+                    Game.PrintChat(string.Format("<font color='#FF0000'>DevTwitch NEW VERSION available! Tap F8 to update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
             }
         }
 
@@ -343,21 +358,13 @@ namespace DevTwitch
 
         private static void InitializeSkinManager()
         {
-            if (mustDebug)
-                Game.PrintChat("InitializeSkinManager Start");
-
             SkinManager = new SkinManager();
-            SkinManager.Add("Kog'Maw");
-            SkinManager.Add("Caterpillar Kog'Maw");
-            SkinManager.Add("Sonoran Kog'Maw");
-            SkinManager.Add("Monarch Kog'Maw");
-            SkinManager.Add("Reindeer Kog'Maw");
-            SkinManager.Add("Lion Dance Kog'Maw");
-            SkinManager.Add("Deep Sea Kog'Maw");
-            SkinManager.Add("Jurassic Kog'Maw");
-
-            if (mustDebug)
-                Game.PrintChat("InitializeSkinManager Finish");
+            SkinManager.Add("Classic Twitch");
+            SkinManager.Add("Kingpin Twitch");
+            SkinManager.Add("Whistler Village Twitch");
+            SkinManager.Add("Medieval Twitch");
+            SkinManager.Add("Gangster Twitch");
+            SkinManager.Add("Vandal Twitch");
         }
 
         static void Game_OnGameSendPacket(GamePacketEventArgs args)
@@ -387,7 +394,8 @@ namespace DevTwitch
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            
+            if (mustDebug)
+                Game.PrintChat(string.Format("OnEnemyGapcloser -> {0}", gapcloser.Sender.SkinName));
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var BarrierGapCloser = Config.Item("BarrierGapCloser").GetValue<bool>();
             var BarrierGapCloserMinHealth = Config.Item("BarrierGapCloserMinHealth").GetValue<Slider>().Value;
@@ -401,6 +409,9 @@ namespace DevTwitch
 
             if (QGapCloser && E.IsReady())
             {
+                if (mustDebug)
+                    Game.PrintChat(string.Format("OnEnemyGapcloser -> UseQ"));
+
                 if (packetCast)
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.Q)).Send();
                 else
@@ -464,9 +475,9 @@ namespace DevTwitch
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("ManaHarass", "Min Mana Harass").SetValue(new Slider(50, 1, 100)));
 
-            //Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
-            //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(false));
-            //Config.SubMenu("LaneClear").AddItem(new MenuItem("EManaLaneClear", "Min Mana to E").SetValue(new Slider(50, 1, 100)));
+            Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(false));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("EManaLaneClear", "Min Mana to E").SetValue(new Slider(50, 1, 100)));
 
             Config.AddSubMenu(new Menu("KillSteal", "KillSteal"));
             Config.SubMenu("KillSteal").AddItem(new MenuItem("RKillSteal", "R KillSteal").SetValue(true));
@@ -479,9 +490,9 @@ namespace DevTwitch
             Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloser", "Barrier onGapCloser").SetValue(true));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloserMinHealth", "Barrier MinHealth").SetValue(new Slider(40, 0, 100)));
 
-            Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("AssistedUltKey", "Assisted Ult Key").SetValue((new KeyBind("R".ToCharArray()[0], KeyBindType.Press))));
+            //Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
+            //Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
+            //Config.SubMenu("Ultimate").AddItem(new MenuItem("AssistedUltKey", "Assisted Ult Key").SetValue((new KeyBind("R".ToCharArray()[0], KeyBindType.Press))));
 
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
             Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q Range").SetValue(new Circle(true, System.Drawing.Color.FromArgb(255, 255, 255, 255))));

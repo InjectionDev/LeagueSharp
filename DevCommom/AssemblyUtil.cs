@@ -12,7 +12,7 @@ namespace DevCommom
     {
 
         public delegate void OnGetVersionCompleted(OnGetVersionCompletedArgs args);
-        public static event OnGetVersionCompleted onGetVersionCompleted;
+        public event OnGetVersionCompleted onGetVersionCompleted;
 
         public AssemblyUtil()
         {
