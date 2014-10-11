@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Cache;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,10 +22,12 @@ namespace DevCommom
 
         public void GetLastVersionAsync()
         {
+
             using (WebClient webClient = new WebClient())
             {
                 var urlBase = string.Format(@"https://raw.githubusercontent.com/InjectionDev/LeagueSharp/master/{0}/Properties/AssemblyInfo.cs", Assembly.GetExecutingAssembly().GetName().Name);
 
+                webClient.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
                 webClient.DownloadStringCompleted += webClient_DownloadStringCompleted;
                 webClient.DownloadStringAsync(new Uri(urlBase));
             }
