@@ -37,6 +37,7 @@ namespace DevRyze
         public static SkinManager SkinManager;
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
+        public static AssemblyUtil assemblyUtil;
 
         private static List<Obj_AI_Base> MinionListToIgnore;
 
@@ -65,13 +66,28 @@ namespace DevRyze
 
                 InitializeAttachEvents();
 
-                Game.PrintChat(string.Format("<font color='#F7A100'>DevRyze Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+
+                assemblyUtil = new AssemblyUtil();
+                assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
+                assemblyUtil.GetLastVersionAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 if (mustDebug)
                     Game.PrintChat(ex.Message);
+            }
+        }
+
+        static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
+        {
+            if (args.IsSuccess)
+            {
+                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                else
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze NEW VERSION available! Tap F8 to update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
             }
         }
 
@@ -328,7 +344,7 @@ namespace DevRyze
             var useQ = Config.Item("UseQCombo").GetValue<bool>();
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
-            var useR = Config.Item("UseRCombo").GetValue<bool>();
+            var useR = Config.Item("UseRCombo").GetValue<bool>() || Config.Item("UseRComboToggle").GetValue<KeyBind>().Active;
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             // Cast R if will hit 1+ enemies
@@ -374,7 +390,7 @@ namespace DevRyze
             var useQ = Config.Item("UseQCombo").GetValue<bool>();
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
-            var useR = Config.Item("UseRCombo").GetValue<bool>();
+            var useR = Config.Item("UseRCombo").GetValue<bool>() || Config.Item("UseRComboToggle").GetValue<KeyBind>().Active;
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
@@ -576,6 +592,7 @@ namespace DevRyze
             Config.SubMenu("Combo").AddItem(new MenuItem("UseWCombo", "Use W").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseECombo", "Use E").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseRComboToggle", "Use R (toggle)").SetValue(new KeyBind("G".ToCharArray()[0], KeyBindType.Toggle)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
