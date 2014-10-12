@@ -135,12 +135,11 @@ namespace DevLulu
             if (mustDebug)
                 Game.PrintChat("OnDetectSkillshot -> IsDanger: " + skillshot.IsDanger(Player.ServerPosition.To2D()));
 
-            var HelpAlly = Config.Item("HelpAlly").GetValue<bool>();
             var UseWHelpAlly = Config.Item("UseWHelpAlly").GetValue<bool>();
             var UseEHelpAlly = Config.Item("UseEHelpAlly").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (HelpAlly && skillshot.Unit.IsEnemy)
+            if (skillshot.Unit.IsEnemy)
             {
                 if (UseEHelpAlly && E.IsReady())
                 {
@@ -235,12 +234,11 @@ namespace DevLulu
 
         public static void HelpAlly()
         {
-            var HelpAlly = Config.Item("HelpAlly").GetValue<bool>();
             var UseWHelpAlly = Config.Item("UseWHelpAlly").GetValue<bool>();
             var UseEHelpAlly = Config.Item("UseEHelpAlly").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (HelpAlly)
+            if (UseWHelpAlly || UseEHelpAlly)
             {
                 var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x.ServerPosition) < W.Range && x.GetHealthPerc() < 50 && DevHelper.CountEnemyInTargetRange(x, 600) > 0).OrderBy(x => x.Health);
                 if (AllyList.Count() > 0)
@@ -466,8 +464,12 @@ namespace DevLulu
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            if (args.Target.IsMinion && IsSupportMode && Player.GetNearestAlly().Distance(Player) < 1000)
-                args.Process = false;
+            if (args.Target.IsMinion && IsSupportMode)
+            {
+                var allyADC = Player.GetNearestAlly();
+                if (allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
+                    args.Process = false;
+            }
 
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
@@ -551,8 +553,7 @@ namespace DevLulu
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseRAlly", "Use R Ally").SetValue(true));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseRAllyMinHealth", "Ally MinHealth").SetValue(new Slider(30, 1, 100)));
 
-            Config.AddSubMenu(new Menu("HelpAlly", "Help Ally"));
-            Config.SubMenu("HelpAlly").AddItem(new MenuItem("HelpAlly", "Help Ally").SetValue(true));
+            Config.AddSubMenu(new Menu("Help Ally", "HelpAlly"));
             Config.SubMenu("HelpAlly").AddItem(new MenuItem("UseWHelpAlly", "Use W").SetValue(true));
             Config.SubMenu("HelpAlly").AddItem(new MenuItem("UseEHelpAlly", "Use E").SetValue(true));
             Config.SubMenu("HelpAlly").AddItem(new MenuItem("AllyMinHealth", "Help Ally MinHealth").SetValue(new Slider(50, 1, 100)));
