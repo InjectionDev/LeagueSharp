@@ -41,7 +41,7 @@ namespace DevLulu
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
 
-        private static bool mustDebug = false;
+        private static bool mustDebug = true;
 
         static void Main(string[] args)
         {
@@ -61,7 +61,7 @@ namespace DevLulu
 
             InitializeMainMenu();
 
-            //InitializeAttachEvents();
+            InitializeAttachEvents();
 
             //Game.PrintChat(string.Format("<font color='#F7A100'>DevLulu Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
@@ -108,20 +108,24 @@ namespace DevLulu
 
         private static void ProcessGainBuff(Obj_AI_Base unit)
         {
-            if (mustDebug)
-            {
-                Game.PrintChat("ProcessGainBuff -> " + unit.BaseSkinName);
-                foreach(var buff in unit.Buffs.Where(buff => buff.IsActive))
-                    Game.PrintChat(string.Format("{0} Buff -> {1} {2}", unit.BaseSkinName, buff.Name, buff.Count));
-            }
+            //if (mustDebug)
+            //{
+            //    Game.PrintChat("ProcessGainBuff -> " + unit.BaseSkinName);
+            //    foreach(var buff in unit.Buffs.Where(buff => buff.IsActive))
+            //        Game.PrintChat(string.Format("{0} Buff -> {1} {2}", unit.BaseSkinName, buff.Name, buff.Count));
+            //}
 
-            if (!unit.IsMe && unit.HasBuff("luluE"))
+            var buffList = unit.Buffs.Where(buff => buff.Name.ToLower().StartsWith("lulufae") && buff.IsActive && !unit.IsMe);
+
+            if (buffList.Count() > 0)
             {
                 var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
                 var queryEnemyList = DevHelper.GetEnemyList().Where(x => x.Distance(unit) < Q.Range).OrderBy(x => x.Health).ToList();
                 if (queryEnemyList.Count() > 0)
                 {
+                    if (mustDebug)
+                        Game.PrintChat(string.Format("Cast Q from -> {0}", unit.BaseSkinName));
                     var enemy = queryEnemyList.First();
                     var pred = Q.GetPrediction(enemy);
                     Q.Cast(pred.CastPosition, packetCast);
@@ -132,8 +136,8 @@ namespace DevLulu
 
         static void SkillshotDetector_OnDetectSkillshot(Evade.Skillshot skillshot)
         {
-            if (mustDebug)
-                Game.PrintChat("OnDetectSkillshot -> IsDanger: " + skillshot.IsDanger(Player.ServerPosition.To2D()));
+            if (mustDebug && skillshot.IsDanger(Player.ServerPosition.To2D()))
+                Game.PrintChat("OnDetectSkillshot -> IsDanger");
 
             var UseWHelpAlly = Config.Item("UseWHelpAlly").GetValue<bool>();
             var UseEHelpAlly = Config.Item("UseEHelpAlly").GetValue<bool>();
@@ -171,6 +175,8 @@ namespace DevLulu
             if (WGapCloser && W.IsReady() && gapcloser.Sender.IsValidTarget(W.Range))
             {
                 W.CastOnUnit(gapcloser.Sender, packetCast);
+                if (mustDebug)
+                    Game.PrintChat("W OnEnemyGapcloser");
             }
         }
 
@@ -182,6 +188,8 @@ namespace DevLulu
             if (WInterruptSpell && W.IsReady() && unit.IsValidTarget(W.Range))
             {
                 W.CastOnUnit(unit, packetCast);
+                if (mustDebug)
+                    Game.PrintChat("W to Interrup");
             }
         }
 
@@ -276,7 +284,8 @@ namespace DevLulu
                 var unit = enemyList.First();
                 E.CastOnUnit(unit, packetCast);
                 // Wait for ProcessGainBuff
-                return;
+                if (mustDebug)
+                    Game.PrintChat("CastEQ -> E Enemy");
             }
 
             var allyList = DevHelper.GetAllyList()
@@ -286,7 +295,8 @@ namespace DevLulu
                 var unit = allyList.First();
                 E.CastOnUnit(unit, packetCast);
                 // Wait for ProcessGainBuff
-                return;
+                if (mustDebug)
+                    Game.PrintChat("CastEQ -> E Ally");
             }
 
             var minionList = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.All, MinionOrderTypes.Health)
@@ -296,7 +306,8 @@ namespace DevLulu
                 var unit = minionList.First();
                 E.CastOnUnit(unit, packetCast);
                 // Wait for ProcessGainBuff
-                return;
+                if (mustDebug)
+                    Game.PrintChat("CastEQ -> E Minion");
             }
         }
 
@@ -376,21 +387,31 @@ namespace DevLulu
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
+            var UseEQCombo = Config.Item("UseEQCombo").GetValue<bool>();
+            
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (IsSupportMode)
             {
-                CastWAlly();
-                CastEAlly();
-                CastQ();
-                CastEQ();
+                if (useW)
+                    CastWAlly();
+                if (useE)
+                    CastEAlly();
+                if (useQ)
+                    CastQ();
+                if (UseEQCombo)
+                    CastEQ();
             }
             else
             {
-                CastQ();
-                CastWEnemy();
-                CastEEnemy();
-                CastEQ();
+                if (useQ)
+                    CastQ();
+                if (useW)
+                    CastWEnemy();
+                if (useE)
+                    CastEEnemy();
+                if (UseEQCombo)
+                    CastEQ();
 
                 if (IgniteManager.CanKill(eTarget))
                 {
@@ -410,21 +431,31 @@ namespace DevLulu
             var useQ = Config.Item("UseQHarass").GetValue<bool>();
             var useW = Config.Item("UseWHarass").GetValue<bool>();
             var useE = Config.Item("UseEHarass").GetValue<bool>();
+            var UseEQHarass = Config.Item("UseEQHarass").GetValue<bool>();
+            
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (IsSupportMode)
             {
-                CastWAlly();
-                CastEAlly();
-                CastQ();
-                CastEQ();
+                if (useW)
+                    CastWAlly();
+                if (useE)
+                    CastEAlly();
+                if (useQ)
+                    CastQ();
+                if (UseEQHarass)
+                    CastEQ();
             }
             else
             {
-                CastQ();
-                CastWEnemy();
-                CastEEnemy();
-                CastEQ();
+                if (useQ)
+                    CastQ();
+                if (useW)
+                    CastWEnemy();
+                if (useE)
+                    CastEEnemy();
+                if (UseEQHarass)
+                    CastEQ();
             }
 
         }
@@ -464,32 +495,12 @@ namespace DevLulu
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            if (args.Target.IsMinion && IsSupportMode)
-            {
-                var allyADC = Player.GetNearestAlly();
-                if (allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
-                    args.Process = false;
-            }
-
-            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-            {
-                var useQ = Config.Item("UseQCombo").GetValue<bool>();
-                var useW = Config.Item("UseWCombo").GetValue<bool>();
-                var useE = Config.Item("UseQCombo").GetValue<bool>();
-
-                if (Player.GetNearestEnemy().IsValidTarget(Q.Range) && useQ && Q.IsReady())
-                    args.Process = false;
-            }
-            else
-                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
-                {
-                    var useQ = Config.Item("UseQHarass").GetValue<bool>();
-                    var useW = Config.Item("UseWHarass").GetValue<bool>();
-                    var useE = Config.Item("UseEHarass").GetValue<bool>();
-
-                    if (Player.GetNearestEnemy().IsValidTarget(Q.Range) && useQ && Q.IsReady())
-                        args.Process = false;
-                }
+            //if (args.Target.IsMinion && IsSupportMode)
+            //{
+            //    var allyADC = Player.GetNearestAlly();
+            //    if (!allyADC.IsMe && allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
+            //        args.Process = false;
+            //}
         }
 
         static void Drawing_OnDraw(EventArgs args)
@@ -533,11 +544,13 @@ namespace DevLulu
             Config.SubMenu("Combo").AddItem(new MenuItem("UseWCombo", "Use W").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseECombo", "Use E").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
+            Config.SubMenu("Combo").AddItem(new MenuItem("UseEQCombo", "Use Combo E+Q to reach far enemies").SetValue(true));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
+            Config.SubMenu("Harass").AddItem(new MenuItem("UseEQHarass", "Use Combo E+Q to reach far enemies").SetValue(true));
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));

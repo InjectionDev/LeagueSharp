@@ -14,6 +14,7 @@ using SharpDX;
  * E KillSteal
  * Ult logic to Kill when 2 AA + Item
  * Smart E Use - Try to stack max of passive before cast E (keeps track of Distance, Min/Max Stacks, BuffTime)
+ * Min Passive Stacks on Harras/Combo with Slider
  * Skin Hack
  * Barrier GapCloser when LowHealth
  * 
