@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Cache;
@@ -15,27 +16,29 @@ namespace DevCommom
         public delegate void OnGetVersionCompleted(OnGetVersionCompletedArgs args);
         public event OnGetVersionCompleted onGetVersionCompleted;
 
-        public AssemblyUtil()
-        {
+        WebRequest webRequest;
 
+        string AssemblyName;
+
+        public AssemblyUtil(string pAssemblyName)
+        {
+            this.AssemblyName = pAssemblyName;
         }
 
         public void GetLastVersionAsync()
         {
+            var urlBase = string.Format(@"https://raw.githubusercontent.com/InjectionDev/LeagueSharp/master/{0}/Properties/AssemblyInfo.cs", this.AssemblyName);
 
-            using (WebClient webClient = new WebClient())
-            {
-                var urlBase = string.Format(@"https://raw.githubusercontent.com/InjectionDev/LeagueSharp/master/{0}/Properties/AssemblyInfo.cs", Assembly.GetExecutingAssembly().GetName().Name);
-
-                webClient.CachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
-                webClient.DownloadStringCompleted += webClient_DownloadStringCompleted;
-                webClient.DownloadStringAsync(new Uri(urlBase));
-            }
+            this.webRequest = WebRequest.Create(urlBase);
+            this.webRequest.BeginGetResponse(new AsyncCallback(FinishWebRequest), null);
         }
 
-        void webClient_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        void FinishWebRequest(IAsyncResult result)
         {
-            var response = e.Result;
+            var webResponse = webRequest.EndGetResponse(result);
+            var body = new StreamReader(webResponse.GetResponseStream()).ReadToEnd();
+
+            var response = body;
             var currentVersion = response.Remove(0, response.LastIndexOf("AssemblyVersion"));
             currentVersion = currentVersion.Substring(currentVersion.IndexOf("\"") + 1);
             currentVersion = currentVersion.Substring(0, currentVersion.IndexOf("\""));
@@ -44,11 +47,14 @@ namespace DevCommom
             {
                 OnGetVersionCompletedArgs versionCompletedArgs = new OnGetVersionCompletedArgs();
                 versionCompletedArgs.CurrentVersion = currentVersion;
-                versionCompletedArgs.IsSuccess = e.Error == null;
+                versionCompletedArgs.IsSuccess = true;
+                versionCompletedArgs.AssemblyName = this.AssemblyName;
 
                 onGetVersionCompleted(versionCompletedArgs);
             }
         }
+
+
 
     }
 
@@ -56,5 +62,6 @@ namespace DevCommom
     {
         public bool IsSuccess;
         public string CurrentVersion;
+        public string AssemblyName;
     }
 }

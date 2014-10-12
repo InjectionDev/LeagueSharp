@@ -63,7 +63,7 @@ namespace DevKarma
 
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevKarma Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
-                assemblyUtil = new AssemblyUtil();
+                assemblyUtil = new AssemblyUtil(Assembly.GetExecutingAssembly().GetName().Name);
                 assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
                 assemblyUtil.GetLastVersionAsync();
             }
@@ -313,7 +313,9 @@ namespace DevKarma
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed && Player.GetNearestEnemy().Distance(Player) < 1000)
+            var allyADC = Player.GetNearestAlly();
+
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed && args.Unit.IsMinion && !allyADC.IsMelee() && allyADC.Distance(args.Unit) < allyADC.AttackRange * 1.2)
                 args.Process = false;
         }
 

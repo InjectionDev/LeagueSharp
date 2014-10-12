@@ -68,7 +68,7 @@ namespace DevRyze
 
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
-                assemblyUtil = new AssemblyUtil();
+                assemblyUtil = new AssemblyUtil(Assembly.GetExecutingAssembly().GetName().Name);
                 assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
                 assemblyUtil.GetLastVersionAsync();
             }
@@ -85,7 +85,7 @@ namespace DevRyze
             if (args.IsSuccess)
             {
                 if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
-                    Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze You have the lastest version.</font>", Assembly.GetExecutingAssembly().GetName().Version));
                 else
                     Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze NEW VERSION available! Tap F8 to update! {0} -> {1}</font>", Assembly.GetExecutingAssembly().GetName().Version, args.CurrentVersion));
             }

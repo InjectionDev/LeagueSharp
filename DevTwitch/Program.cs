@@ -307,7 +307,7 @@ namespace DevTwitch
 
                 //Game.PrintChat(string.Format("<font color='#fb762d'>DevTwitch Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
-                assemblyUtil = new AssemblyUtil();
+                assemblyUtil = new AssemblyUtil(Assembly.GetExecutingAssembly().GetName().Name);
                 assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
                 assemblyUtil.GetLastVersionAsync();
 
