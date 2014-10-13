@@ -289,7 +289,7 @@ namespace DevLulu
             }
 
             var allyList = DevHelper.GetAllyList()
-                .Where(x => Player.Distance(x) < E.Range && x.Distance(eTarget) < Q.Range).ToList();
+                .Where(x => !x.IsMe && Player.Distance(x) < E.Range && x.Distance(eTarget) < Q.Range).ToList();
             if (allyList.Count() > 0)
             {
                 var unit = allyList.First();
@@ -343,7 +343,7 @@ namespace DevLulu
 
         public static void CastEAlly()
         {
-            // SkillshotDetector_OnDetectSkillshot logic
+            // Its on SkillshotDetector_OnDetectSkillshot
         }
 
         public static void CastEEnemy()
@@ -476,7 +476,7 @@ namespace DevLulu
             BarrierManager = new BarrierManager();
 
             Q = new Spell(SpellSlot.Q, 950);
-            Q.SetSkillshot(0.2f, 60, 1450, false, SkillshotType.SkillshotLine);
+            Q.SetSkillshot(0.2f, 60, 1450, true, SkillshotType.SkillshotLine);
 
             W = new Spell(SpellSlot.W, 650);
             W.SetTargetted(0.2f, float.MaxValue);
