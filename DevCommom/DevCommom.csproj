@@ -61,11 +61,13 @@
     <Compile Include="IgniteManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ItemManager.cs" />
     <Compile Include="LevelUpManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SkinManager.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SummonerSpellManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

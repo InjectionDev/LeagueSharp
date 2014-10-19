@@ -44,6 +44,7 @@ namespace DevKogMaw
 
         private static DateTime dtLastJungleStealAlert = DateTime.Now;
         private static DateTime dtLastJungleSteal = DateTime.Now;
+        private static DateTime dtLastKS = DateTime.Now;
 
         private static bool mustDebug = false;
 
@@ -78,11 +79,9 @@ namespace DevKogMaw
                         break;
                 }
 
-                if (Config.Item("RKillSteal").GetValue<bool>())
-                    KillSteal();
+                KillSteal();
 
-                if (Config.Item("ChaseEnemyAfterDeath").GetValue<bool>())
-                    ChaseEnemyAfterDeath();
+                ChaseEnemyAfterDeath();
 
                 if (Config.Item("JungleStealAlert").GetValue<bool>())
                     JungleStealAlert();
@@ -141,7 +140,7 @@ namespace DevKogMaw
                 E.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (eTarget.IsValidTarget(R.Range) && R.IsReady() && GetRStacks() < RMaxStacksCombo && useR)
+            if (eTarget.IsValidTarget(R.Range) && R.IsReady() && GetRStacks() < RMaxStacksCombo && useR && Player.Distance(eTarget) > Player.AttackRange)
             {
                 R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -192,7 +191,7 @@ namespace DevKogMaw
                 E.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (eTarget.IsValidTarget(R.Range) && R.IsReady() && GetRStacks() < RMaxStacksHarass && useR)
+            if (eTarget.IsValidTarget(R.Range) && R.IsReady() && GetRStacks() < RMaxStacksHarass && useR && Player.Distance(eTarget) > Player.AttackRange)
             {
                 R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -269,14 +268,18 @@ namespace DevKogMaw
             {
                 foreach (var enemy in DevHelper.GetEnemyList())
                 {
-                    if (enemy.IsValidTarget(R.Range) && enemy.Health < Player.GetSpellDamage(enemy, SpellSlot.R))
+                    if (enemy.IsValidTarget(R.Range) && enemy.Health < Player.GetSpellDamage(enemy, SpellSlot.R) && Player.Distance(enemy) > Player.AttackRange)
                     {
-                        if (R.CastIfHitchanceEquals(enemy, enemy.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                        var pred = R.GetPrediction(enemy);
+                        R.Cast(pred.CastPosition, packetCast);
+
+                        if (dtLastKS.AddSeconds(5) < DateTime.Now)
                         {
                             Game.PrintChat("R KillSteal");
                             Utility.DelayAction.Add(0, () => DevHelper.Ping(enemy.ServerPosition));
-                            Utility.DelayAction.Add(200, () => DevHelper.Ping(enemy.ServerPosition));
                             Utility.DelayAction.Add(400, () => DevHelper.Ping(enemy.ServerPosition));
+                            Utility.DelayAction.Add(800, () => DevHelper.Ping(enemy.ServerPosition));
+                            dtLastKS = DateTime.Now;
                         }
                     }
                 }
@@ -287,15 +290,19 @@ namespace DevKogMaw
         {
             var ChaseEnemyAfterDeath = Config.Item("ChaseEnemyAfterDeath").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
 
-            if (eTarget == null)
-                return;
-
-            if (HasPassiveBuff() && eTarget.IsValidTarget() && Player.Distance(eTarget.ServerPosition) > 10)
+            if (ChaseEnemyAfterDeath)
             {
-                Player.IssueOrder(GameObjectOrder.MoveTo, eTarget.ServerPosition);
-                //Player.SendMovePacket(eTarget.ServerPosition.To2D());
+                var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+
+                if (eTarget == null)
+                    return;
+
+                if (HasPassiveBuff() && eTarget.IsValidTarget() && Player.Distance(eTarget.ServerPosition) > 10)
+                {
+                    Player.IssueOrder(GameObjectOrder.MoveTo, eTarget.ServerPosition);
+                    //Player.SendMovePacket(eTarget.ServerPosition.To2D());
+                }
             }
         }
 
@@ -562,8 +569,8 @@ namespace DevKogMaw
                     else
                         Game.PrintChat("Jungle Steal Alert! Wait...");
                     Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
-                    Utility.DelayAction.Add(200, () => DevHelper.Ping(mob.ServerPosition));
                     Utility.DelayAction.Add(400, () => DevHelper.Ping(mob.ServerPosition));
+                    Utility.DelayAction.Add(800, () => DevHelper.Ping(mob.ServerPosition));
                     dtLastJungleStealAlert = DateTime.Now;
                 }
             }
@@ -594,8 +601,8 @@ namespace DevKogMaw
                 {
                     Game.PrintChat("Jungle Steal!");
                     Utility.DelayAction.Add(0, () => DevHelper.Ping(mob.ServerPosition));
-                    Utility.DelayAction.Add(200, () => DevHelper.Ping(mob.ServerPosition));
                     Utility.DelayAction.Add(400, () => DevHelper.Ping(mob.ServerPosition));
+                    Utility.DelayAction.Add(800, () => DevHelper.Ping(mob.ServerPosition));
                     dtLastJungleSteal = DateTime.Now;
                 }
             }
