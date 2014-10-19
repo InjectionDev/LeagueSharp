@@ -260,16 +260,18 @@ namespace DevTwitch
         {
             if (mustDebug)
                 Game.PrintChat("Freeze Start");
-
         }
 
         private static void CastE()
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            if (packetCast)
-                Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.E)).Send();
-            else
-                E.Cast();
+            if (E.IsReady())
+            {
+                if (packetCast)
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.E)).Send();
+                else
+                    E.Cast();
+            }
         }
 
 
