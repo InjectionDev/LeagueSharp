@@ -81,8 +81,8 @@ namespace DevCassio
                         break;
                 }
 
-                if (Config.Item("UseUltUnderTower").GetValue<bool>())
-                    UseUltUnderTower();
+                
+                UseUltUnderTower();
 
                 //if (Config.Item("AutoLevelUP").GetValue<bool>())
                 //    LevelUpManager.Update();
@@ -427,12 +427,16 @@ namespace DevCassio
         private static void UseUltUnderTower()
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var UseUltUnderTower = Config.Item("UseUltUnderTower").GetValue<bool>();
 
-            foreach (var eTarget in DevHelper.GetEnemyList())
+            if (UseUltUnderTower)
             {
-                if (eTarget.IsValidTarget(R.Range) && eTarget.IsUnderEnemyTurret() && R.IsReady())
+                foreach (var eTarget in DevHelper.GetEnemyList())
                 {
-                    R.Cast(eTarget.ServerPosition, packetCast);
+                    if (eTarget.IsValidTarget(R.Range) && eTarget.IsUnderEnemyTurret() && R.IsReady())
+                    {
+                        R.Cast(eTarget.ServerPosition, packetCast);
+                    }
                 }
             }
         }

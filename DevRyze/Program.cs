@@ -350,7 +350,7 @@ namespace DevRyze
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             // Cast R if will hit 1+ enemies
-            if (useR && R.IsReady() && DevHelper.CountEnemyInTargetRange(eTarget, 300) > 1)
+            if (useR && R.IsReady() && DevHelper.CountEnemyInPositionRange(eTarget.ServerPosition, 300) > 1)
             {
                 if (packetCast)
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();

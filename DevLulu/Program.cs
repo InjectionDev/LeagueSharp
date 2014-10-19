@@ -225,13 +225,13 @@ namespace DevLulu
 
             if (UseRAlly && R.IsReady())
             {
-                if (Player.GetHealthPerc() < UseRAllyMinHealth && DevHelper.CountEnemyInTargetRange(Player, 500) > 0)
+                if (Player.GetHealthPerc() < UseRAllyMinHealth && DevHelper.CountEnemyInPositionRange(Player.ServerPosition, 500) > 0)
                 {
                     R.CastOnUnit(Player, packetCast);
                     return;
                 }
 
-                var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x.ServerPosition) < R.Range && x.GetHealthPerc() < UseRAllyMinHealth && DevHelper.CountEnemyInTargetRange(x, 500) > 0);
+                var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x.ServerPosition) < R.Range && x.GetHealthPerc() < UseRAllyMinHealth && DevHelper.CountEnemyInPositionRange(x.ServerPosition, 500) > 0);
                 if (AllyList.Count() > 0)
                 {
                     var ally = AllyList.First();
@@ -248,7 +248,7 @@ namespace DevLulu
 
             if (UseWHelpAlly || UseEHelpAlly)
             {
-                var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x.ServerPosition) < W.Range && x.GetHealthPerc() < 50 && DevHelper.CountEnemyInTargetRange(x, 600) > 0).OrderBy(x => x.Health);
+                var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x.ServerPosition) < W.Range && x.GetHealthPerc() < 50 && DevHelper.CountEnemyInPositionRange(x.ServerPosition, 600) > 0).OrderBy(x => x.Health);
                 if (AllyList.Count() > 0)
                 {
                     var ally = AllyList.First();
@@ -391,34 +391,42 @@ namespace DevLulu
             
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (IsSupportMode)
+            switch (Config.Item("ModeType").GetValue<StringList>().SelectedIndex)
             {
-                if (useW)
-                    CastWAlly();
-                if (useE)
-                    CastEAlly();
-                if (useQ)
-                    CastQ();
-                if (UseEQCombo)
-                    CastEQ();
-            }
-            else
-            {
-                if (useQ)
-                    CastQ();
-                if (useW)
-                    CastWEnemy();
-                if (useE)
-                    CastEEnemy();
-                if (UseEQCombo)
-                    CastEQ();
+                case 0: //SoloQ
+                    {
+                        if (useQ)
+                            CastQ();
+                        if (useW)
+                            CastWEnemy();
+                        if (useE)
+                            CastEEnemy();
+                        if (UseEQCombo)
+                            CastEQ();
 
-                if (IgniteManager.CanKill(eTarget))
-                {
-                    if (IgniteManager.Cast(eTarget))
-                        Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
-                }
+                        if (IgniteManager.CanKill(eTarget))
+                        {
+                            if (IgniteManager.Cast(eTarget))
+                                Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
+                        }
+                        break;
+                    }
+                case 1: // Support
+                    {
+                        if (useW)
+                            CastWAlly();
+                        if (useE)
+                            CastEAlly();
+                        if (useQ)
+                            CastQ();
+                        if (UseEQCombo)
+                            CastEQ();
+                        break;
+                    }
+                default:
+                    break;
             }
+
         }
 
         public static void Harass()
@@ -435,28 +443,32 @@ namespace DevLulu
             
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (IsSupportMode)
+            switch (Config.Item("ModeType").GetValue<StringList>().SelectedIndex)
             {
-                if (useW)
-                    CastWAlly();
-                if (useE)
-                    CastEAlly();
-                if (useQ)
-                    CastQ();
-                if (UseEQHarass)
-                    CastEQ();
+                case 0: //SoloQ
+                    if (useQ)
+                        CastQ();
+                    if (useW)
+                        CastWEnemy();
+                    if (useE)
+                        CastEEnemy();
+                    if (UseEQHarass)
+                        CastEQ();
+                    break;
+                case 1: // Support
+                    if (useW)
+                        CastWAlly();
+                    if (useE)
+                        CastEAlly();
+                    if (useQ)
+                        CastQ();
+                    if (UseEQHarass)
+                        CastEQ();
+                    break;
+                default:
+                    break;
             }
-            else
-            {
-                if (useQ)
-                    CastQ();
-                if (useW)
-                    CastWEnemy();
-                if (useE)
-                    CastEEnemy();
-                if (UseEQHarass)
-                    CastEQ();
-            }
+
 
         }
 
@@ -521,9 +533,6 @@ namespace DevLulu
             return (float)Damage.GetComboDamage(Player, enemy, spellCombo);
         }
 
-        private static bool IsSupportMode {
-            get { return Config.Item("UseQHarass").GetValue<bool>(); }
-        }
 
         private static void InitializeMainMenu()
         {
@@ -537,7 +546,7 @@ namespace DevLulu
             Orbwalker = new Orbwalking.Orbwalker(Config.SubMenu("Orbwalking"));
 
             Config.AddSubMenu(new Menu("Mode", "Mode"));
-            Config.SubMenu("Mode").AddItem(new MenuItem("SupportMode", "Support Mode").SetValue(true));
+            Config.SubMenu("Mode").AddItem(new MenuItem("ModeType", "Mode Type").SetValue(new StringList(new[] { "SoloQ", "Support" })));
 
             Config.AddSubMenu(new Menu("Combo", "Combo"));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseQCombo", "Use Q").SetValue(true));

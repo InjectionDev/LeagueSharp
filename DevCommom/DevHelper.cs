@@ -111,9 +111,9 @@ namespace DevCommom
             return Damage.GetComboDamage(source, target, spellCombo) * 0.9 > target.Health;
         }
 
-        public static int CountEnemyInTargetRange(Obj_AI_Base target, float range)
+        public static int CountEnemyInPositionRange(Vector3 position, float range)
         {
-            return GetEnemyList().Where(x => target.ServerPosition.Distance(x.ServerPosition) <= range).Count();
+            return GetEnemyList().Where(x => x.ServerPosition.Distance(position) <= range).Count();
         }
     }
 }

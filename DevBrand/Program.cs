@@ -183,7 +183,7 @@ namespace DevBrand
             // Combo Damage
             if (R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
             {
-                if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
+                if (eTarget.Health < totalComboDamage * 0.9 && Player.Mana >= totalManaCost)
                 {
                     if (totalComboDamage * 0.3 < eTarget.Health) // Anti OverKill
                     {
@@ -329,6 +329,7 @@ namespace DevBrand
         private static void InitializeSkinManager()
         {
             skinManager = new SkinManager();
+            skinManager.Add("Classic Brand");
             skinManager.Add("Apocalyptic Brand");
             skinManager.Add("Vandal Brand");
             skinManager.Add("Cryocore Brand");
