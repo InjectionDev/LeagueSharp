@@ -11,24 +11,42 @@ namespace DevCommom
     public class LevelUpManager
     {
         private int[] spellPriorityList;
-        private int lastLevel = 0;
+        private int lastLevel;
 
-        public LevelUpManager(int[] pSpellPriorityList)
+        private Dictionary<string, int[]> SpellPriorityList;
+        private Menu Menu;
+        private int SelectedPriority;
+
+        public LevelUpManager()
         {
-            this.spellPriorityList = pSpellPriorityList;
-
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            lastLevel = 0;
+            SpellPriorityList = new Dictionary<string, int[]>();
         }
 
-        void Game_OnGameUpdate(EventArgs args)
+        public void AddToMenu(ref Menu menu)
         {
-            Update();
+            Menu = menu;
+            if (SpellPriorityList.Count > 0)
+            {
+                Menu.AddSubMenu(new Menu("Spell Level Up", "LevelUp"));
+                Menu.SubMenu("LevelUp").AddItem(new MenuItem("LevelUp_" + ObjectManager.Player.ChampionName + "_enabled", "Enable").SetValue(true));
+                Menu.SubMenu("LevelUp").AddItem(new MenuItem("LevelUp_" + ObjectManager.Player.ChampionName + "_select", "").SetValue(new StringList(SpellPriorityList.Keys.ToArray())));
+                SelectedPriority = Menu.Item("LevelUp_" + ObjectManager.Player.ChampionName + "_select").GetValue<StringList>().SelectedIndex;
+            }
         }
+
+        public void Add(string spellPriorityDesc, int[] spellPriority)
+        {
+            SpellPriorityList.Add(spellPriorityDesc, spellPriority);
+        }
+
 
         public void Update()
         {
-            if (this.lastLevel == ObjectManager.Player.Level)
+            if (SpellPriorityList.Count == 0 || !Menu.Item("LevelUp_" + ObjectManager.Player.ChampionName + "_enabled").GetValue<bool>() || this.lastLevel == ObjectManager.Player.Level)
                 return;
+
+            this.spellPriorityList = SpellPriorityList.Values.ElementAt(SelectedPriority);
 
             int qL = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Q).Level;
             int wL = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.W).Level;

@@ -41,16 +41,15 @@ namespace DevCassio
         public static Spell R;
         public static List<Obj_AI_Base> MinionList;
         public static SkinManager skinManager;
-        public static IgniteManager igniteManager;
         public static LevelUpManager levelUpManager;
         public static AssemblyUtil assemblyUtil;
+        public static SummonerSpellManager summonerSpellManager;
 
         private static DateTime dtBurstComboStart = DateTime.MinValue;
         private static DateTime dtLastQCast = DateTime.MinValue;
-
+        private static DateTime dtLastSaveYourself = DateTime.Now;
        
         public static bool mustDebug = false;
-
 
         static void Main(string[] args)
         {
@@ -84,10 +83,9 @@ namespace DevCassio
                 
                 UseUltUnderTower();
 
-                //if (Config.Item("AutoLevelUP").GetValue<bool>())
-                //    LevelUpManager.Update();
-
                 skinManager.Update();
+
+                levelUpManager.Update();
 
             }
             catch (Exception ex)
@@ -114,17 +112,23 @@ namespace DevCassio
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             double totalComboDamage = 0;
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
+            if (R.IsReady())
+            {
+                totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
+                totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
+                totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
+            }
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.E);
-            totalComboDamage += igniteManager.IsReady() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
+            totalComboDamage += summonerSpellManager.GetIgniteDamage(eTarget);
 
             double totalManaCost = 0;
-            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
+            if (R.IsReady())
+            {
+                totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
+            }
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
 
             if (mustDebug)
@@ -133,30 +137,32 @@ namespace DevCassio
                 Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), Player.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
-            if (R.IsReady() && useR && eTarget.IsValidTarget(R.Range) && eTarget.IsFacing(Player))
+            if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
             {
-                if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
+                if (R.IsReady() && useR && eTarget.IsValidTarget(R.Range) && eTarget.IsFacing(Player))
                 {
-                    if (totalComboDamage * 0.3 < eTarget.Health) // Anti OverKill
+                    if (totalComboDamage * 0.3 < eTarget.Health) // Anti R OverKill
                     {
                         if (mustDebug)
                             Game.PrintChat("BurstCombo R");
                         R.Cast(eTarget.ServerPosition, packetCast);
+                        dtBurstComboStart = DateTime.Now;
                     }
                     else
                     {
                         if (mustDebug)
                             Game.PrintChat("BurstCombo OverKill");
+                        dtBurstComboStart = DateTime.Now;
                     }
-                    dtBurstComboStart = DateTime.Now;
                 }
             }
 
-            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now && igniteManager.IsReady())
+
+            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now && summonerSpellManager.IsReadyIgnite() && eTarget.IsValidTarget(600))
             {
                 if (mustDebug)
                     Game.PrintChat("Ignite");
-                igniteManager.Cast(eTarget);
+                summonerSpellManager.CastIgnite(eTarget);
             }
         }
 
@@ -185,7 +191,11 @@ namespace DevCassio
                 if (Player.GetHealthPerc() < UseRSaveYourselfMinHealth && eTarget.IsFacing(Player))
                 {
                     R.Cast(eTarget.ServerPosition, packetCast);
-                    Game.PrintChat("Save Yourself!");
+                    if (dtLastSaveYourself.AddSeconds(3) < DateTime.Now)
+                    {
+                        Game.PrintChat("Save Yourself!");
+                        dtLastSaveYourself = DateTime.Now;
+                    }
                 }
             }
 
@@ -228,9 +238,10 @@ namespace DevCassio
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (igniteManager.HasIgnite && igniteManager.IsReady() && igniteManager.CanKill(eTarget))
+            double igniteDamage = summonerSpellManager.GetIgniteDamage(eTarget) + (Player.GetSpellDamage(eTarget, SpellSlot.E) * 2);
+            if (eTarget.Health < igniteDamage && E.Level > 0 && eTarget.IsValidTarget(600) && eTarget.HasBuffOfType(BuffType.Poison))
             {
-                igniteManager.Cast(eTarget);
+                summonerSpellManager.CastIgnite(eTarget);
             }
 
         }
@@ -469,6 +480,8 @@ namespace DevCassio
 
                 InitializeSkinManager();
 
+                InitializeLevelUpManager();
+
                 InitializeMainMenu();
 
                 InitializeAttachEvents();
@@ -524,12 +537,6 @@ namespace DevCassio
             Config.Item("UltRange").ValueChanged += (object sender, OnValueChangeEventArgs e) => { R.Range = e.GetNewValue<Slider>().Value; };
             R.Range = Config.Item("UltRange").GetValue<Slider>().Value;
 
-            // LevelUpManager
-            //var priority = new int[] { 1, 3, 3, 2, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
-            //LevelUpManager = new LevelUpManager(priority);
-            //if (Config.Item("AutoLevelUP").GetValue<bool>())
-            //    LevelUpManager.Update();
-
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
         }
@@ -561,13 +568,12 @@ namespace DevCassio
             R = new Spell(SpellSlot.R, 850);
             R.SetSkillshot(0.6f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
 
-            igniteManager = new IgniteManager();
-
-
             SpellList.Add(Q);
             SpellList.Add(W);
             SpellList.Add(E);
             SpellList.Add(R);
+
+            summonerSpellManager = new SummonerSpellManager();
 
             if (mustDebug)
                 Game.PrintChat("InitializeSpells Finish");
@@ -587,6 +593,22 @@ namespace DevCassio
 
             if (mustDebug)
                 Game.PrintChat("InitializeSkinManager Finish");
+        }
+
+        private static void InitializeLevelUpManager()
+        {
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Start");
+
+            var priority1 = new int[] { 1, 3, 3, 2, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+            var priority2 = new int[] { 1, 3, 2, 3, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+
+            levelUpManager = new LevelUpManager();
+            levelUpManager.Add("Q > E > E > W ", priority1);
+            levelUpManager.Add("Q > E > W > E ", priority2);
+
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Finish");
         }
 
         static void Game_OnGameSendPacket(GamePacketEventArgs args)
@@ -725,7 +747,7 @@ namespace DevCassio
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "No-Face Exploit (PacketCast)").SetValue(true));
-            Config.SubMenu("Misc").AddItem(new MenuItem("AutoLevelUP", "Auto Level UP").SetValue(true));
+            //Config.SubMenu("Misc").AddItem(new MenuItem("AutoLevelUP", "Auto Level UP").SetValue(true));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
@@ -744,6 +766,8 @@ namespace DevCassio
             Config.SubMenu("Drawings").AddItem(new MenuItem("EDamage", "Show E Damage on HPBar").SetValue(true));
 
             skinManager.AddToMenu(ref Config);
+
+            levelUpManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
 
