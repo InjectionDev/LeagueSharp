@@ -16,6 +16,8 @@ using System.Threading.Tasks;
  * + Priorize Heal with R+W when LowHealth (with Slider)
  * + Skin Hack
  * + Shield/Heal Allies
+ * + Auto Spell Level UP
+ * 
 */
 
 namespace DevKarma
@@ -36,6 +38,7 @@ namespace DevKarma
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
         public static AssemblyUtil assemblyUtil;
+        public static LevelUpManager levelUpManager;
 
         private static bool mustDebug = false;
 
@@ -56,6 +59,8 @@ namespace DevKarma
                 InitializeSpells();
 
                 InitializeSkinManager();
+
+                InitializeLevelUpManager();
 
                 InitializeMainMenu();
 
@@ -153,6 +158,8 @@ namespace DevKarma
                 }
 
                 SkinManager.Update();
+
+                levelUpManager.Update();
             }
             catch(Exception ex)
             {
@@ -289,6 +296,20 @@ namespace DevKarma
             SkinManager.Add("Order of the Lotus Karma");
         }
 
+        private static void InitializeLevelUpManager()
+        {
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Start");
+
+            var priority1 = new int[] { 1, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 };
+
+            levelUpManager = new LevelUpManager();
+            levelUpManager.Add("Q > E > Q > W ", priority1);
+
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Finish");
+        }
+
         private static void InitializeSpells()
         {
             IgniteManager = new IgniteManager();
@@ -399,6 +420,8 @@ namespace DevKarma
             Config.SubMenu("Drawings").AddItem(new MenuItem("ComboDamage", "Drawings on HPBar").SetValue(true));
 
             SkinManager.AddToMenu(ref Config);
+
+            levelUpManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
         }

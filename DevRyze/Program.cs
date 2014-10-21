@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 /*
  * ##### DevRyze Mods #####
+ * 
  * + SBTW with Q/W/E/R
  * + Wave/Jungle Clear
  * + Harras/WaveClear with Min Mana Slider
@@ -17,7 +18,8 @@ using System.Threading.Tasks;
  * + Interrupt Spell with W
  * + W Gapcloser
  * + Skin Hack
-
+ * + Auto Spell Level UP
+ * 
 */
 
 namespace DevRyze
@@ -38,6 +40,7 @@ namespace DevRyze
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
         public static AssemblyUtil assemblyUtil;
+        public static LevelUpManager levelUpManager;
 
         private static List<Obj_AI_Base> MinionListToIgnore;
 
@@ -61,6 +64,8 @@ namespace DevRyze
                 InitializeSpells();
 
                 InitializeSkinManager();
+
+                InitializeLevelUpManager();
 
                 InitializeMainMenu();
 
@@ -90,8 +95,6 @@ namespace DevRyze
                     Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze NEW VERSION available! Tap F8 to update! {0} -> {1}</font>", Assembly.GetExecutingAssembly().GetName().Version, args.CurrentVersion));
             }
         }
-
-
 
         private static void InitializeSpells()
         {
@@ -139,6 +142,20 @@ namespace DevRyze
 
             if (mustDebug)
                 Game.PrintChat("InitializeSkinManager Finish");
+        }
+
+        private static void InitializeLevelUpManager()
+        {
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Start");
+
+            var priority1 = new int[] { 1, 2, 3, 1, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
+
+            levelUpManager = new LevelUpManager();
+            levelUpManager.Add("Q > W > E > Q ", priority1);
+
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Finish");
         }
 
         private static void InitializeAttachEvents()
@@ -628,6 +645,8 @@ namespace DevRyze
             Config.SubMenu("Drawings").AddItem(new MenuItem("ComboDamage", "Drawings on HPBar").SetValue(true));
 
             SkinManager.AddToMenu(ref Config);
+
+            levelUpManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
 

@@ -20,7 +20,8 @@ using SharpDX;
  * + Smart W usage
  * + Jungle Steal Alert
  * + Jungle Steal with R (Blue/Red/Dragon/Balron)
-
+ * + Auto Spell Level UP
+ * 
 */
 
 namespace DevKogMaw
@@ -41,6 +42,7 @@ namespace DevKogMaw
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
         public static AssemblyUtil assemblyUtil;
+        public static LevelUpManager levelUpManager;
 
         private static DateTime dtLastJungleStealAlert = DateTime.Now;
         private static DateTime dtLastJungleSteal = DateTime.Now;
@@ -92,6 +94,8 @@ namespace DevKogMaw
                 UpdateSpellsRange();
 
                 SkinManager.Update();
+
+                levelUpManager.Update();
             }
             catch (Exception ex)
             {
@@ -338,6 +342,8 @@ namespace DevKogMaw
 
                 InitializeSkinManager();
 
+                InitializeLevelUpManager();
+
                 InitializeMainMenu();
 
                 InitializeAttachEvents();
@@ -435,6 +441,20 @@ namespace DevKogMaw
 
             if (mustDebug)
                 Game.PrintChat("InitializeSkinManager Finish");
+        }
+
+        private static void InitializeLevelUpManager()
+        {
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Start");
+
+            var priority1 = new int[] { 2, 1, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3 };
+
+            levelUpManager = new LevelUpManager();
+            levelUpManager.Add("W > Q > E > W ", priority1);
+
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Finish");
         }
 
         static void Game_OnGameSendPacket(GamePacketEventArgs args)
@@ -676,8 +696,9 @@ namespace DevKogMaw
             Config.SubMenu("Drawings").AddItem(new MenuItem("RRange", "R Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
             Config.SubMenu("Drawings").AddItem(new MenuItem("RDamage", "R Dmg onHPBar").SetValue(true));
 
-
             SkinManager.AddToMenu(ref Config);
+
+            levelUpManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
 

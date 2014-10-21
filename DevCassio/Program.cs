@@ -23,6 +23,8 @@ using SharpDX;
  * + Auto Ult if will hit X
  * + Jungle Clear
  * + R to Save Yourself, when MinHealth and Enemy IsFacing
+ * + Auto Spell Level UP
+ * 
 */
 
 namespace DevCassio
