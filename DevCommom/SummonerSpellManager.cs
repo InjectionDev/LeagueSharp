@@ -22,10 +22,10 @@ namespace DevCommom
         public SummonerSpellManager()
         {
             IgniteSlot = ObjectManager.Player.GetSpellSlot("SummonerDot");
-            //FlashSlot = ObjectManager.Player.GetSpellSlot("SummonerFlash");
-            //BarrierSlot = ObjectManager.Player.GetSpellSlot("SummonerBarrier");
-            //HealSlot = ObjectManager.Player.GetSpellSlot("SummonerHeal");
-            //ExhaustSlot = ObjectManager.Player.GetSpellSlot("SummonerExhaust");
+            FlashSlot = ObjectManager.Player.GetSpellSlot("SummonerFlash");
+            BarrierSlot = ObjectManager.Player.GetSpellSlot("SummonerBarrier");
+            HealSlot = ObjectManager.Player.GetSpellSlot("SummonerHeal");
+            ExhaustSlot = ObjectManager.Player.GetSpellSlot("SummonerExhaust");
         }
 
         public bool CastIgnite(Obj_AI_Hero target)
