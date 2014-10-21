@@ -171,29 +171,33 @@ namespace DevKogMaw
             var RMaxStacksHarass = Config.Item("RMaxStacksHarass").GetValue<Slider>().Value;
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var EManaHarass = Config.Item("EManaHarass").GetValue<Slider>().Value;
+            var ManaHarass = Config.Item("ManaHarass").GetValue<Slider>().Value;
 
             if (mustDebug)
                 Game.PrintChat("Harass Target -> " + eTarget.SkinName);
 
-            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
+            if (Player.GetManaPerc() > ManaHarass)
             {
-                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-            }
+                if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
+                {
+                    Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                }
 
-            if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
-            {
-                W.Cast();
-                Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
-            }
+                if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
+                {
+                    W.Cast();
+                    Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
+                }
 
-            if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE && Player.GetManaPerc() > EManaHarass)
-            {
-                E.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-            }
+                if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE && Player.GetManaPerc() > EManaHarass)
+                {
+                    E.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                }
 
-            if (eTarget.IsValidTarget(R.Range) && R.IsReady() && GetRStacks() < RMaxStacksHarass && useR && Player.Distance(eTarget) > Player.AttackRange)
-            {
-                R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                if (eTarget.IsValidTarget(R.Range) && R.IsReady() && GetRStacks() < RMaxStacksHarass && useR && Player.Distance(eTarget) > Player.AttackRange)
+                {
+                    R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                }
             }
 
             if (mustDebug)
@@ -639,7 +643,8 @@ namespace DevKogMaw
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseRHarass", "Use R").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("RMaxStacksHarass", "R Max Stacks").SetValue(new Slider(1, 1, 5)));
-            Config.SubMenu("Harass").AddItem(new MenuItem("EManaHarass", "Min Mana to E").SetValue(new Slider(50, 1, 100)));
+            Config.SubMenu("Harass").AddItem(new MenuItem("ManaHarass", "Min Mana Harass").SetValue(new Slider(25, 1, 100)));
+            Config.SubMenu("Harass").AddItem(new MenuItem("EManaHarass", "Min Mana to E").SetValue(new Slider(60, 1, 100)));
             
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(false));
