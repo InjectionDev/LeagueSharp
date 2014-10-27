@@ -87,7 +87,7 @@ namespace DevCommom
 
         public static void Ping(Vector3 pos)
         {
-            Packet.S2C.Ping.Encoded(new Packet.S2C.Ping.Struct(pos.X, pos.Y, 0, 0, Packet.PingType.NormalSound)).Process();
+            Packet.S2C.Ping.Encoded(new Packet.S2C.Ping.Struct(pos.X, pos.Y, 0, 0, Packet.PingType.Normal)).Process();
         }
 
         public static float GetDistanceSqr(Obj_AI_Base source, Obj_AI_Base target)
