@@ -70,7 +70,7 @@ namespace DevAnnie
 
                 InitializeAttachEvents();
 
-                //Game.PrintChat(string.Format("<font color='#F7A100'>DevAnnie Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                //Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
                 assemblyUtil = new AssemblyUtil(Assembly.GetExecutingAssembly().GetName().Name);
                 assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;

@@ -40,6 +40,7 @@ namespace DevLulu
         public static SkinManager SkinManager;
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
+        public static AssemblyUtil assemblyUtil;
 
         private static bool mustDebug = true;
 
@@ -65,7 +66,22 @@ namespace DevLulu
 
             //Game.PrintChat(string.Format("<font color='#F7A100'>DevLulu Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
+            assemblyUtil = new AssemblyUtil(Assembly.GetExecutingAssembly().GetName().Name);
+            assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
+            assemblyUtil.GetLastVersionAsync();
+
             Game.PrintChat(string.Format("<font color='#FF0000'>DevLulu: THIS ASSEMBLY IS NOT FINISHED YET!!!</font>"));
+        }
+
+        static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
+        {
+            if (args.IsSuccess)
+            {
+                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevLulu You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                else
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevLulu NEW VERSION available! Tap F8 for Update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
+            }
         }
 
         private static void InitializeAttachEvents()

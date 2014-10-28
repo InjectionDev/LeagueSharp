@@ -116,9 +116,16 @@ namespace DevTwitch
             {
                 var rTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Physical);
 
+                if (mustDebug)
+                {
+                    Game.PrintChat("RTarget: " + rTarget.BaseSkinName);
+                    Game.PrintChat("AADamage: " + Player.GetAutoAttackDamage(rTarget));
+                    Game.PrintChat("AARDamage: " + GetRDamage(rTarget));
+                }
+
                 double totalCombo = 0;
-                totalCombo += Damage.GetAutoAttackDamage(Player, rTarget) + GetRAttackDamageBonus();
-                totalCombo += Damage.GetAutoAttackDamage(Player, rTarget) + GetRAttackDamageBonus();
+                totalCombo += GetRDamage(rTarget);
+                totalCombo += GetRDamage(rTarget);
 
                 if (totalCombo * 0.9 > rTarget.Health)
                 {
@@ -141,7 +148,7 @@ namespace DevTwitch
             // R Killsteal
             if (RKillSteal && R.IsReady())
             {
-                var enemies = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(R.Range) && Player.GetAutoAttackDamage(x) + GetRAttackDamageBonus() > x.Health * 1.1).OrderBy(x => x.Health);
+                var enemies = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(R.Range) && GetRDamage(x) > x.Health).OrderBy(x => x.Health);
                 if (enemies.Count() > 0)
                 {
                     var enemy = enemies.First();
@@ -273,20 +280,13 @@ namespace DevTwitch
             }
         }
 
-
-        static double GetRAttackDamageBonus()
+        private static float GetRDamage(Obj_AI_Hero enemy)
         {
-            switch (R.Level)
-            { 
-                case 1:
-                    return 20;
-                case 2:
-                    return 28;
-                case 3:
-                    return 36;
-                default:
-                    return 0;
-            }
+            double attackDamageBonusR = 0;
+            if (R.Level > 0)
+                attackDamageBonusR = 12 + (R.Level * 8);
+
+            return (float)Player.CalcDamage(enemy, Damage.DamageType.Physical, Player.BaseAttackDamage + Player.FlatPhysicalDamageMod + attackDamageBonusR);
         }
 
         private static void onGameLoad(EventArgs args)
@@ -478,11 +478,6 @@ namespace DevTwitch
                 return query.First().Count;
             else
                 return 0;
-        }
-
-        private static float GetRDamage(Obj_AI_Hero enemy)
-        {
-            return (float)Damage.GetSpellDamage(Player, enemy, SpellSlot.R);
         }
 
         private static void OnDraw(EventArgs args)
