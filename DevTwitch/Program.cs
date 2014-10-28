@@ -17,6 +17,7 @@ using SharpDX;
  * Min Passive Stacks on Harras/Combo with Slider
  * Skin Hack
  * Barrier GapCloser when LowHealth
+ * Auto Spell Level UP
  * 
 */
 
@@ -38,6 +39,7 @@ namespace DevTwitch
         public static IgniteManager IgniteManager;
         public static BarrierManager BarrierManager;
         public static AssemblyUtil assemblyUtil;
+        public static LevelUpManager levelUpManager;
 
         private static bool mustDebug = false;
 
@@ -78,6 +80,8 @@ namespace DevTwitch
                 UpdateSpell();
 
                 SkinManager.Update();
+
+                levelUpManager.Update();
             }
             catch (Exception ex)
             {
@@ -298,6 +302,8 @@ namespace DevTwitch
 
                 InitializeSkinManager();
 
+                InitializeLevelUpManager();
+
                 InitializeMainMenu();
 
                 InitializeAttachEvents();
@@ -374,6 +380,20 @@ namespace DevTwitch
 
             if (mustDebug)
                 Game.PrintChat("InitializeSpells Finish");
+        }
+
+        private static void InitializeLevelUpManager()
+        {
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Start");
+
+            var priority1 = new int[] { 3, 2, 3, 1, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+
+            levelUpManager = new LevelUpManager();
+            levelUpManager.Add("E > W > E > Q ", priority1);
+
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Finish");
         }
 
         private static void InitializeSkinManager()
@@ -534,8 +554,9 @@ namespace DevTwitch
             Config.SubMenu("Drawings").AddItem(new MenuItem("RRange", "R Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
             Config.SubMenu("Drawings").AddItem(new MenuItem("RDamage", "R Dmg onHPBar").SetValue(true));
 
-
             SkinManager.AddToMenu(ref Config);
+
+            levelUpManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
 
