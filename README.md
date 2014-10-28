@@ -1,6 +1,6 @@
 # InjectionDev's LeagueSharp Assemblys
 
-### Assemblys
+### Assemblies
 
 * #### DevBrand
   - SBTW Assembly
@@ -8,6 +8,7 @@
   - Ult when X enemies in R Range
   - Smart E usage on minions to harras (work in progress)
   - Skin Hack
+  - Auto Spell Level UP
 
 * #### DevCassio
   - AntiGapCloser with R when LowHealth
@@ -23,12 +24,14 @@
   - Auto Ult if will hit X
   - Jungle Clear
   - R to Save Yourself, when MinHealth and Enemy IsFacing
+  - Auto Spell Level UP
 
 * #### DevKarma
   - Logic with R+Q/R+W/R+E
   - Priorize Heal with R+W when LowHealth (with Slider)
   - Skin Hack
   - Shield/Heal Allies
+  - Auto Spell Level UP
 
 * #### DevKogMaw
   - Chase Enemy After Death
@@ -42,6 +45,7 @@
   - Smart W usage
   - Jungle Steal Alert
   - Jungle Steal with R (Blue/Red/Dragon/Balron)
+  - Auto Spell Level UP
 
 * #### DevLulu - Not Finished
   - Support Mode and AP Carry Mode with separated logic
@@ -60,6 +64,14 @@
   - Interrupt Spell with W
   - W Gapcloser
   - Skin Hack
+  - Auto Spell Level UP
 
-* #### DevTwitch - Not Finished
-  - In Dev.
+* #### DevTwitch
+  - R KillSteal 1 AA
+  - E KillSteal
+  - Ult logic to Kill when 2 AA + Item
+  - Smart E Use - Try to stack max of passive before cast E (keeps track of Distance, Min/Max Stacks, BuffTime)
+  - Min Passive Stacks on Harras/Combo with Slider
+  - Skin Hack
+  - Barrier GapCloser when LowHealth
+  - Auto Spell Level UP
