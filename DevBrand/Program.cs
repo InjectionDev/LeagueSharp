@@ -17,6 +17,8 @@ using System.Threading.Tasks;
  * + Ult when X enemies in R Range
  * + Smart E usage on minions to harras (work in progress)
  * + Skin Hack
+ * + Auto Spell Level UP
+ *  
 */
 
 namespace DevBrand
@@ -36,6 +38,8 @@ namespace DevBrand
         public static SkinManager skinManager;
         public static IgniteManager igniteManager;
         public static BarrierManager barrierManager;
+        public static AssemblyUtil assemblyUtil;
+        public static LevelUpManager levelUpManager;
 
         private static DateTime dtBurstComboStart = DateTime.MinValue;
 
@@ -59,15 +63,32 @@ namespace DevBrand
 
                 InitializeSkinManager();
 
+                InitializeLevelUpManager();
+
                 InitializeMainMenu();
 
                 InitializeAttachEvents();
 
-                Game.PrintChat(string.Format("<font color='#F7A100'>DevBrand Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevBrand Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+
+                assemblyUtil = new AssemblyUtil(Assembly.GetExecutingAssembly().GetName().Name);
+                assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
+                assemblyUtil.GetLastVersionAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+            }
+        }
+
+        static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
+        {
+            if (args.IsSuccess)
+            {
+                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevBrand You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                else
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevBrand NEW VERSION available! Tap F8 for Update! {0}</font>", args.CurrentVersion));
             }
         }
 
@@ -131,6 +152,8 @@ namespace DevBrand
                 }
 
                 skinManager.Update();
+
+                levelUpManager.Update();
             }
             catch (Exception ex)
             {
@@ -174,7 +197,7 @@ namespace DevBrand
             // Passive UP +1 enemy Combo
             var query = DevHelper.GetEnemyList()
                 .Where(x => x.IsValidTarget(R.Range) && HasPassiveBuff(x) && Player.GetSpellDamage(x, SpellSlot.R) > x.Health).OrderBy(x => x.Health);
-            if (query.Count() > 0)
+            if (query.Count() > 0 && R.IsReady())
             {
                 R.CastOnUnit(query.First(), packetCast);
             }
@@ -311,19 +334,31 @@ namespace DevBrand
                 var jungleList = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth)
                     .Where(x => HasPassiveBuff(x));
 
-                if (minionList.Count() > 0)
-                    E.CastOnUnit(jungleList.First(), packetCast);
-
                 if (jungleList.Count() > 0)
                     E.CastOnUnit(jungleList.First(), packetCast);
+                else if (minionList.Count() > 0)
+                    E.CastOnUnit(jungleList.First(), packetCast);
             }
-
 
         }
 
         public static bool HasPassiveBuff(Obj_AI_Base unit)
         {
             return unit.HasBuff("brandablaze", true);
+        }
+
+        private static void InitializeLevelUpManager()
+        {
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Start");
+
+            var priority1 = new int[] { 2, 1, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
+
+            levelUpManager = new LevelUpManager();
+            levelUpManager.Add("W > Q > E > W ", priority1);
+
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Finish");
         }
 
         private static void InitializeSkinManager()
@@ -350,7 +385,7 @@ namespace DevBrand
             E = new Spell(SpellSlot.E, 650);
             E.SetTargetted(0.2f, float.MaxValue);
 
-            R = new Spell(SpellSlot.R);
+            R = new Spell(SpellSlot.R, 750);
             R.SetTargetted(0.2f, float.MaxValue);
 
             SpellList.Add(Q);
@@ -445,6 +480,8 @@ namespace DevBrand
             Config.SubMenu("Drawings").AddItem(new MenuItem("ComboDamage", "Drawings on HPBar").SetValue(true));
 
             skinManager.AddToMenu(ref Config);
+
+            levelUpManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
         }
