@@ -1,4 +1,4 @@
-# InjectionDev's LeagueSharp Assemblys
+# InjectionDev's LeagueSharp Assemblies
 
 ### Assemblies
 
