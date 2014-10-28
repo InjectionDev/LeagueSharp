@@ -184,7 +184,6 @@ namespace DevTwitch
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var MinPassiveStackUseE = Config.Item("MinPassiveStackUseECombo").GetValue<Slider>().Value;
             
-
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
@@ -194,11 +193,9 @@ namespace DevTwitch
             {
                 if (Player.Distance(eTarget) > E.Range * 0.75 && GetExpungeStacks(eTarget) >= MinPassiveStackUseE)
                     CastE();
-
-                if (GetExpungeStacks(eTarget) >= 6)
+                else if (GetExpungeStacks(eTarget) >= 6)
                     CastE();
-
-                if (GetExpungeBuff(eTarget) != null && GetExpungeBuff(eTarget).EndTime < Game.Time + 0.2f && GetExpungeStacks(eTarget) >= MinPassiveStackUseE)
+                else if (GetExpungeBuff(eTarget) != null && GetExpungeBuff(eTarget).EndTime < Game.Time + 0.2f && GetExpungeStacks(eTarget) >= MinPassiveStackUseE)
                     CastE();
             }
 
@@ -233,11 +230,9 @@ namespace DevTwitch
             {
                 if (Player.Distance(eTarget) > E.Range * 0.75 && GetExpungeStacks(eTarget) >= MinPassiveStackUseE)
                     CastE();
-
-                if (GetExpungeStacks(eTarget) >= 6)
+                else if (GetExpungeStacks(eTarget) >= 6)
                     CastE();
-
-                if (GetExpungeBuff(eTarget) != null && GetExpungeBuff(eTarget).EndTime < Game.Time + 0.2f && GetExpungeStacks(eTarget) >= MinPassiveStackUseE)
+                else if (GetExpungeBuff(eTarget) != null && GetExpungeBuff(eTarget).EndTime < Game.Time + 0.2f && GetExpungeStacks(eTarget) >= MinPassiveStackUseE)
                     CastE();
             }
         }
@@ -370,7 +365,7 @@ namespace DevTwitch
 
             E = new Spell(SpellSlot.E, 1200);
 
-            R = new Spell(SpellSlot.R);
+            R = new Spell(SpellSlot.R, 850);
 
             SpellList.Add(Q);
             SpellList.Add(W);
@@ -475,7 +470,7 @@ namespace DevTwitch
             foreach (var spell in SpellList)
             {
                 var menuItem = Config.Item(spell.Slot + "Range").GetValue<Circle>();
-                if (menuItem.Active && spell.IsReady() && spell.Slot != SpellSlot.W)
+                if (menuItem.Active && spell.IsReady())
                 {
                     Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
                 }
