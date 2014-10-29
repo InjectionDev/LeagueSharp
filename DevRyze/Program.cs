@@ -344,6 +344,8 @@ namespace DevRyze
 
                 SkinManager.Update();
 
+                levelUpManager.Update();
+
             }
             catch (Exception ex)
             {
@@ -355,7 +357,7 @@ namespace DevRyze
 
         public static void BurstCombo()
         {
-            var eTarget = SimpleTs.GetTarget(W.Range, SimpleTs.DamageType.Magical);
+            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -376,7 +378,7 @@ namespace DevRyze
             }
 
             // Cast R for Killable Combo
-            IEnumerable<SpellSlot> spellCombo = new[] { SpellSlot.Q, SpellSlot.R, SpellSlot.E, SpellSlot.Q, SpellSlot.W, SpellSlot.Q };
+            var spellCombo = new[] { SpellSlot.Q, SpellSlot.R, SpellSlot.E, SpellSlot.Q, SpellSlot.W, SpellSlot.Q };
             if (useR && R.IsReady() && Player.IsKillable(eTarget, spellCombo))
             {
                 if (packetCast)
@@ -386,8 +388,7 @@ namespace DevRyze
             }
 
             // Cast on W
-            IEnumerable<SpellSlot> spellComboHard = new[] { SpellSlot.Q, SpellSlot.R, SpellSlot.E, SpellSlot.Q, SpellSlot.W, SpellSlot.Q, SpellSlot.Q };
-            if (useR && R.IsReady() && eTarget.HasBuff("Rune Prision") && Player.IsKillable(eTarget, spellComboHard))
+            if (useR && R.IsReady() && eTarget.HasBuff("Rune Prision"))
             {
                 if (packetCast)
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
