@@ -88,13 +88,13 @@ namespace DevRyze
 
         static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
         {
-            if (args.IsSuccess)
-            {
-                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
-                    Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze You have the lastest version.</font>", Assembly.GetExecutingAssembly().GetName().Version));
-                else
-                    Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze NEW VERSION available! Tap F8 to update! {0} -> {1}</font>", Assembly.GetExecutingAssembly().GetName().Version, args.CurrentVersion));
-            }
+            if (args.LastAssemblyVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze You have the lastest version.</font>"));
+            else
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
+
+            if (args.CurrentCommomVersion != args.LastCommomVersion)
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevCommom Library NEW VERSION available! Please Update while NOT INGAME! {0}</font>", args.LastCommomVersion));
         }
 
         private static void InitializeSpells()
@@ -201,6 +201,8 @@ namespace DevRyze
                     {
                         Q.CastOnUnit(mob, packetCast);
                         MinionList.Remove(mob);
+                        if (mustDebug)
+                            Game.PrintChat("CheckAALastHit -> Q Secure Gold");
                     }
                 }
 
@@ -211,6 +213,8 @@ namespace DevRyze
                     {
                         E.CastOnUnit(mob, packetCast);
                         MinionList.Remove(mob);
+                        if (mustDebug)
+                            Game.PrintChat("CheckAALastHit -> E Secure Gold");
                     }
                 }
 
@@ -240,6 +244,8 @@ namespace DevRyze
                             Q.CastOnUnit(mob, packetCast);
                             MinionListToIgnore.Add(mob.NetworkId);
                             MinionList.Remove(mob);
+                            if (mustDebug)
+                                Game.PrintChat("AfterAttack -> Q Secure Gold");
                         }
                     }
 
@@ -250,6 +256,8 @@ namespace DevRyze
                         {
                             E.CastOnUnit(mob, packetCast);
                             MinionListToIgnore.Add(mob.NetworkId);
+                            if (mustDebug)
+                                Game.PrintChat("AfterAttack -> E Secure Gold");
                         }
                     }
                 }
@@ -377,6 +385,9 @@ namespace DevRyze
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
                 else
                     R.Cast();
+
+                if (mustDebug)
+                    Game.PrintChat("BurstCombo -> R hit 1+");
             }
 
             // Cast R for Killable Combo
@@ -387,6 +398,9 @@ namespace DevRyze
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
                 else
                     R.Cast();
+
+                if (mustDebug)
+                    Game.PrintChat("BurstCombo -> R Combo");
             }
 
             // Cast on W
@@ -396,6 +410,9 @@ namespace DevRyze
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
                 else
                     R.Cast();
+
+                if (mustDebug)
+                    Game.PrintChat("BurstCombo -> R Rune Prision");
             }
         }
 

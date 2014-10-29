@@ -130,12 +130,13 @@ namespace DevKogMaw
                 Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
+            if (!HasWBuff() && Player.Distance(eTarget) > Player.AttackRange && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
             {
                 if (packetCast)
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.W)).Send();
                 else
                     W.Cast();
+
                 Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
             }
 
@@ -189,7 +190,11 @@ namespace DevKogMaw
 
                 if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
                 {
-                    W.Cast();
+                    if (packetCast)
+                        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.W)).Send();
+                    else
+                        W.Cast();
+
                     Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
                 }
 
@@ -364,13 +369,13 @@ namespace DevKogMaw
 
         static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
         {
-            if (args.IsSuccess)
-            {
-                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
-                    Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
-                else
-                    Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw NEW VERSION available! Update DevCommom and DevKogMaw! {0} -> {1}</font>", Assembly.GetExecutingAssembly().GetName().Version, args.CurrentVersion));
-            }
+            if (args.LastAssemblyVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw You have the lastest version.</font>"));
+            else
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
+
+            if (args.CurrentCommomVersion != args.LastCommomVersion)
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevCommom Library NEW VERSION available! Please Update while NOT INGAME! {0}</font>", args.LastCommomVersion));
         }
 
         private static void InitializeAttachEvents()

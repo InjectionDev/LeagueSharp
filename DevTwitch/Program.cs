@@ -40,6 +40,7 @@ namespace DevTwitch
         public static BarrierManager BarrierManager;
         public static AssemblyUtil assemblyUtil;
         public static LevelUpManager levelUpManager;
+        public static ItemManager itemManager;
 
         private static bool mustDebug = false;
 
@@ -324,13 +325,13 @@ namespace DevTwitch
 
         static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
         {
-            if (args.IsSuccess)
-            {
-                if (args.CurrentVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
-                    Game.PrintChat(string.Format("<font color='#fb762d'>DevTwitch You have the lastest version. {0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
-                else
-                    Game.PrintChat(string.Format("<font color='#fb762d'>DevTwitch NEW VERSION available! Tap F8 for Update!</font>", Assembly.GetExecutingAssembly().GetName().Version));
-            }
+            if (args.LastAssemblyVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevTwitch You have the lastest version.</font>"));
+            else
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevTwitch NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
+
+            if (args.CurrentCommomVersion != args.LastCommomVersion)
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevCommom Library NEW VERSION available! Please Update while NOT INGAME! {0}</font>", args.LastCommomVersion));
         }
 
         private static void InitializeAttachEvents()
@@ -363,6 +364,7 @@ namespace DevTwitch
 
             IgniteManager = new IgniteManager();
             BarrierManager = new BarrierManager();
+            itemManager = new ItemManager();
 
             Q = new Spell(SpellSlot.Q);
 
