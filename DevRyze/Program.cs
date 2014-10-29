@@ -18,6 +18,7 @@ using System.Threading.Tasks;
  * + Interrupt Spell with W
  * + W Gapcloser
  * + Skin Hack
+ * + No-Face Exploit Menu (PacketCast)
  * + Auto Spell Level UP
  * 
 */
@@ -221,7 +222,8 @@ namespace DevRyze
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit ||
-                Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
+                Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear ||
+                Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
             {
                 if (target.IsMinion)
                 {
