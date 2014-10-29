@@ -43,7 +43,7 @@ namespace DevRyze
         public static AssemblyUtil assemblyUtil;
         public static LevelUpManager levelUpManager;
 
-        private static List<Obj_AI_Base> MinionListToIgnore;
+        private static List<int> MinionListToIgnore;
 
         private static bool mustDebug = false;
 
@@ -104,7 +104,7 @@ namespace DevRyze
 
             IgniteManager = new IgniteManager();
             BarrierManager = new BarrierManager();
-            MinionListToIgnore = new List<Obj_AI_Base>();
+            MinionListToIgnore = new List<int>();
 
             Q = new Spell(SpellSlot.Q, 630);
             Q.SetTargetted(0.2f, float.MaxValue);
@@ -229,7 +229,7 @@ namespace DevRyze
                 {
                     var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
                         .Where(x => 
-                            !x.IsDead && target.NetworkId != x.NetworkId && !MinionListToIgnore.Contains(x) &&
+                            !x.IsDead && target.NetworkId != x.NetworkId && !MinionListToIgnore.Contains(x.NetworkId) &&
                             HealthPrediction.LaneClearHealthPrediction(x, (int)(Player.AttackDelay * 1000 * 1.1)) <= 0).ToList();
 
                     if (MinionList.Count() > 0)
@@ -238,7 +238,7 @@ namespace DevRyze
                         if (Q.IsReady() && mob.IsValidTarget(Q.Range))
                         {
                             Q.CastOnUnit(mob, packetCast);
-                            MinionListToIgnore.Add(mob);
+                            MinionListToIgnore.Add(mob.NetworkId);
                             MinionList.Remove(mob);
                         }
                     }
@@ -249,7 +249,7 @@ namespace DevRyze
                         if (E.IsReady() && mob.IsValidTarget(E.Range))
                         {
                             E.CastOnUnit(mob, packetCast);
-                            MinionListToIgnore.Add(mob);
+                            MinionListToIgnore.Add(mob.NetworkId);
                         }
                     }
                 }
@@ -484,7 +484,7 @@ namespace DevRyze
         public static void WaveClear()
         {
             var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
-                .Where(x => !MinionListToIgnore.Contains(x)).ToList();
+                .Where(x => !MinionListToIgnore.Contains(x.NetworkId)).ToList();
 
             var JungleList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
 
@@ -511,7 +511,7 @@ namespace DevRyze
                 {
                     var mob = queryMinion.First();
                     Q.CastOnUnit(mob, packetCast);
-                    MinionListToIgnore.Add(mob);
+                    MinionListToIgnore.Add(mob.NetworkId);
                     MinionList.Remove(mob);
                 }
             }
@@ -530,7 +530,7 @@ namespace DevRyze
                 {
                     var mob = query.First();
                     W.CastOnUnit(mob, packetCast);
-                    MinionListToIgnore.Add(mob);
+                    MinionListToIgnore.Add(mob.NetworkId);
                     MinionList.Remove(mob);
                 }
             }
@@ -549,7 +549,7 @@ namespace DevRyze
                 {
                     var mob = query.First();
                     E.CastOnUnit(mob, packetCast);
-                    MinionListToIgnore.Add(mob);
+                    MinionListToIgnore.Add(mob.NetworkId);
                     MinionList.Remove(mob);
                 }
             }
@@ -559,7 +559,7 @@ namespace DevRyze
         public static void Freeze()
         {
             var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
-                .Where(x => !MinionListToIgnore.Contains(x));
+                .Where(x => !MinionListToIgnore.Contains(x.NetworkId));
 
             if (mustDebug)
                 Game.PrintChat("Freeze Start");
@@ -575,7 +575,7 @@ namespace DevRyze
                 {
                     var mob = queryMinion.First();
                     Q.CastOnUnit(mob, packetCast);
-                    MinionListToIgnore.Add(mob);
+                    MinionListToIgnore.Add(mob.NetworkId);
                 }
             }
         }
