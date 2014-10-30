@@ -20,7 +20,7 @@ using System.Threading.Tasks;
  * + Skin Hack
  * + No-Face Exploit Menu (PacketCast)
  * + Auto Spell Level UP
- * 
+ * + Chase Enemy function 
 */
 
 namespace DevRyze
@@ -326,30 +326,31 @@ namespace DevRyze
         {
             try
             {
-                switch (Orbwalker.ActiveMode)
+                if (Config.Item("ComboKey").GetValue<KeyBind>().Active)
                 {
-                    case Orbwalking.OrbwalkingMode.Combo:
-                        BurstCombo();
-                        Combo();
-                        break;
-                    case Orbwalking.OrbwalkingMode.Mixed:
-                        Harass();
-                        break;
-                    case Orbwalking.OrbwalkingMode.LaneClear:
-                        WaveClear();
-                        break;
-                    case Orbwalking.OrbwalkingMode.LastHit:
-                        Freeze();
-                        break;
-                    default:
-                        {
-                            if (Config.Item("UseHarassAlways").GetValue<bool>())
-                            {
-                                Harass();
-                            }
-                            break;
-                        }
-                       
+                    BurstCombo();
+                    Combo();
+                }
+                if (Config.Item("HarassKey").GetValue<KeyBind>().Active)
+                {
+                    Harass();
+                }
+                if (Config.Item("LaneClearKey").GetValue<KeyBind>().Active)
+                {
+                    WaveClear();
+                }
+                if (Config.Item("FreezeKey").GetValue<KeyBind>().Active)
+                {
+                    Freeze();
+                }
+                if (Config.Item("ChaseKey").GetValue<KeyBind>().Active)
+                {
+                    ChaseEnemy();
+                }
+
+                if (Config.Item("UseHarassAlways").GetValue<bool>())
+                {
+                    Harass();
                 }
 
                 SkinManager.Update();
@@ -362,6 +363,29 @@ namespace DevRyze
                 Console.WriteLine("OnTick e:" + ex.ToString());
                 if (mustDebug)
                     Game.PrintChat("OnTick e:" + ex.Message);
+            }
+        }
+
+        public static void ChaseEnemy()
+        {
+            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
+            var useW = Config.Item("UseWChase").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var UseFullComboAfterChase = Config.Item("UseFullComboAfterChase").GetValue<bool>();
+
+            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
+            {
+                W.CastOnUnit(eTarget, packetCast);
+            }
+
+            if (UseFullComboAfterChase && eTarget.HasBuff("Rune Prision"))
+            {
+                BurstCombo();
+                Combo();
             }
         }
 
@@ -627,6 +651,7 @@ namespace DevRyze
             Orbwalker = new Orbwalking.Orbwalker(Config.SubMenu("Orbwalking"));
 
             Config.AddSubMenu(new Menu("Combo", "Combo"));
+            Config.SubMenu("Combo").AddItem(new MenuItem("ComboKey", "Combo!").SetValue(new KeyBind(Config.Item("Orbwalk").GetValue<KeyBind>().Key, KeyBindType.Press)));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseQCombo", "Use Q").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseWCombo", "Use W").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseECombo", "Use E").SetValue(true));
@@ -634,27 +659,28 @@ namespace DevRyze
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRComboToggle", "Use R (toggle)").SetValue(new KeyBind("G".ToCharArray()[0], KeyBindType.Toggle)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
+            Config.SubMenu("Harass").AddItem(new MenuItem("HarassKey", "Harass!").SetValue(new KeyBind(Config.Item("Farm").GetValue<KeyBind>().Key, KeyBindType.Press)));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseHarassAlways", "Keep Harras Always ON").SetValue(false));
 
-            Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
+            Config.AddSubMenu(new Menu("Chase Enemy", "Chase"));
+            Config.SubMenu("Chase").AddItem(new MenuItem("ChaseKey", "Chase Enemy!").SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press)));
+            Config.SubMenu("Chase").AddItem(new MenuItem("UseWChase", "Use W").SetValue(true));
+            Config.SubMenu("Chase").AddItem(new MenuItem("UseFullComboAfterChase", "Use FullCombo After W").SetValue(true));
+
+            Config.AddSubMenu(new Menu("LaneClear", "LaneClear")); 
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearKey", "LaneClear!").SetValue(new KeyBind(Config.Item("LaneClear").GetValue<KeyBind>().Key, KeyBindType.Press)));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "Min Mana LaneClear").SetValue(new Slider(40, 1, 100)));
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
+            Config.SubMenu("Freeze").AddItem(new MenuItem("FreezeKey", "Freeze!").SetValue(new KeyBind(Config.Item("LastHit").GetValue<KeyBind>().Key, KeyBindType.Press)));
             Config.SubMenu("Freeze").AddItem(new MenuItem("UseQFreeze", "Use Q LastHit").SetValue(false));
             Config.SubMenu("Freeze").AddItem(new MenuItem("ManaFreeze", "Min Mana Q").SetValue(new Slider(40, 1, 100)));
-
-            //Config.AddSubMenu(new Menu("Farm", "Farm"));
-            //Config.SubMenu("Farm").AddItem(new MenuItem("UseQFarm", "Use Q").SetValue(new StringList(new[] { "Freeze", "LaneClear", "Both", "No" }, 2)));
-            //Config.SubMenu("Farm").AddItem(new MenuItem("UseWFarm", "Use W").SetValue(new StringList(new[] { "Freeze", "LaneClear", "Both", "No" }, 1)));
-            //Config.SubMenu("Farm").AddItem(new MenuItem("UseWFarm", "Use W").SetValue(new StringList(new[] { "Freeze", "LaneClear", "Both", "No" }, 1)));
-            //Config.SubMenu("Farm").AddItem(new MenuItem("FreezeActive", "Freeze!").SetValue(new KeyBind(Config.Item("Farm").GetValue<KeyBind>().Key, KeyBindType.Press)));
-            //Config.SubMenu("Farm").AddItem(new MenuItem("LaneClearActive", "LaneClear!").SetValue(new KeyBind(Config.Item("LaneClear").GetValue<KeyBind>().Key, KeyBindType.Press)));
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
@@ -664,7 +690,7 @@ namespace DevRyze
             Config.SubMenu("GapCloser").AddItem(new MenuItem("WGapCloser", "W onGapCloser").SetValue(true));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("WInterruptSpell", "W Interrupt Spell").SetValue(true));
 
-            Config.AddSubMenu(new Menu("Drawings", "Drawings"));
+            Config.AddSubMenu(new Menu("Drawings", "Drawings")); 
             Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q Range").SetValue(new Circle(true, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
             Config.SubMenu("Drawings").AddItem(new MenuItem("WRange", "W Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
             Config.SubMenu("Drawings").AddItem(new MenuItem("ERange", "E Range").SetValue(new Circle(false, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
