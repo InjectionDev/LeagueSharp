@@ -47,6 +47,7 @@ namespace DevRyze
 
         private static bool mustDebug = false;
 
+        private static DateTime dtLastRunePrision = DateTime.MinValue;
 
         static void Main(string[] args)
         {
@@ -92,7 +93,7 @@ namespace DevRyze
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze You have the lastest version.</font>"));
             else
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevRyze NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
-
+            
             if (args.CurrentCommomVersion != args.LastCommomVersion)
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevCommom Library NEW VERSION available! Please Update while NOT INGAME! {0}</font>", args.LastCommomVersion));
         }
@@ -382,8 +383,9 @@ namespace DevRyze
                 W.CastOnUnit(eTarget, packetCast);
             }
 
-            if (UseFullComboAfterChase && eTarget.HasBuff("Rune Prision"))
+            if (UseFullComboAfterChase && (eTarget.HasBuff("Rune Prision") || dtLastRunePrision.AddSeconds(4) > DateTime.Now))
             {
+                dtLastRunePrision = DateTime.Now;
                 BurstCombo();
                 Combo();
             }
@@ -430,6 +432,8 @@ namespace DevRyze
             // Cast on W
             if (useR && R.IsReady() && eTarget.HasBuff("Rune Prision"))
             {
+                dtLastRunePrision = DateTime.Now;
+
                 if (packetCast)
                     Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
                 else
@@ -635,6 +639,25 @@ namespace DevRyze
                 }
             }
         }
+
+        // working ???
+        //private static void TearExploit()
+        //{
+        //    var UsePacket = Config.Item("UsePacket").GetValue<bool>();
+        //    var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
+        //    if (Q.IsReady() && W.IsReady())
+        //    {
+        //        foreach (var minion in allMinions)
+        //        {
+        //            if (120 >= minion.Health)
+        //            {
+        //                Q.CastOnUnit(minion, UsePacket);
+        //                Utility.DelayAction.Add(25, () => W.CastOnUnit(minion, UsePacket));
+        //                break;
+        //            }
+        //        }
+        //    }
+        //}
 
         private static void InitializeMainMenu()
         {
