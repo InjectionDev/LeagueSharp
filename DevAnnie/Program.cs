@@ -287,13 +287,14 @@ namespace DevAnnie
             double totalComboDamage = 0;
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
+            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.W);
 
-            if (itemManager.IsReadyDFG())
-                totalComboDamage = totalComboDamage * 1.2;
+            ////if (itemManager.IsReadyDFG())
+            ////    totalComboDamage = totalComboDamage * 1.2;
 
-            if (itemManager.IsReadyDFG())
-                totalComboDamage += Player.GetItemDamage(eTarget, Damage.DamageItems.Dfg);
+            ////if (itemManager.IsReadyDFG())
+            ////    totalComboDamage += Player.GetItemDamage(eTarget, Damage.DamageItems.Dfg);
 
             totalComboDamage += summonerSpellManager.IsReadyIgnite() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
@@ -317,10 +318,11 @@ namespace DevAnnie
                         if (mustDebug)
                             Game.PrintChat("BurstCombo R -> " + eTarget.BaseSkinName);
 
-                        if (itemManager.IsReadyDFG())
-                            itemManager.CastDFG(eTarget);
+                        ////if (itemManager.IsReadyDFG())
+                        ////    itemManager.CastDFG(eTarget);
 
                         R.CastOnUnit(eTarget, packetCast);
+                        dtBurstComboStart = DateTime.Now;
                     }
                     else
                     {
@@ -345,8 +347,8 @@ namespace DevAnnie
                             E.Cast();
                     }
 
-                    if (itemManager.IsReadyDFG())
-                        itemManager.CastDFG(eTarget);
+                    ////if (itemManager.IsReadyDFG())
+                    ////    itemManager.CastDFG(eTarget);
 
                     R.CastOnUnit(eTarget, packetCast);
                     dtBurstComboStart = DateTime.Now;
@@ -354,7 +356,7 @@ namespace DevAnnie
             }
 
             // Ignite
-            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now && summonerSpellManager.IsReadyIgnite())
+            if (dtBurstComboStart.AddSeconds(4) > DateTime.Now && summonerSpellManager.IsReadyIgnite())
             {
                 if (mustDebug)
                     Game.PrintChat("Ignite -> " + eTarget.BaseSkinName);
