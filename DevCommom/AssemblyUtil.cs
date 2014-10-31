@@ -14,7 +14,7 @@ namespace DevCommom
 {
     public class AssemblyUtil
     {
-        private static OnGetVersionCompletedArgs versionCompletedArgs;
+        private OnGetVersionCompletedArgs versionCompletedArgs;
 
         public delegate void OnGetVersionCompleted(OnGetVersionCompletedArgs args);
         public event OnGetVersionCompleted onGetVersionCompleted;
