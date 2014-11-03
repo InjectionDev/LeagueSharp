@@ -171,6 +171,7 @@ namespace DevRyze
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
+            //Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
 
             Config.Item("ComboDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("ComboDamage").GetValue<bool>())
@@ -181,6 +182,42 @@ namespace DevRyze
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
+        }
+
+        static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (sender.IsMe)
+            {
+                if (mustDebug)
+                {
+                    Game.PrintChat("SpellCast -> Name: " + args.SData.Name);
+                    Game.PrintChat("SpellCast -> MissileSpeed: " + args.SData.MissileSpeed);
+                    Game.PrintChat("SpellCast -> TimeSpellEnd: " + args.TimeSpellEnd);
+                    Game.PrintChat("SpellCast -> Distance: " + args.Start.Distance(args.End));
+                    Game.PrintChat("SpellCast -> Delay: " + 1000 * (args.Start.Distance(args.End) / args.SData.MissileSpeed));
+                    Game.PrintChat("SpellCast -> Ping: " + Game.Ping);
+                }
+
+                var spellSlot = Player.GetSpellSlot(args.SData.Name, false);
+                var target = ObjectManager.GetUnitByNetworkId<Obj_AI_Base>(args.Target.NetworkId);
+
+                if (spellSlot == SpellSlot.Q && W.IsReady() && target.IsMinion)
+                {
+                    var delay = 1000 * (args.Start.Distance(args.End) / args.SData.MissileSpeed);
+                    delay += Game.Ping / 2;
+
+                    if (mustDebug)
+                    {
+                        Game.PrintChat("SpellCast -> Delay Q: " + delay);
+                        Game.PrintChat("SpellCast -> HealthPrediction: " + HealthPrediction.GetHealthPrediction(target, (int)delay));
+                    }
+
+                    if (HealthPrediction.GetHealthPrediction(target, (int)delay) <= 0)
+                    {
+                        Utility.DelayAction.Add((int)delay, () => W.CastOnUnit(target, true));
+                    }
+                }
+            }
         }
 
         // same logic of Orbwalking_AfterAttack but without callback.. TODO: test it
