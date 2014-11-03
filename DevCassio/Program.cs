@@ -509,9 +509,6 @@ namespace DevCassio
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevCassio You have the lastest version.</font>"));
             else
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevCassio NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
-
-            if (args.CurrentCommomVersion != args.LastCommomVersion)
-                Game.PrintChat(string.Format("<font color='#fb762d'>DevCommom Library NEW VERSION available! Please Update while NOT INGAME! {0}</font>", args.LastCommomVersion));
         }
 
         private static void InitializeAttachEvents()
@@ -749,7 +746,6 @@ namespace DevCassio
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "No-Face Exploit (PacketCast)").SetValue(true));
-            //Config.SubMenu("Misc").AddItem(new MenuItem("AutoLevelUP", "Auto Level UP").SetValue(true));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));

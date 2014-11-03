@@ -14,7 +14,7 @@ namespace DevCommom
 {
     public class AssemblyUtil
     {
-        private static OnGetVersionCompletedArgs versionCompletedArgs;
+        private OnGetVersionCompletedArgs versionCompletedArgs;
 
         public delegate void OnGetVersionCompleted(OnGetVersionCompletedArgs args);
         public event OnGetVersionCompleted onGetVersionCompleted;
@@ -32,7 +32,6 @@ namespace DevCommom
             versionCompletedArgs = new OnGetVersionCompletedArgs();
         }
         
-
         public void GetLastVersionAsync()
         {
             var urlBase = string.Format(@"https://raw.githubusercontent.com/InjectionDev/LeagueSharp/master/{0}/Properties/AssemblyInfo.cs", this.AssemblyName);
@@ -46,31 +45,34 @@ namespace DevCommom
 
         void FinishWebRequest(IAsyncResult result)
         {
-            var webResponse = this.webRequest.EndGetResponse(result);
-            var body = new StreamReader(webResponse.GetResponseStream()).ReadToEnd();
-
-            if (onGetVersionCompleted != null && !string.IsNullOrEmpty(body))
+            try
             {
-                versionCompletedArgs.LastAssemblyVersion = this.GetVersionFromAssemblyInfo(body);
+                var webResponse = this.webRequest.EndGetResponse(result);
+                var body = new StreamReader(webResponse.GetResponseStream()).ReadToEnd();
 
-                if (!string.IsNullOrEmpty(versionCompletedArgs.LastAssemblyVersion) && !string.IsNullOrEmpty(versionCompletedArgs.LastCommomVersion))
+                if (onGetVersionCompleted != null)
+                {
+                    versionCompletedArgs.LastAssemblyVersion = this.GetVersionFromAssemblyInfo(body);
                     onGetVersionCompleted(versionCompletedArgs);
+                }
             }
+            catch { }
         }
 
         void FinishWebRequestCommom(IAsyncResult result)
         {
-            var webResponse = this.webRequest.EndGetResponse(result);
-            var body = new StreamReader(webResponse.GetResponseStream()).ReadToEnd();
-
-            if (onGetVersionCompleted != null && !string.IsNullOrEmpty(body))
+            try
             {
+                var webResponse = this.webRequest.EndGetResponse(result);
+                var body = new StreamReader(webResponse.GetResponseStream()).ReadToEnd();
+
                 versionCompletedArgs.LastCommomVersion = this.GetVersionFromAssemblyInfo(body);
                 versionCompletedArgs.CurrentCommomVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
-                if (!string.IsNullOrEmpty(versionCompletedArgs.LastAssemblyVersion) && !string.IsNullOrEmpty(versionCompletedArgs.LastCommomVersion))
-                    onGetVersionCompleted(versionCompletedArgs);
+                if (versionCompletedArgs.CurrentCommomVersion != versionCompletedArgs.LastCommomVersion)
+                    Game.PrintChat(string.Format("<font color='#fb762d'>DevCommom Library NEW VERSION available! Please Update while NOT INGAME! {0}</font>", versionCompletedArgs.LastCommomVersion));
             }
+            catch { }
         }
 
         private string GetVersionFromAssemblyInfo(string body)

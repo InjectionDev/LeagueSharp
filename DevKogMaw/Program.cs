@@ -371,9 +371,6 @@ namespace DevKogMaw
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw You have the lastest version.</font>"));
             else
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
-
-            if (args.CurrentCommomVersion != args.LastCommomVersion)
-                Game.PrintChat(string.Format("<font color='#fb762d'>DevCommom Library NEW VERSION available! Please Update while NOT INGAME! {0}</font>", args.LastCommomVersion));
         }
 
         private static void InitializeAttachEvents()

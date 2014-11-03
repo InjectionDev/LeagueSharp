@@ -91,9 +91,6 @@ namespace DevAnnie
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie You have the lastest version.</font>"));
             else
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
-
-            if (args.CurrentCommomVersion != args.LastCommomVersion)
-                Game.PrintChat(string.Format("<font color='#fb762d'>DevCommom Library NEW VERSION available! Please Update while NOT INGAME! {0}</font>", args.LastCommomVersion));
         }
 
         private static void InitializeAttachEvents()
@@ -460,7 +457,6 @@ namespace DevAnnie
             var useW = Config.Item("UseWLaneClear").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var ManaLaneClear = Config.Item("ManaLaneClear").GetValue<Slider>().Value;
-            var UseQHarassLastHit = Config.Item("UseQHarassLastHit").GetValue<bool>();
 
             if (Q.IsReady() && useQ)
             {
