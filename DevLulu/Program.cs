@@ -13,14 +13,14 @@ using Evade;
 /*
  * ##### DevLulu Mods #####
  * 
- * + Support Mode and AP Carry Mode with separated logic
- * + E + Q Combo ! (Use enemy/ally/minion to hit target)
- * + E/R Interrupt Spells
- * + W Interrupt/Gapcloser
- * + Skin Hack
- * + Help Ally W/E/R
- * + Auto Shield Ally (Evade integrated)
-
+ * SoloQ and Support Mode with separated logic
+ * E + Q Combo ! (Use enemy/ally/minion to hit target)
+ * E/R Interrupt Spells
+ * W Interrupt/Gapcloser
+ * Skin Hack
+ * Help Ally W/E/R
+ * Auto Shield Ally (Evade integration)
+ * 
 */
 
 namespace DevLulu
@@ -407,43 +407,48 @@ namespace DevLulu
             
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            switch (Config.Item("ModeType").GetValue<StringList>().SelectedIndex)
+            if (IsSoloQMode)
             {
-                case 0: //SoloQ
-                    {
-                        if (useQ)
-                            CastQ();
-                        if (useW)
-                            CastWEnemy();
-                        if (useE)
-                            CastEEnemy();
-                        if (UseEQCombo)
-                            CastEQ();
+                if (useQ)
+                    CastQ();
+                if (useW)
+                    CastWEnemy();
+                if (useE)
+                    CastEEnemy();
+                if (UseEQCombo)
+                    CastEQ();
 
-                        if (IgniteManager.CanKill(eTarget))
-                        {
-                            if (IgniteManager.Cast(eTarget))
-                                Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
-                        }
-                        break;
-                    }
-                case 1: // Support
-                    {
-                        if (useW)
-                            CastWAlly();
-                        if (useE)
-                            CastEAlly();
-                        if (useQ)
-                            CastQ();
-                        if (UseEQCombo)
-                            CastEQ();
-                        break;
-                    }
-                default:
-                    break;
+                if (IgniteManager.CanKill(eTarget))
+                {
+                    if (IgniteManager.Cast(eTarget))
+                        Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
+                }
+            }
+
+            if (IsSupportMode)
+            {
+                if (useW)
+                    CastWAlly();
+                if (useE)
+                    CastEAlly();
+                if (useQ)
+                    CastQ();
+                if (UseEQCombo)
+                    CastEQ();
             }
 
         }
+
+        static bool IsSoloQMode
+        {
+            get { return Config.Item("ModeType").GetValue<StringList>().SelectedIndex == 0; }
+        }
+
+        static bool IsSupportMode
+        {
+            get { return Config.Item("ModeType").GetValue<StringList>().SelectedIndex == 1; }
+        }
+
 
         public static void Harass()
         {
@@ -459,32 +464,29 @@ namespace DevLulu
             
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            switch (Config.Item("ModeType").GetValue<StringList>().SelectedIndex)
+            if (IsSoloQMode)
             {
-                case 0: //SoloQ
-                    if (useQ)
-                        CastQ();
-                    if (useW)
-                        CastWEnemy();
-                    if (useE)
-                        CastEEnemy();
-                    if (UseEQHarass)
-                        CastEQ();
-                    break;
-                case 1: // Support
-                    if (useW)
-                        CastWAlly();
-                    if (useE)
-                        CastEAlly();
-                    if (useQ)
-                        CastQ();
-                    if (UseEQHarass)
-                        CastEQ();
-                    break;
-                default:
-                    break;
+                if (useQ)
+                    CastQ();
+                if (useW)
+                    CastWEnemy();
+                if (useE)
+                    CastEEnemy();
+                if (UseEQHarass)
+                    CastEQ();
             }
 
+            if (IsSupportMode)
+            {
+                if (useW)
+                    CastWAlly();
+                if (useE)
+                    CastEAlly();
+                if (useQ)
+                    CastQ();
+                if (UseEQHarass)
+                    CastEQ();
+            }
 
         }
 
@@ -523,12 +525,12 @@ namespace DevLulu
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            //if (args.Target.IsMinion && IsSupportMode)
-            //{
-            //    var allyADC = Player.GetNearestAlly();
-            //    if (!allyADC.IsMe && allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
-            //        args.Process = false;
-            //}
+            if (args.Target.IsMinion && IsSupportMode)
+            {
+                var allyADC = Player.GetNearestAlly();
+                if (allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
+                    args.Process = false;
+            }
         }
 
         static void Drawing_OnDraw(EventArgs args)

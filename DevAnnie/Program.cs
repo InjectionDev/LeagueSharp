@@ -13,7 +13,8 @@ using System.Threading.Tasks;
  * ##### DevAnnie Mods #####
  * 
  * SBTW Assembly
- * Flash + Combo Burst
+ * SoloQ and Support Mode with separated logic
+ * Flash + Combo Burst Key
  * Use E against AA and GapCloser
  * LastHit with Q in HarassMode to StackPassive (Save Q if enemy is near)
  * Use R + 4 Pyromania to Interrupt Dangerous Spells
@@ -28,7 +29,7 @@ namespace DevAnnie
 {
     class Program
     {
-        public const string ChampionName = "annie";
+        public const string ChampionName = "Annie";
 
         public static Menu Config;
         public static Orbwalking.Orbwalker Orbwalker;
@@ -57,7 +58,7 @@ namespace DevAnnie
         {
             Player = ObjectManager.Player;
 
-            if (!Player.ChampionName.ToLower().Contains(ChampionName))
+            if (!Player.ChampionName.Equals(ChampionName, StringComparison.CurrentCultureIgnoreCase))
                 return;
 
             try
@@ -197,9 +198,19 @@ namespace DevAnnie
             }
         }
 
+        static bool IsSoloQMode
+        {
+            get { return Config.Item("ModeType").GetValue<StringList>().SelectedIndex == 0; }
+        }
+
+        static bool IsSupportMode
+        {
+            get { return Config.Item("ModeType").GetValue<StringList>().SelectedIndex == 1; }
+        }
+
         public static void FlashCombo()
         {
-            var UseFlashCombo = Config.Item("UseFlashCombo").GetValue<bool>();
+            var UseFlashCombo = Config.Item("FlashComboKey").GetValue<KeyBind>().Active;
             var FlashComboMinEnemies = Config.Item("FlashComboMinEnemies").GetValue<Slider>().Value;
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var FlashAntiSuicide = Config.Item("FlashAntiSuicide").GetValue<bool>();
@@ -532,6 +543,13 @@ namespace DevAnnie
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
+            if (args.Target.IsMinion && IsSupportMode)
+            {
+                var allyADC = Player.GetNearestAlly();
+                if (allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
+                    args.Process = false;
+            }
+
             //if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             //{
             //    var useQ = Config.Item("UseQCombo").GetValue<bool>();
@@ -582,6 +600,9 @@ namespace DevAnnie
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
             Orbwalker = new Orbwalking.Orbwalker(Config.SubMenu("Orbwalking"));
 
+            Config.AddSubMenu(new Menu("Mode", "Mode"));
+            Config.SubMenu("Mode").AddItem(new MenuItem("ModeType", "Mode Type").SetValue(new StringList(new[] { "SoloQ", "Support" })));
+
             Config.AddSubMenu(new Menu("Combo", "Combo"));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseQCombo", "Use Q").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseWCombo", "Use W").SetValue(true));
@@ -590,8 +611,8 @@ namespace DevAnnie
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRMinEnemies", "Use R Stun X Enemies").SetValue(new Slider(2, 1, 5)));
 
-            Config.AddSubMenu(new Menu("FlashCombo", "FlashCombo"));
-            Config.SubMenu("FlashCombo").AddItem(new MenuItem("UseFlashCombo", "Use Flash Combo").SetValue(true));
+            Config.AddSubMenu(new Menu("Flash Combo", "FlashCombo"));
+            Config.SubMenu("FlashCombo").AddItem(new MenuItem("FlashComboKey", "FlashCombo!").SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press)));
             Config.SubMenu("FlashCombo").AddItem(new MenuItem("FlashComboMinEnemies", "FlashCombo Min Enemies Hit").SetValue(new Slider(2, 1, 5)));
             Config.SubMenu("FlashCombo").AddItem(new MenuItem("FlashAntiSuicide", "Use Flash Anti Suicide").SetValue(true));
 
