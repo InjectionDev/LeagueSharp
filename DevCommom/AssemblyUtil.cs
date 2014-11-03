@@ -14,7 +14,7 @@ namespace DevCommom
 {
     public class AssemblyUtil
     {
-        private OnGetVersionCompletedArgs versionCompletedArgs;
+        private static OnGetVersionCompletedArgs versionCompletedArgs;
 
         public delegate void OnGetVersionCompleted(OnGetVersionCompletedArgs args);
         public event OnGetVersionCompleted onGetVersionCompleted;
@@ -31,6 +31,7 @@ namespace DevCommom
 
             versionCompletedArgs = new OnGetVersionCompletedArgs();
         }
+        
 
         public void GetLastVersionAsync()
         {

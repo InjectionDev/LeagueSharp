@@ -18,7 +18,8 @@ using System.Threading.Tasks;
  * + Smart E usage on minions to harras (work in progress)
  * + Skin Hack
  * + Auto Spell Level UP
- *  
+ * + Kill Steal Q/W/E/R
+ * + Priorize Stun Harass/Combo 
 */
 
 namespace DevBrand
@@ -128,6 +129,11 @@ namespace DevBrand
 
         }
 
+        static bool HasPassiveBuff(Obj_AI_Base unit)
+        {
+            return unit.HasBuff("BrandAblaze");
+        }
+
         static void Game_OnGameUpdate(EventArgs args)
         {
             try
@@ -150,6 +156,8 @@ namespace DevBrand
                     default:
                         break;
                 }
+
+                KillSteal();
 
                 skinManager.Update();
 
@@ -249,11 +257,20 @@ namespace DevBrand
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
+            var PriorizeStun = Config.Item("PriorizeStunCombo").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
-                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                if (PriorizeStun)
+                {
+                    if (HasPassiveBuff(eTarget))
+                        Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                }
+                else
+                {
+                    Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                }
             }
 
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
@@ -284,11 +301,20 @@ namespace DevBrand
             var useW = Config.Item("UseWHarass").GetValue<bool>();
             var useE = Config.Item("UseEHarass").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
+            var PriorizeStun = Config.Item("PriorizeStunHarass").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
-                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                if (PriorizeStun)
+                { 
+                    if (HasPassiveBuff(eTarget))
+                        Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                }
+                else
+                {
+                    Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                }
             }
 
             if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
@@ -342,10 +368,61 @@ namespace DevBrand
 
         }
 
-        public static bool HasPassiveBuff(Obj_AI_Base unit)
+        static void KillSteal()
         {
-            return unit.HasBuff("brandablaze", true);
+            var UseQKillSteal = Config.Item("UseQKillSteal").GetValue<bool>();
+            var UseWKillSteal = Config.Item("UseWKillSteal").GetValue<bool>();
+            var UseEKillSteal = Config.Item("UseEKillSteal").GetValue<bool>();
+            var UseRKillSteal = Config.Item("UseRKillSteal").GetValue<bool>();
+            var KillSteal = Config.Item("KillSteal").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (KillSteal)
+            {
+
+                if (UseQKillSteal && Q.IsReady())
+                {
+                    var ksQ = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(Q.Range) && Q.GetDamage(x) > x.Health * 1.1).OrderBy(x => x.Health).ToList();
+                    if (ksQ.Count > 0)
+                    {
+                        var target = ksQ.First();
+                        Q.CastIfHitchanceEquals(target, target.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                    }
+                }
+
+                if (UseWKillSteal && W.IsReady())
+                {
+                    var ksW = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(W.Range) && W.GetDamage(x) > x.Health * 1.1).OrderBy(x => x.Health).ToList();
+                    if (ksW.Count > 0)
+                    {
+                        var target = ksW.First();
+                        W.CastIfHitchanceEquals(target, target.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                    }
+                }
+
+                if (UseEKillSteal && E.IsReady())
+                {
+                    var ksE = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(E.Range) && E.GetDamage(x) > x.Health * 1.1).OrderBy(x => x.Health).ToList();
+                    if (ksE.Count > 0)
+                    {
+                        var target = ksE.First();
+                        E.CastOnUnit(target, packetCast);
+                    }
+                }
+
+                if (UseRKillSteal && R.IsReady())
+                {
+                    var ksR = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(R.Range) && R.GetDamage(x) > x.Health * 1.1).OrderBy(x => x.Health).ToList();
+                    if (ksR.Count > 0)
+                    {
+                        var target = ksR.First();
+                        R.CastOnUnit(target, packetCast);
+                    }
+                }
+
+            }
         }
+
 
         private static void InitializeLevelUpManager()
         {
@@ -453,11 +530,13 @@ namespace DevBrand
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRCombo", "Use R").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseIgnite", "Use Ignite").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRMinEnemies", "Use R if Hit X").SetValue(new Slider(2, 1, 5)));
+            Config.SubMenu("Combo").AddItem(new MenuItem("PriorizeStunCombo", "Priorize Q Stun").SetValue(true));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
+            Config.SubMenu("Harass").AddItem(new MenuItem("PriorizeStunHarass", "Priorize Q Stun").SetValue(true));
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             //Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(false));
@@ -467,6 +546,13 @@ namespace DevBrand
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
+
+            Config.AddSubMenu(new Menu("KillSteal", "KillSteal"));
+            Config.SubMenu("KillSteal").AddItem(new MenuItem("KillSteal", "Kill Steal").SetValue(true));
+            Config.SubMenu("KillSteal").AddItem(new MenuItem("UseQKillSteal", "Use Q").SetValue(true));
+            Config.SubMenu("KillSteal").AddItem(new MenuItem("UseWKillSteal", "Use W").SetValue(true));
+            Config.SubMenu("KillSteal").AddItem(new MenuItem("UseEKillSteal", "Use E").SetValue(true));
+            Config.SubMenu("KillSteal").AddItem(new MenuItem("UseRKillSteal", "Use R").SetValue(true));
 
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloser", "Barrier onGapCloser").SetValue(true));
