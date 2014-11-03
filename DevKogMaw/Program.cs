@@ -28,7 +28,7 @@ namespace DevKogMaw
 {
     class Program
     {
-        public const string ChampionName = "kogmaw";
+        public const string ChampionName = "KogMaw";
 
         public static Menu Config;
         public static Orbwalking.Orbwalker Orbwalker;
@@ -337,7 +337,7 @@ namespace DevKogMaw
             {
                 Player = ObjectManager.Player;
 
-                if (!Player.ChampionName.ToLower().Contains(ChampionName))
+                if (!Player.ChampionName.Equals(ChampionName, StringComparison.CurrentCultureIgnoreCase))
                     return;
 
                 InitializeSpells();
@@ -511,21 +511,38 @@ namespace DevKogMaw
 
         static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
         {
-            //Game.PrintChat(string.Format("OnPosibleToInterrupt -> {0} cast {1}", unit.SkinName, spell.SpellName));
+            if (mustDebug)
+                Game.PrintChat(string.Format("OnPosibleToInterrupt -> {0} cast {1}", unit.SkinName, spell.SpellName));
+
+
+            var EInterrupt = Config.Item("EInterrupt").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (EInterrupt && E.IsReady() && unit.IsValidTarget(E.Range))
+            {
+                E.CastIfHitchanceEquals(unit, unit.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+            }
         }
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
-            //Game.PrintChat(string.Format("OnEnemyGapcloser -> {0}", gapcloser.Sender.SkinName));
+            if (mustDebug)
+                Game.PrintChat(string.Format("OnEnemyGapcloser -> {0}", gapcloser.Sender.SkinName));
 
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var BarrierGapCloser = Config.Item("BarrierGapCloser").GetValue<bool>();
             var BarrierGapCloserMinHealth = Config.Item("BarrierGapCloserMinHealth").GetValue<Slider>().Value;
+            var EGapCloser = Config.Item("EGapCloser").GetValue<bool>();
 
             if (BarrierGapCloser && Player.GetHealthPerc() < BarrierGapCloserMinHealth && gapcloser.Sender.IsValidTarget(Player.AttackRange))
             {
                 if (BarrierManager.Cast())
                     Game.PrintChat(string.Format("OnEnemyGapcloser -> BarrierGapCloser on {0} !", gapcloser.Sender.SkinName));
+            }
+
+            if (EGapCloser && E.IsReady() && gapcloser.Sender.IsValidTarget(E.Range))
+            {
+                E.CastIfHitchanceEquals(gapcloser.Sender, gapcloser.Sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
         }
@@ -690,6 +707,8 @@ namespace DevKogMaw
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloser", "Barrier onGapCloser").SetValue(true));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloserMinHealth", "Barrier MinHealth").SetValue(new Slider(40, 0, 100)));
+            Config.SubMenu("GapCloser").AddItem(new MenuItem("EGapCloser", "E GapCloser").SetValue(true));
+            Config.SubMenu("GapCloser").AddItem(new MenuItem("EInterrupt", "E Interrupt").SetValue(true));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
