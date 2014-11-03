@@ -181,32 +181,29 @@ namespace DevKogMaw
             if (mustDebug)
                 Game.PrintChat("Harass Target -> " + eTarget.SkinName);
 
-            if (Player.GetManaPerc() > ManaHarass)
+            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ && Player.GetManaPerc() > ManaHarass)
             {
-                if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
-                {
-                    Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                }
+                Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+            }
 
-                if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
-                {
-                    if (packetCast)
-                        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.W)).Send();
-                    else
-                        W.Cast();
+            if (!HasWBuff() && Player.Distance(eTarget) > Player.AttackRange && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
+            {
+                if (packetCast)
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.W)).Send();
+                else
+                    W.Cast();
 
-                    Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
-                }
+                Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
+            }
 
-                if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE && Player.GetManaPerc() > EManaHarass)
-                {
-                    E.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                }
+            if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE && Player.GetManaPerc() > EManaHarass)
+            {
+                E.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+            }
 
-                if (eTarget.IsValidTarget(R.Range) && R.IsReady() && GetRStacks() < RMaxStacksHarass && useR && Player.Distance(eTarget) > Player.AttackRange)
-                {
-                    R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
-                }
+            if (eTarget.IsValidTarget(R.Range) && R.IsReady() && GetRStacks() < RMaxStacksHarass && useR && Player.Distance(eTarget) > Player.AttackRange && Player.GetManaPerc() > ManaHarass)
+            {
+                R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
             if (mustDebug)
