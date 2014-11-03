@@ -564,12 +564,14 @@ namespace DevKogMaw
 
         private static bool HasWBuff()
         {
-            return Player.HasBuff("kogMawBioArcaneBarrage");
+            return Player.Buffs.Where(x => x.Name.ToLower() == "kogMawBioArcaneBarrage".ToLower()).Count() > 0;
+            //return Player.HasBuff("kogMawBioArcaneBarrage");
         }
 
         private static bool HasPassiveBuff()
         {
-            return Player.HasBuff("KogMawIcathianSurprise");
+            return Player.Buffs.Where(x => x.Name.ToLower() == "KogMawIcathianSurprise".ToLower()).Count() > 0;
+            //return Player.HasBuff("KogMawIcathianSurprise");
         }
 
         private static void JungleStealAlert()
