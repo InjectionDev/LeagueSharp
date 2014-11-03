@@ -131,7 +131,7 @@ namespace DevTwitch
                 if (totalCombo * 0.9 > rTarget.Health)
                 {
                     if (packetCast)
-                        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
+                        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
                     else
                         R.Cast();
 
@@ -155,7 +155,7 @@ namespace DevTwitch
                     var enemy = enemies.First();
 
                     if (packetCast)
-                        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
+                        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
                     else
                         R.Cast();
 
@@ -275,7 +275,7 @@ namespace DevTwitch
             if (E.IsReady())
             {
                 if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.E)).Send();
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.E)).Send();
                 else
                     E.Cast();
             }
@@ -428,7 +428,7 @@ namespace DevTwitch
             //if (QGapCloser && Q.IsReady())
             //{
             //    if (packetCast)
-            //        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.Q)).Send();
+            //        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.Q)).Send();
             //    else
             //        Q.Cast();
             //}
@@ -455,7 +455,7 @@ namespace DevTwitch
             //        Game.PrintChat(string.Format("OnEnemyGapcloser -> UseQ"));
 
             //    if (packetCast)
-            //        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.Q)).Send();
+            //        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.Q)).Send();
             //    else
             //        Q.Cast();
             //}

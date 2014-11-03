@@ -408,7 +408,7 @@ namespace DevRyze
             if (useR && R.IsReady() && DevHelper.CountEnemyInPositionRange(eTarget.ServerPosition, 300) > 1)
             {
                 if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
                 else
                     R.Cast();
 
@@ -421,7 +421,7 @@ namespace DevRyze
             if (useR && R.IsReady() && Player.IsKillable(eTarget, spellCombo))
             {
                 if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
                 else
                     R.Cast();
 
@@ -435,7 +435,7 @@ namespace DevRyze
                 dtLastRunePrision = DateTime.Now;
 
                 if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.R)).Send();
+                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
                 else
                     R.Cast();
 

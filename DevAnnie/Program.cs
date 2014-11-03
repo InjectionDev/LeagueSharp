@@ -147,7 +147,7 @@ namespace DevAnnie
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             if (packetCast)
-                Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.E)).Send();
+                Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.E)).Send();
             else
                 E.Cast();
         }
@@ -226,7 +226,7 @@ namespace DevAnnie
                         if (qtPassiveStacks == 3)
                         {
                             if (packetCast)
-                                Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.E)).Send();
+                                Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.E)).Send();
                             else
                                 E.Cast();
                         }
@@ -342,7 +342,7 @@ namespace DevAnnie
                     if (qtPassiveStacks == 3)
                     {
                         if (packetCast)
-                            Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(0, SpellSlot.E)).Send();
+                            Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.E)).Send();
                         else
                             E.Cast();
                     }
