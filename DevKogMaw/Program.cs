@@ -229,7 +229,7 @@ namespace DevKogMaw
 
             if (E.IsReady() && useE && Player.GetManaPerc() > EManaLaneClear)
             {
-                var farmLocation = E.GetLineFarmLocation(MinionList, E.Width * 0.8f);
+                var farmLocation = E.GetLineFarmLocation(MinionList, E.Width * 0.7f);
                 if (farmLocation.MinionsHit >= 6)
                     E.Cast(farmLocation.Position, packetCast);
             }
@@ -549,6 +549,8 @@ namespace DevKogMaw
                     {
                         if (spell.IsReady())
                             Utility.DrawCircle(ObjectManager.Player.Position, Player.AttackRange + spell.Range, System.Drawing.Color.Green);
+                        else if (HasPassiveBuff())
+                            Utility.DrawCircle(ObjectManager.Player.Position, Player.AttackRange, System.Drawing.Color.Orange);
                         else
                             Utility.DrawCircle(ObjectManager.Player.Position, Player.AttackRange + spell.Range, System.Drawing.Color.Red);
                     }

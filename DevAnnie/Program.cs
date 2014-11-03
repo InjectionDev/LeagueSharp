@@ -19,7 +19,7 @@ using System.Threading.Tasks;
  * Use R + 4 Pyromania to Interrupt Dangerous Spells
  * Cast R if will Stun X Enemies
  * Cast R Burst Combo
- * Use DFG
+ * Use Itens (DFG)
  * Skin Hack
  * 
 */
