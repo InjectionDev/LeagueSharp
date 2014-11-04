@@ -71,13 +71,11 @@ namespace DevAnnie
 
                 InitializeAttachEvents();
 
-                //Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
                 assemblyUtil = new AssemblyUtil(Assembly.GetExecutingAssembly().GetName().Name);
                 assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
                 assemblyUtil.GetLastVersionAsync();
-
-                Game.PrintChat(string.Format("<font color='#FF0000'>DevAnnie: THIS ASSEMBLY IS NOT FINISHED YET!!!</font>"));
             }
             catch (Exception ex)
             {
