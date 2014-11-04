@@ -15,7 +15,7 @@ using System.Threading.Tasks;
  * SBTW Assembly
  * SoloQ and Support Mode with separated logic
  * Flash + Combo Burst Key
- * Use E against AA and GapCloser
+ * Use E Shield against AA/spells and GapCloser
  * LastHit with Q in HarassMode to StackPassive (Save Q if enemy is near)
  * Use R + 4 Pyromania to Interrupt Dangerous Spells
  * Cast R if will Stun X Enemies
