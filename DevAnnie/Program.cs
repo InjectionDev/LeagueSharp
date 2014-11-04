@@ -101,6 +101,7 @@ namespace DevAnnie
         {
             Game.OnGameUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
+            Drawing.OnEndScene += Drawing_OnEndScene;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
@@ -113,6 +114,8 @@ namespace DevAnnie
                 Utility.HpBarDamageIndicator.Enabled = true;
             }
         }
+
+
 
         static void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
@@ -178,7 +181,7 @@ namespace DevAnnie
                         break;
                     case Orbwalking.OrbwalkingMode.Mixed:
                         Harass();
-                        QHarassLastHit();
+                        //QHarassLastHit();
                         break;
                     case Orbwalking.OrbwalkingMode.LaneClear:
                         WaveClear();
@@ -305,7 +308,8 @@ namespace DevAnnie
             var UseRMinEnemies = Config.Item("UseRMinEnemies").GetValue<Slider>().Value;
 
             double totalComboDamage = 0;
-            totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
+            if (R.IsReady())
+                totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.W);
@@ -319,7 +323,8 @@ namespace DevAnnie
             totalComboDamage += summonerSpellManager.IsReadyIgnite() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
-            totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
+            if (R.IsReady())
+                totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
 
             if (mustDebug)
@@ -328,51 +333,40 @@ namespace DevAnnie
                 Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), Player.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
-            // R KS
-            if (R.IsReady() && useR)
+            // R Combo
+            if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
             {
-                if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
+                if (totalComboDamage * 0.3 < eTarget.Health) // Anti OverKill
                 {
-                    if (totalComboDamage * 0.3 < eTarget.Health) // Anti OverKill
+                    if (mustDebug)
+                        Game.PrintChat("BurstCombo R -> " + eTarget.BaseSkinName);
+
+                    if (itemManager.IsReadyDFG())
+                        itemManager.CastDFG(eTarget);
+
+                    if (R.IsReady() && useR)
                     {
-                        if (mustDebug)
-                            Game.PrintChat("BurstCombo R -> " + eTarget.BaseSkinName);
-
-                        if (itemManager.IsReadyDFG())
-                            itemManager.CastDFG(eTarget);
-
-                        var pred = R.GetPrediction(eTarget, true);
+                        var pred = R.GetPrediction(eTarget, true); 
                         R.Cast(pred.CastPosition, packetCast);
-                        dtBurstComboStart = DateTime.Now;
                     }
-                    else
-                    {
-                        if (mustDebug)
-                            Game.PrintChat("BurstCombo OverKill -> Save R");
-                    }
+
                     dtBurstComboStart = DateTime.Now;
                 }
+                dtBurstComboStart = DateTime.Now;
             }
 
+
             // R if Hit X Enemies
-            int qtPassiveStacks = GetPassiveStacks();
-            if (R.IsReady() && useR && ((qtPassiveStacks == 3 && E.IsReady()) || qtPassiveStacks == 4))
+            if (R.IsReady() && useR)
             {
                 if (DevHelper.CountEnemyInPositionRange(eTarget.ServerPosition, 250) >= UseRMinEnemies)
                 {
-                    if (qtPassiveStacks == 3)
-                    {
-                        if (packetCast)
-                            Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.E)).Send();
-                        else
-                            E.Cast();
-                    }
-
                     if (itemManager.IsReadyDFG())
                         itemManager.CastDFG(eTarget);
 
                     var pred = R.GetPrediction(eTarget, true);
                     R.Cast(pred.CastPosition, packetCast);
+
                     dtBurstComboStart = DateTime.Now;
                 }
             }
@@ -474,7 +468,7 @@ namespace DevAnnie
             if (Q.IsReady() && useQ)
             {
                 var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
-                var minionLastHit = allMinions.Where(x => HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9f).OrderBy(x => x.Health);
+                var minionLastHit = allMinions.Where(x => HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.8f).OrderBy(x => x.Health);
 
                 if (minionLastHit.Count() > 0)
                 {
@@ -525,11 +519,11 @@ namespace DevAnnie
 
         public static int GetPassiveStacks()
         {
-            var buffs = Player.Buffs.Where(buff => (buff.Name == "pyromania" || buff.Name == "pyromania_particle"));
+            var buffs = Player.Buffs.Where(buff => (buff.Name.ToLower() == "pyromania" || buff.Name.ToLower() == "pyromania_particle"));
             if (buffs.Count() > 0)
             {
                 var buff = buffs.First();
-                if (buff.Name == "pyromania_particle")
+                if (buff.Name.ToLower() == "pyromania_particle")
                     return 4;
                 else
                     return buff.Count;
@@ -573,7 +567,7 @@ namespace DevAnnie
             Q = new Spell(SpellSlot.Q, 650);
             Q.SetTargetted(0.25f, 1400);
 
-            W = new Spell(SpellSlot.W, 650);
+            W = new Spell(SpellSlot.W, 625);
             W.SetSkillshot(0.6f, (float)(50 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
 
             E = new Spell(SpellSlot.E);
@@ -619,6 +613,12 @@ namespace DevAnnie
 
         static void Drawing_OnDraw(EventArgs args)
         {
+
+
+        }
+
+        static void Drawing_OnEndScene(EventArgs args)
+        {
             foreach (var spell in SpellList)
             {
                 var menuItem = Config.Item(spell.Slot + "Range").GetValue<Circle>();
@@ -627,12 +627,11 @@ namespace DevAnnie
                     Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
                 }
             }
-
         }
 
         private static float GetComboDamage(Obj_AI_Hero enemy)
         {
-            IEnumerable<SpellSlot> spellCombo = new[] { SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R };
+            IEnumerable<SpellSlot> spellCombo = new[] { SpellSlot.Q, SpellSlot.W, SpellSlot.R };
             return (float)Damage.GetComboDamage(Player, enemy, spellCombo);
         }
 
