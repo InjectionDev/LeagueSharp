@@ -22,6 +22,7 @@ using System.Threading.Tasks;
  * Cast R Burst Combo
  * Use Itens (DFG)
  * Skin Hack
+ * Auto Spell Level UP
  * 
 */
 
@@ -43,6 +44,7 @@ namespace DevAnnie
         public static SummonerSpellManager summonerSpellManager;
         public static ItemManager itemManager;
         public static AssemblyUtil assemblyUtil;
+        public static LevelUpManager levelUpManager;
 
         private static DateTime dtBurstComboStart = DateTime.MinValue;
         private static string msgFlashCombo = string.Empty;
@@ -66,6 +68,8 @@ namespace DevAnnie
                 InitializeSpells();
 
                 InitializeSkinManager();
+
+                InitializeLevelUpManager();
 
                 InitializeMainMenu();
 
@@ -114,10 +118,10 @@ namespace DevAnnie
         {
             var UseEAgainstAA = Config.Item("UseEAgainstAA").GetValue<bool>();
 
-            if (UseEAgainstAA && E.IsReady() && sender.IsEnemy && sender is Obj_SpellMissile)
+            if (UseEAgainstAA && E.IsReady() && sender is Obj_SpellMissile)
             {
                 var missile = sender as Obj_SpellMissile;
-                if (missile.SpellCaster is Obj_AI_Hero && missile.Target.IsMe)
+                if (missile.SpellCaster is Obj_AI_Hero && missile.SpellCaster.IsEnemy && missile.Target.IsMe)
                     CastE();
             }
         }
@@ -169,7 +173,6 @@ namespace DevAnnie
                 switch (Orbwalker.ActiveMode)
                 {
                     case Orbwalking.OrbwalkingMode.Combo:
-                        FlashCombo();
                         BurstCombo();
                         Combo();
                         break;
@@ -179,6 +182,7 @@ namespace DevAnnie
                         break;
                     case Orbwalking.OrbwalkingMode.LaneClear:
                         WaveClear();
+                        JungleClear();
                         break;
                     case Orbwalking.OrbwalkingMode.LastHit:
                         //Freeze();
@@ -187,7 +191,11 @@ namespace DevAnnie
                         break;
                 }
 
+                FlashCombo();
+
                 skinManager.Update();
+
+                levelUpManager.Update();
             }
             catch (Exception ex)
             {
@@ -209,11 +217,15 @@ namespace DevAnnie
         {
             var UseFlashCombo = Config.Item("FlashComboKey").GetValue<KeyBind>().Active;
             var FlashComboMinEnemies = Config.Item("FlashComboMinEnemies").GetValue<Slider>().Value;
-            var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var FlashAntiSuicide = Config.Item("FlashAntiSuicide").GetValue<bool>();
-            
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (!UseFlashCombo)
+                return;
+
             int qtPassiveStacks = GetPassiveStacks();
-            if (UseFlashCombo && ((qtPassiveStacks == 3 && E.IsReady()) || qtPassiveStacks == 4) && summonerSpellManager.IsReadyFlash() && R.IsReady())
+
+            if (((qtPassiveStacks == 3 && E.IsReady()) || qtPassiveStacks == 4) && summonerSpellManager.IsReadyFlash() && R.IsReady())
             {
                 var allEnemies = DevHelper.GetEnemyList()
                     .Where(x => Player.Distance(x) > R.Range && Player.Distance(x) < R.Range + 500);
@@ -298,11 +310,11 @@ namespace DevAnnie
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.W);
 
-            ////if (itemManager.IsReadyDFG())
-            ////    totalComboDamage = totalComboDamage * 1.2;
+            if (itemManager.IsReadyDFG())
+                totalComboDamage = totalComboDamage * 1.2;
 
-            ////if (itemManager.IsReadyDFG())
-            ////    totalComboDamage += Player.GetItemDamage(eTarget, Damage.DamageItems.Dfg);
+            if (itemManager.IsReadyDFG())
+                totalComboDamage += Player.GetItemDamage(eTarget, Damage.DamageItems.Dfg);
 
             totalComboDamage += summonerSpellManager.IsReadyIgnite() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
@@ -326,8 +338,8 @@ namespace DevAnnie
                         if (mustDebug)
                             Game.PrintChat("BurstCombo R -> " + eTarget.BaseSkinName);
 
-                        ////if (itemManager.IsReadyDFG())
-                        ////    itemManager.CastDFG(eTarget);
+                        if (itemManager.IsReadyDFG())
+                            itemManager.CastDFG(eTarget);
 
                         R.CastOnUnit(eTarget, packetCast);
                         dtBurstComboStart = DateTime.Now;
@@ -355,8 +367,8 @@ namespace DevAnnie
                             E.Cast();
                     }
 
-                    ////if (itemManager.IsReadyDFG())
-                    ////    itemManager.CastDFG(eTarget);
+                    if (itemManager.IsReadyDFG())
+                        itemManager.CastDFG(eTarget);
 
                     R.CastOnUnit(eTarget, packetCast);
                     dtBurstComboStart = DateTime.Now;
@@ -396,7 +408,6 @@ namespace DevAnnie
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
-
 
             if (summonerSpellManager.CanKillIgnite(eTarget))
             {
@@ -484,7 +495,30 @@ namespace DevAnnie
                 }
             }
 
+        }
 
+        private static void JungleClear()
+        {
+            var mobs = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+
+            if (mobs.Count == 0)
+                return;
+
+            var UseQJungleClear = Config.Item("UseQJungleClear").GetValue<bool>();
+            var UseWJungleClear = Config.Item("UseWJungleClear").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            var mob = mobs.First();
+
+            if (UseQJungleClear && Q.IsReady() && mob.IsValidTarget(Q.Range))
+            {
+                Q.CastOnUnit(mob, packetCast);
+            }
+
+            if (UseWJungleClear && W.IsReady() && mob.IsValidTarget(W.Range))
+            {
+                W.Cast(mob.Position, packetCast);
+            }
         }
 
         public static int GetPassiveStacks()
@@ -513,6 +547,20 @@ namespace DevAnnie
             skinManager.Add("Franken Tibbers Annie");
             skinManager.Add("Reverse Annie");
             skinManager.Add("Panda Annie");
+        }
+
+        private static void InitializeLevelUpManager()
+        {
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Start");
+
+            var priority1 = new int[] { 2, 1, 1, 3, 1, 4, 1, 2, 1, 2, 4, 2, 3, 2, 3, 4, 3, 3 };
+
+            levelUpManager = new LevelUpManager();
+            levelUpManager.Add("W > Q > Q > E ", priority1);
+
+            if (mustDebug)
+                Game.PrintChat("InitializeLevelUpManager Finish");
         }
 
         private static void InitializeSpells()
@@ -577,6 +625,12 @@ namespace DevAnnie
                     Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
                 }
             }
+
+            if (GetPassiveStacks() >= 4)
+            {
+                Utility.PrintFloatText(Player, "PassiveUP", Packet.FloatTextPacket.Critical);
+
+            }
         }
 
         private static float GetComboDamage(Obj_AI_Hero enemy)
@@ -623,6 +677,10 @@ namespace DevAnnie
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("ManaLaneClear", "W Min Mana LaneClear").SetValue(new Slider(30, 1, 100)));
 
+            Config.AddSubMenu(new Menu("JungleClear", "JungleClear"));
+            Config.SubMenu("JungleClear").AddItem(new MenuItem("UseQJungleClear", "Use Q").SetValue(true));
+            Config.SubMenu("JungleClear").AddItem(new MenuItem("UseWJungleClear", "Use W").SetValue(true));
+
             Config.AddSubMenu(new Menu("Extra", "Extra"));
             Config.SubMenu("Extra").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
             Config.SubMenu("Extra").AddItem(new MenuItem("UseEAgainstAA", "Use E against AA").SetValue(true));
@@ -641,6 +699,8 @@ namespace DevAnnie
             Config.SubMenu("Drawings").AddItem(new MenuItem("ComboDamage", "Drawings on HPBar").SetValue(true));
 
             skinManager.AddToMenu(ref Config);
+
+            levelUpManager.AddToMenu(ref Config);
 
             Config.AddToMainMenu();
         }
