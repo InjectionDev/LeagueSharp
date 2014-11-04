@@ -10,7 +10,7 @@ namespace DevCommom
 {
     public class ItemManager
     {
-        public static Items.Item DFG;
+        public Items.Item DFG;
 
         public ItemManager()
         { 
@@ -24,7 +24,8 @@ namespace DevCommom
 
         public void CastDFG(Obj_AI_Hero target)
         {
-            DFG.Cast(target);
+            if (IsReadyDFG())
+                DFG.Cast(target);
         }
 
     }

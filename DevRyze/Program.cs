@@ -21,13 +21,14 @@ using System.Threading.Tasks;
  * + No-Face Exploit Menu (PacketCast)
  * + Auto Spell Level UP
  * + Chase Enemy function 
+ * + Tear Exploit (double stack Q+W)
 */
 
 namespace DevRyze
 {
     class Program
     {
-        public const string ChampionName = "ryze";
+        public const string ChampionName = "Ryze";
 
         public static Menu Config;
         public static Orbwalking.Orbwalker Orbwalker;
@@ -60,7 +61,7 @@ namespace DevRyze
             {
                 Player = ObjectManager.Player;
 
-                if (!Player.ChampionName.ToLower().Contains(ChampionName))
+                if (!Player.ChampionName.Equals(ChampionName, StringComparison.CurrentCultureIgnoreCase))
                     return;
 
                 InitializeSpells();
@@ -168,7 +169,7 @@ namespace DevRyze
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
-            //Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
+            Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
 
             Config.Item("ComboDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("ComboDamage").GetValue<bool>())
@@ -183,35 +184,35 @@ namespace DevRyze
 
         static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (sender.IsMe)
+            var TearExploit = Config.Item("TearExploit").GetValue<bool>();
+
+            if (TearExploit && sender.IsMe)
             {
-                if (mustDebug)
+                var spellSlot = Player.GetSpellSlot(args.SData.Name, false);
+                var target = ObjectManager.GetUnitByNetworkId<Obj_AI_Base>(args.Target.NetworkId);
+                var distance = Player.ServerPosition.Distance(target.ServerPosition);
+                var delay = 1000 * (distance / args.SData.MissileSpeed);
+                delay -= Game.Ping / 2;
+
+                if (mustDebug && spellSlot == SpellSlot.Q)
                 {
-                    Game.PrintChat("SpellCast -> Name: " + args.SData.Name);
+                    Game.PrintChat("SpellCast -> Name: {0} {1}", args.SData.Name, spellSlot);
                     Game.PrintChat("SpellCast -> MissileSpeed: " + args.SData.MissileSpeed);
-                    Game.PrintChat("SpellCast -> TimeSpellEnd: " + args.TimeSpellEnd);
-                    Game.PrintChat("SpellCast -> Distance: " + args.Start.Distance(args.End));
-                    Game.PrintChat("SpellCast -> Delay: " + 1000 * (args.Start.Distance(args.End) / args.SData.MissileSpeed));
+                    Game.PrintChat("SpellCast -> Start: {0} ({1})", args.Target.Name, args.Target.NetworkId);
+                    Game.PrintChat("SpellCast -> Distance: " + distance);
+                    Game.PrintChat("SpellCast -> Delay: " + delay);
                     Game.PrintChat("SpellCast -> Ping: " + Game.Ping);
                 }
 
-                var spellSlot = Player.GetSpellSlot(args.SData.Name, false);
-                var target = ObjectManager.GetUnitByNetworkId<Obj_AI_Base>(args.Target.NetworkId);
-
                 if (spellSlot == SpellSlot.Q && W.IsReady() && target.IsMinion)
                 {
-                    var delay = 1000 * (args.Start.Distance(args.End) / args.SData.MissileSpeed);
-                    delay += Game.Ping / 2;
-
-                    if (mustDebug)
-                    {
-                        Game.PrintChat("SpellCast -> Delay Q: " + delay);
-                        Game.PrintChat("SpellCast -> HealthPrediction: " + HealthPrediction.GetHealthPrediction(target, (int)delay));
-                    }
-
-                    if (HealthPrediction.GetHealthPrediction(target, (int)delay) <= 0)
+                    if (target.Health < Q.GetDamage(target))
                     {
                         Utility.DelayAction.Add((int)delay, () => W.CastOnUnit(target, true));
+                        if (mustDebug)
+                        {
+                            Game.PrintChat("SpellCast -> CAST W! delay: " + delay);
+                        }
                     }
                 }
             }
@@ -417,7 +418,7 @@ namespace DevRyze
                 W.CastOnUnit(eTarget, packetCast);
             }
 
-            if (UseFullComboAfterChase && (eTarget.HasBuff("Rune Prision") || dtLastRunePrision.AddSeconds(4) > DateTime.Now))
+            if (UseFullComboAfterChase && (eTarget.HasBuff("Rune Prison") || dtLastRunePrision.AddSeconds(4) > DateTime.Now))
             {
                 dtLastRunePrision = DateTime.Now;
                 BurstCombo();
@@ -464,7 +465,7 @@ namespace DevRyze
             }
 
             // Cast on W
-            if (useR && R.IsReady() && eTarget.HasBuff("Rune Prision"))
+            if (useR && R.IsReady() && eTarget.HasBuff("Rune Prison"))
             {
                 dtLastRunePrision = DateTime.Now;
 
@@ -484,9 +485,6 @@ namespace DevRyze
 
             if (eTarget == null)
                 return;
-
-            if (mustDebug)
-                Game.PrintChat("Combo Start");
 
             var useQ = Config.Item("UseQCombo").GetValue<bool>();
             var useW = Config.Item("UseWCombo").GetValue<bool>();
@@ -531,9 +529,6 @@ namespace DevRyze
             if (eTarget == null)
                 return;
 
-            if (mustDebug)
-                Game.PrintChat("Harass Start");
-
             var useQ = Config.Item("UseQHarass").GetValue<bool>();
             var useW = Config.Item("UseWHarass").GetValue<bool>();
             var useE = Config.Item("UseEHarass").GetValue<bool>();
@@ -566,9 +561,6 @@ namespace DevRyze
                 .Where(x => !MinionListToIgnore.Contains(x.NetworkId)).ToList();
 
             var JungleList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
-
-            if (mustDebug)
-                Game.PrintChat("WaveClear Start");
 
             var useQ = Config.Item("UseQLaneClear").GetValue<bool>();
             var useW = Config.Item("UseWLaneClear").GetValue<bool>();
@@ -639,9 +631,6 @@ namespace DevRyze
         {
             var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
                 .Where(x => !MinionListToIgnore.Contains(x.NetworkId));
-
-            if (mustDebug)
-                Game.PrintChat("Freeze Start");
 
             var useQ = Config.Item("UseQFreeze").GetValue<bool>();
             var ManaLaneClear = Config.Item("ManaFreeze").GetValue<Slider>().Value;
@@ -741,6 +730,7 @@ namespace DevRyze
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("TearExploit", "Use Tear Exploit").SetValue(true));
 
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloser", "Barrier onGapCloser").SetValue(true));

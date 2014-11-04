@@ -232,6 +232,13 @@ namespace DevCassio
                 }
             }
 
+            if (W.IsReady() && useW)
+            {
+                var predic = W.GetPrediction(eTarget, true);
+                if (predic.Hitchance >= HitChance.Medium && predic.AoeTargetsHitCount > 1)
+                    W.Cast(predic.CastPosition, packetCast);
+            }
+
             if (useW)
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range + (W.Width / 2))));
 
@@ -278,6 +285,13 @@ namespace DevCassio
                     dtLastQCast = DateTime.Now;
                     return;
                 }
+            }
+
+            if (W.IsReady() && useW)
+            {
+                var predic = W.GetPrediction(eTarget, true);
+                if (predic.Hitchance >= HitChance.Medium && predic.AoeTargetsHitCount > 1)
+                    W.Cast(predic.CastPosition, packetCast);
             }
 
             if (useW)
