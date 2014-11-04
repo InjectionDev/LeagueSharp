@@ -331,7 +331,7 @@ namespace DevAnnie
             // R KS
             if (R.IsReady() && useR)
             {
-                if (eTarget.Health < totalComboDamage * 0.9 && Player.Mana >= totalManaCost)
+                if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
                 {
                     if (totalComboDamage * 0.3 < eTarget.Health) // Anti OverKill
                     {
@@ -554,10 +554,10 @@ namespace DevAnnie
             if (mustDebug)
                 Game.PrintChat("InitializeLevelUpManager Start");
 
-            var priority1 = new int[] { 2, 1, 1, 3, 1, 4, 1, 2, 1, 2, 4, 2, 3, 2, 3, 4, 3, 3 };
+            var priority1 = new int[] { 1, 2, 1, 3, 1, 4, 1, 2, 1, 2, 4, 2, 2, 3, 3, 4, 3, 3 };
 
             levelUpManager = new LevelUpManager();
-            levelUpManager.Add("W > Q > Q > E ", priority1);
+            levelUpManager.Add("Q > W > Q > E ", priority1);
 
             if (mustDebug)
                 Game.PrintChat("InitializeLevelUpManager Finish");
@@ -626,11 +626,6 @@ namespace DevAnnie
                 }
             }
 
-            if (GetPassiveStacks() >= 4)
-            {
-                Utility.PrintFloatText(Player, "PassiveUP", Packet.FloatTextPacket.Critical);
-
-            }
         }
 
         private static float GetComboDamage(Obj_AI_Hero enemy)
