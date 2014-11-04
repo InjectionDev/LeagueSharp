@@ -341,7 +341,8 @@ namespace DevAnnie
                         if (itemManager.IsReadyDFG())
                             itemManager.CastDFG(eTarget);
 
-                        R.CastOnUnit(eTarget, packetCast);
+                        var pred = R.GetPrediction(eTarget, true);
+                        R.Cast(pred.CastPosition, packetCast);
                         dtBurstComboStart = DateTime.Now;
                     }
                     else
@@ -370,7 +371,8 @@ namespace DevAnnie
                     if (itemManager.IsReadyDFG())
                         itemManager.CastDFG(eTarget);
 
-                    R.CastOnUnit(eTarget, packetCast);
+                    var pred = R.GetPrediction(eTarget, true);
+                    R.Cast(pred.CastPosition, packetCast);
                     dtBurstComboStart = DateTime.Now;
                 }
             }
