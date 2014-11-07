@@ -630,7 +630,7 @@ namespace DevAnnie
         private static float GetComboDamage(Obj_AI_Hero enemy)
         {
             IEnumerable<SpellSlot> spellCombo = new[] { SpellSlot.Q, SpellSlot.W, SpellSlot.R };
-            return (float)Damage.GetComboDamage(Player, enemy, spellCombo);
+            return (float)Player.GetComboDamage(enemy, spellCombo);
         }
 
         private static void InitializeMainMenu()
