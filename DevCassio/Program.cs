@@ -24,6 +24,7 @@ using SharpDX;
  * + Jungle Clear
  * + R to Save Yourself, when MinHealth and Enemy IsFacing
  * + Auto Spell Level UP
+ * + Play Legit Menu :)
  * 
 */
 
@@ -50,6 +51,7 @@ namespace DevCassio
         private static DateTime dtBurstComboStart = DateTime.MinValue;
         private static DateTime dtLastQCast = DateTime.MinValue;
         private static DateTime dtLastSaveYourself = DateTime.Now;
+        private static DateTime dtLastECast = DateTime.MinValue;
        
         public static bool mustDebug = false;
 
@@ -220,7 +222,7 @@ namespace DevCassio
 
                 if ((eTarget.HasBuffOfType(BuffType.Poison) && buffEndTime > (Game.Time + E.Delay)) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
                 {
-                    E.CastOnUnit(eTarget, packetCast);
+                    CastE(eTarget);
                 }
             }
 
@@ -274,7 +276,7 @@ namespace DevCassio
             {
                 if (eTarget.HasBuffOfType(BuffType.Poison) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
                 {
-                    E.CastOnUnit(eTarget, packetCast);
+                    CastE(eTarget);
                 }
             }
 
@@ -379,11 +381,13 @@ namespace DevCassio
                         if (UseELastHitLaneClear)
                         {
                             if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
-                                E.CastOnUnit(minion, packetCast);
+                            {
+                                CastE(minion);
+                            }
                         }
                         else if (Player.GetManaPerc() >= LaneClearMinMana)
                         {
-                            E.CastOnUnit(minion, packetCast);
+                            CastE(minion);
                         }
                     }
                 }
@@ -419,7 +423,7 @@ namespace DevCassio
                     {
                         if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
                         {
-                            E.CastOnUnit(minion, packetCast);
+                            CastE(minion);
                         }
                     }
                 }
@@ -447,7 +451,7 @@ namespace DevCassio
 
             if (UseEJungleClear && E.IsReady() && mob.HasBuffOfType(BuffType.Poison) && mob.IsValidTarget(E.Range))
             {
-                E.CastOnUnit(mob, packetCast);
+                CastE(mob);
             }
         }
 
@@ -465,6 +469,28 @@ namespace DevCassio
                         R.Cast(eTarget.ServerPosition, packetCast);
                     }
                 }
+            }
+        }
+
+        public static void CastE(Obj_AI_Base unit)
+        {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var PlayLegit = Config.Item("PlayLegit").GetValue<bool>();
+            var DisableNFE = Config.Item("DisableNFE").GetValue<bool>();
+            var LegitCastDelay = Config.Item("LegitCastDelay").GetValue<Slider>().Value;
+
+            if (PlayLegit && DisableNFE)
+                packetCast = false;
+
+            if (PlayLegit && DateTime.Now > dtLastECast.AddMilliseconds(LegitCastDelay))
+            {
+                E.CastOnUnit(unit, packetCast);
+                dtLastECast = DateTime.Now;
+            }
+            else
+            {
+                E.CastOnUnit(unit, packetCast);
+                dtLastECast = DateTime.Now;
             }
         }
 
@@ -760,6 +786,11 @@ namespace DevCassio
 
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "No-Face Exploit (PacketCast)").SetValue(true));
+
+            Config.AddSubMenu(new Menu("Im Legit! :)", "Legit"));
+            Config.SubMenu("Legit").AddItem(new MenuItem("PlayLegit", "Play Legit :)").SetValue(false));
+            Config.SubMenu("Legit").AddItem(new MenuItem("DisableNFE", "Disable No-Face Exploit").SetValue(true));
+            Config.SubMenu("Legit").AddItem(new MenuItem("LegitCastDelay", "Cast E Delay").SetValue(new Slider(500, 0, 1000)));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));

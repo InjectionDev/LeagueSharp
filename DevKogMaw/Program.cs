@@ -114,9 +114,6 @@ namespace DevKogMaw
             if (eTarget == null)
                 return;
 
-            if (mustDebug)
-                Game.PrintChat("Combo Start");
-
             var useQ = Config.Item("UseQCombo").GetValue<bool>();
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
@@ -162,9 +159,6 @@ namespace DevKogMaw
 
         public static void Harass()
         {
-            if (mustDebug)
-                Game.PrintChat("Harass Start");
-
             var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
 
             if (eTarget == null)
@@ -207,15 +201,10 @@ namespace DevKogMaw
                 R.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (mustDebug)
-                Game.PrintChat("Harass Finish");
         }
 
         public static void WaveClear()
         {
-            if (mustDebug)
-                Game.PrintChat("WaveClear Start");
-
             var MinionList = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.Enemy);
 
             if (MinionList.Count() == 0)
