@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-using Evade;
+//using Evade;
 
 /*
  * ##### DevLulu Mods #####
@@ -91,7 +91,7 @@ namespace DevLulu
 
             Game.OnGameProcessPacket += Game_OnGameProcessPacket;
 
-            Evade.SkillshotDetector.OnDetectSkillshot += SkillshotDetector_OnDetectSkillshot;
+            //Evade.SkillshotDetector.OnDetectSkillshot += SkillshotDetector_OnDetectSkillshot;
 
             Config.Item("ComboDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("ComboDamage").GetValue<bool>())
@@ -147,31 +147,31 @@ namespace DevLulu
 
         }
 
-        static void SkillshotDetector_OnDetectSkillshot(Evade.Skillshot skillshot)
-        {
-            if (mustDebug && skillshot.IsDanger(Player.ServerPosition.To2D()))
-                Game.PrintChat("OnDetectSkillshot -> IsDanger");
+        //static void SkillshotDetector_OnDetectSkillshot(Evade.Skillshot skillshot)
+        //{
+        //    if (mustDebug && skillshot.IsDanger(Player.ServerPosition.To2D()))
+        //        Game.PrintChat("OnDetectSkillshot -> IsDanger");
 
-            var UseWHelpAlly = Config.Item("UseWHelpAlly").GetValue<bool>();
-            var UseEHelpAlly = Config.Item("UseEHelpAlly").GetValue<bool>();
-            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+        //    var UseWHelpAlly = Config.Item("UseWHelpAlly").GetValue<bool>();
+        //    var UseEHelpAlly = Config.Item("UseEHelpAlly").GetValue<bool>();
+        //    var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (skillshot.Unit.IsEnemy)
-            {
-                if (UseEHelpAlly && E.IsReady())
-                {
-                    var AllyList = DevCommom.DevHelper.GetAllyList()
-                        .Where(ally => Player.Distance(ally) < E.Range && skillshot.IsDanger(ally.ServerPosition.To2D()))
-                        .OrderBy(ally => ally.Health);
+        //    if (skillshot.Unit.IsEnemy)
+        //    {
+        //        if (UseEHelpAlly && E.IsReady())
+        //        {
+        //            var AllyList = DevCommom.DevHelper.GetAllyList()
+        //                .Where(ally => Player.Distance(ally) < E.Range && skillshot.IsDanger(ally.ServerPosition.To2D()))
+        //                .OrderBy(ally => ally.Health);
 
-                    if (AllyList.Count() > 0)
-                    {
-                        var ally = AllyList.First();
-                        E.CastOnUnit(ally, packetCast);
-                    }
-                }
-            }
-        }
+        //            if (AllyList.Count() > 0)
+        //            {
+        //                var ally = AllyList.First();
+        //                E.CastOnUnit(ally, packetCast);
+        //            }
+        //        }
+        //    }
+        //}
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
