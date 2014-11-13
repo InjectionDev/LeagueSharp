@@ -319,7 +319,7 @@ namespace DevCassio
                 var allMinionsQ = MinionManager.GetMinions(Player.Position, Q.Range + Q.Width, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health).ToList();
                 var allMinionsQNonPoisoned = allMinionsQ.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                if (allMinionsQNonPoisoned.Count > 0)
+                if (allMinionsQNonPoisoned.Any())
                 {
                     var farmNonPoisoned = Q.GetCircularFarmLocation(allMinionsQNonPoisoned, Q.Width * 0.8f);
                     if (farmNonPoisoned.MinionsHit >= 3)
@@ -330,7 +330,7 @@ namespace DevCassio
                     }
                 }
 
-                if (allMinionsQ.Count > 0)
+                if (allMinionsQ.Any())
                 {
                     var farmAll = Q.GetCircularFarmLocation(allMinionsQ, Q.Width * 0.8f);
                     if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
@@ -347,7 +347,7 @@ namespace DevCassio
                 var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All).ToList();
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
 
-                if (allMinionsWNonPoisoned.Count > 0)
+                if (allMinionsWNonPoisoned.Any())
                 {
                     var farmNonPoisoned = W.GetCircularFarmLocation(allMinionsWNonPoisoned, W.Width * 0.8f);
                     if (farmNonPoisoned.MinionsHit >= 3)
@@ -357,7 +357,7 @@ namespace DevCassio
                     }
                 }
 
-                if (allMinionsW.Count > 0)
+                if (allMinionsW.Any())
                 {
                     var farmAll = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
                     if (farmAll.MinionsHit >= 2 || allMinionsW.Count == 1)
@@ -380,7 +380,7 @@ namespace DevCassio
                     {
                         if (UseELastHitLaneClear)
                         {
-                            if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
+                            if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.85 > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
                             {
                                 CastE(minion);
                             }
@@ -407,7 +407,7 @@ namespace DevCassio
         {
             MinionList = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
-            if (MinionList.Count == 0)
+            if (!MinionList.Any())
                 return;
 
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
@@ -421,7 +421,7 @@ namespace DevCassio
 
                     if (E.IsReady() && buffEndTime > (Game.Time + E.Delay) && minion.IsValidTarget(E.Range))
                     {
-                        if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9d > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
+                        if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.85 > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
                         {
                             CastE(minion);
                         }
@@ -435,7 +435,7 @@ namespace DevCassio
         {
             var mobs = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
 
-            if (mobs.Count == 0)
+            if (!mobs.Any())
                 return;
 
             var UseQJungleClear = Config.Item("UseQJungleClear").GetValue<bool>();
