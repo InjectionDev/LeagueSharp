@@ -35,9 +35,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Evade">
-      <HintPath>E:\OneDrive\Projetos\LSharp\\System\Evade.dll</HintPath>
-    </Reference>
     <Reference Include="LeagueSharp">
       <HintPath>E:\OneDrive\Projetos\LSharp\\System\LeagueSharp.dll</HintPath>
     </Reference>
