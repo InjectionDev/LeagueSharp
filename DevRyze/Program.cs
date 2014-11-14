@@ -230,7 +230,7 @@ namespace DevRyze
                 var MinionList = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health)
                     .Where(x => !x.IsDead && HealthPrediction.LaneClearHealthPrediction(x, (int)(timeNextAA * 1.1)) <= 0).ToList();
 
-                if (MinionList.Count() > 0)
+                if (MinionList.Any())
                 {
                     var mob = MinionList.First();
                     if (Q.IsReady() && mob.IsValidTarget(Q.Range))
@@ -242,7 +242,7 @@ namespace DevRyze
                     }
                 }
 
-                if (MinionList.Count() > 0)
+                if (MinionList.Any())
                 {
                     var mob = MinionList.First();
                     if (E.IsReady() && mob.IsValidTarget(E.Range))
@@ -272,7 +272,7 @@ namespace DevRyze
                             !x.IsDead && target.NetworkId != x.NetworkId && !MinionListToIgnore.Contains(x.NetworkId) &&
                             HealthPrediction.LaneClearHealthPrediction(x, (int)(Player.AttackDelay * 1000 * 1.1)) <= 0).ToList();
 
-                    if (MinionList.Count() > 0)
+                    if (MinionList.Any())
                     { 
                         var mob = MinionList.First();
                         if (Q.IsReady() && mob.IsValidTarget(Q.Range))
@@ -285,7 +285,7 @@ namespace DevRyze
                         }
                     }
 
-                    if (MinionList.Count() > 0)
+                    if (MinionList.Any())
                     {
                         var mob = MinionList.First();
                         if (E.IsReady() && mob.IsValidTarget(E.Range))
@@ -571,14 +571,14 @@ namespace DevRyze
             if (Q.IsReady() && useQ && Player.GetManaPerc() > ManaLaneClear)
             {
                 var queryJungle = JungleList.Where(x => x.IsValidTarget(Q.Range));
-                if (queryJungle.Count() > 0)
+                if (queryJungle.Any())
                 {
                     var mob = queryJungle.First();
                     Q.CastOnUnit(mob, packetCast);
                 }
 
                 var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9);
-                if (queryMinion.Count() > 0)
+                if (queryMinion.Any())
                 {
                     var mob = queryMinion.First();
                     Q.CastOnUnit(mob, packetCast);
@@ -590,14 +590,14 @@ namespace DevRyze
             if (W.IsReady() && useW && Player.GetManaPerc() > ManaLaneClear)
             {
                 var queryJungle = JungleList.Where(x => x.IsValidTarget(W.Range));
-                if (queryJungle.Count() > 0)
+                if (queryJungle.Any())
                 {
                     var mob = queryJungle.First();
                     W.CastOnUnit(mob, packetCast);
                 }
 
                 var query = MinionList.Where(x => x.IsValidTarget(W.Range) && HealthPrediction.LaneClearHealthPrediction(x, (int)W.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.W) * 0.9);
-                if (query.Count() > 0)
+                if (query.Any())
                 {
                     var mob = query.First();
                     W.CastOnUnit(mob, packetCast);
@@ -609,14 +609,14 @@ namespace DevRyze
             if (E.IsReady() && useE && Player.GetManaPerc() > ManaLaneClear)
             {
                 var queryJungle = JungleList.Where(x => x.IsValidTarget(E.Range));
-                if (queryJungle.Count() > 0)
+                if (queryJungle.Any())
                 {
                     var mob = queryJungle.First();
                     E.CastOnUnit(mob, packetCast);
                 }
 
                 var query = MinionList.Where(x => x.IsValidTarget(E.Range) && HealthPrediction.LaneClearHealthPrediction(x, (int)E.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.E) * 0.9);
-                if (query.Count() > 0)
+                if (query.Any())
                 {
                     var mob = query.First();
                     E.CastOnUnit(mob, packetCast);
@@ -639,7 +639,7 @@ namespace DevRyze
             if (Q.IsReady() && useQ && Player.GetManaPerc() > ManaLaneClear)
             {
                 var queryMinion = MinionList.Where(x => x.IsValidTarget(Q.Range) && HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9);
-                if (queryMinion.Count() > 0)
+                if (queryMinion.Any())
                 {
                     var mob = queryMinion.First();
                     Q.CastOnUnit(mob, packetCast);

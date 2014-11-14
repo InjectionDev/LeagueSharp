@@ -175,7 +175,7 @@ namespace DevKarma
             if (HelpAlly)
             {
                 var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x.ServerPosition) < E.Range && x.GetHealthPerc() < AllyMinHealth && DevHelper.CountEnemyInPositionRange(x.ServerPosition, x.AttackRange) > 0).OrderBy(x => x.Health);
-                if (AllyList.Count() > 0)
+                if (AllyList.Any())
                 {
                     var ally = AllyList.First();
 

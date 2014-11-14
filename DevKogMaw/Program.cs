@@ -568,13 +568,13 @@ namespace DevKogMaw
 
         private static bool HasWBuff()
         {
-            return Player.Buffs.Where(x => x.Name.Equals("KogMawBioArcaneBarrage", StringComparison.CurrentCultureIgnoreCase)).Count() > 0;
+            return Player.Buffs.Where(x => x.Name.Equals("KogMawBioArcaneBarrage", StringComparison.CurrentCultureIgnoreCase)).Any();
             //return Player.HasBuff("KogMawBioArcaneBarrage");
         }
 
         private static bool HasPassiveBuff()
         {
-            return Player.Buffs.Where(x => x.Name.Equals("KogMawIcathianSurprise", StringComparison.CurrentCultureIgnoreCase)).Count() > 0;
+            return Player.Buffs.Where(x => x.Name.Equals("KogMawIcathianSurprise", StringComparison.CurrentCultureIgnoreCase)).Any();
             //return Player.HasBuff("KogMawIcathianSurprise");
         }
 
@@ -592,7 +592,7 @@ namespace DevKogMaw
                 x.IsValid &&
                 DevHelper.GetEnemyList().Any(enemy => x.Distance(enemy.ServerPosition) < 2000));
 
-            if (R.IsReady() && query.Count() > 0)
+            if (R.IsReady() && query.Any())
             {
                 var mob = query.FirstOrDefault();
 
@@ -626,7 +626,7 @@ namespace DevKogMaw
                 x.Health < Player.GetSpellDamage(x, SpellSlot.R) &&
                 DevHelper.GetEnemyList().Any(enemy => x.Distance(enemy.ServerPosition) < 1000));
 
-            if (R.IsReady() && query.Count() > 0)
+            if (R.IsReady() && query.Any())
             {
                 var mob = query.FirstOrDefault();
                 R.Cast(mob.ServerPosition, packetCast);

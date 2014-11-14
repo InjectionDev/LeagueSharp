@@ -202,7 +202,7 @@ namespace DevBrand
             // Passive UP +1 enemy Combo
             var query = DevHelper.GetEnemyList()
                 .Where(x => x.IsValidTarget(R.Range) && HasPassiveBuff(x) && Player.GetSpellDamage(x, SpellSlot.R) > x.Health).OrderBy(x => x.Health);
-            if (query.Count() > 0 && R.IsReady())
+            if (query.Any() && R.IsReady())
             {
                 R.CastOnUnit(query.First(), packetCast);
             }
@@ -338,7 +338,7 @@ namespace DevBrand
             {
                 var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All, MinionTeam.Enemy).ToList();
 
-                if (allMinionsW.Count > 0)
+                if (allMinionsW.Any())
                 {
                     var farm = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
                     if (farm.MinionsHit >= 2)
@@ -357,9 +357,9 @@ namespace DevBrand
                 var jungleList = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth)
                     .Where(x => HasPassiveBuff(x));
 
-                if (jungleList.Count() > 0)
+                if (jungleList.Any())
                     E.CastOnUnit(jungleList.First(), packetCast);
-                else if (minionList.Count() > 0)
+                else if (minionList.Any())
                     E.CastOnUnit(jungleList.First(), packetCast);
             }
 
@@ -380,7 +380,7 @@ namespace DevBrand
                 if (UseQKillSteal && Q.IsReady())
                 {
                     var ksQ = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(Q.Range) && Q.GetDamage(x) > x.Health * 1.1).OrderBy(x => x.Health).ToList();
-                    if (ksQ.Count > 0)
+                    if (ksQ.Any())
                     {
                         var target = ksQ.First();
                         Q.CastIfHitchanceEquals(target, target.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
@@ -390,7 +390,7 @@ namespace DevBrand
                 if (UseWKillSteal && W.IsReady())
                 {
                     var ksW = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(W.Range) && W.GetDamage(x) > x.Health * 1.1).OrderBy(x => x.Health).ToList();
-                    if (ksW.Count > 0)
+                    if (ksW.Any())
                     {
                         var target = ksW.First();
                         W.CastIfHitchanceEquals(target, target.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
@@ -400,7 +400,7 @@ namespace DevBrand
                 if (UseEKillSteal && E.IsReady())
                 {
                     var ksE = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(E.Range) && E.GetDamage(x) > x.Health * 1.1).OrderBy(x => x.Health).ToList();
-                    if (ksE.Count > 0)
+                    if (ksE.Any())
                     {
                         var target = ksE.First();
                         E.CastOnUnit(target, packetCast);
@@ -410,7 +410,7 @@ namespace DevBrand
                 if (UseRKillSteal && R.IsReady())
                 {
                     var ksR = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(R.Range) && R.GetDamage(x) > x.Health * 1.1).OrderBy(x => x.Health).ToList();
-                    if (ksR.Count > 0)
+                    if (ksR.Any())
                     {
                         var target = ksR.First();
                         R.CastOnUnit(target, packetCast);

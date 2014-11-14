@@ -237,7 +237,7 @@ namespace DevAnnie
 
                 bool isSuicide = FlashAntiSuicide ? allEnemies.Count() - enemies.Count() > 2 : false;
 
-                if (enemies.Count() > 0 && !isSuicide)
+                if (enemies.Any() && !isSuicide)
                 { 
                     var enemy = enemies.First();
                     if (DevHelper.CountEnemyInPositionRange(enemy.ServerPosition, 250) >= FlashComboMinEnemies)

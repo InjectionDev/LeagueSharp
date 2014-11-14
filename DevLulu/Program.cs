@@ -130,12 +130,12 @@ namespace DevLulu
 
             var buffList = unit.Buffs.Where(buff => buff.Name.ToLower().StartsWith("lulufae") && buff.IsActive && !unit.IsMe);
 
-            if (buffList.Count() > 0)
+            if (buffList.Any())
             {
                 var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
                 var queryEnemyList = DevHelper.GetEnemyList().Where(x => x.Distance(unit) < Q.Range).OrderBy(x => x.Health).ToList();
-                if (queryEnemyList.Count() > 0)
+                if (queryEnemyList.Any())
                 {
                     if (mustDebug)
                         Game.PrintChat(string.Format("Cast Q from -> {0}", unit.BaseSkinName));
@@ -245,7 +245,7 @@ namespace DevLulu
                 }
 
                 var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x.ServerPosition) < R.Range && x.GetHealthPerc() < UseRAllyMinHealth && DevHelper.CountEnemyInPositionRange(x.ServerPosition, 500) > 0);
-                if (AllyList.Count() > 0)
+                if (AllyList.Any())
                 {
                     var ally = AllyList.First();
                     R.CastOnUnit(ally, packetCast);
@@ -262,7 +262,7 @@ namespace DevLulu
             if (UseWHelpAlly || UseEHelpAlly)
             {
                 var AllyList = DevHelper.GetAllyList().Where(x => Player.Distance(x.ServerPosition) < W.Range && x.GetHealthPerc() < 50 && DevHelper.CountEnemyInPositionRange(x.ServerPosition, 600) > 0).OrderBy(x => x.Health);
-                if (AllyList.Count() > 0)
+                if (AllyList.Any())
                 {
                     var ally = AllyList.First();
 
@@ -292,7 +292,7 @@ namespace DevLulu
 
             var enemyList = DevHelper.GetEnemyList()
                 .Where(x => eTarget.NetworkId != x.NetworkId && Player.Distance(x) < E.Range && x.Distance(eTarget) < Q.Range).ToList();
-            if (enemyList.Count() > 0)
+            if (enemyList.Any())
             {
                 var unit = enemyList.First();
                 E.CastOnUnit(unit, packetCast);
@@ -303,7 +303,7 @@ namespace DevLulu
 
             var allyList = DevHelper.GetAllyList()
                 .Where(x => !x.IsMe && Player.Distance(x) < E.Range && x.Distance(eTarget) < Q.Range).ToList();
-            if (allyList.Count() > 0)
+            if (allyList.Any())
             {
                 var unit = allyList.First();
                 E.CastOnUnit(unit, packetCast);
@@ -314,7 +314,7 @@ namespace DevLulu
 
             var minionList = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.All, MinionOrderTypes.Health)
                 .Where(x => x.Distance(eTarget) < Q.Range).OrderByDescending(x => x.Health).ToList();
-            if (minionList.Count() > 0)
+            if (minionList.Any())
             {
                 var unit = minionList.First();
                 E.CastOnUnit(unit, packetCast);
@@ -332,7 +332,7 @@ namespace DevLulu
                 .Where(ally => Player.Distance(ally) < W.Range && W.IsReady() && ally.GetNearestEnemy().Distance(ally) < ally.AttackRange)
                 .OrderBy(ally => ally.Health);
 
-            if (allyList.Count() > 0)
+            if (allyList.Any())
             {
                 var ally = allyList.First();
                 W.CastOnUnit(ally, packetCast);

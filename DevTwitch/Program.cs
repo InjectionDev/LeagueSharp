@@ -150,7 +150,7 @@ namespace DevTwitch
             if (RKillSteal && R.IsReady())
             {
                 var enemies = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(R.Range) && GetRDamage(x) > x.Health).OrderBy(x => x.Health);
-                if (enemies.Count() > 0)
+                if (enemies.Any())
                 {
                     var enemy = enemies.First();
 
@@ -170,7 +170,7 @@ namespace DevTwitch
                     .Where(x => x.IsValidTarget(E.Range) && GetExpungeStacks(x) > 0 && E.GetDamage(x) * 0.9 > x.Health)
                     .OrderBy(x => x.Health);
 
-                if (query.Count() > 0)
+                if (query.Any())
                 {
                     CastE();
                 }
@@ -463,7 +463,7 @@ namespace DevTwitch
         {
             var query = unit.Buffs.Where(buff => buff.DisplayName.ToLower() == "twitchdeadlyvenom");
 
-            if (query.Count() > 0)
+            if (query.Any())
                 return query.First();
             else
                 return null;
@@ -473,7 +473,7 @@ namespace DevTwitch
         {
             var query = unit.Buffs.Where(buff => buff.DisplayName.ToLower() == "twitchdeadlyvenom");
 
-            if (query.Count() > 0)
+            if (query.Any())
                 return query.First().Count;
             else
                 return 0;

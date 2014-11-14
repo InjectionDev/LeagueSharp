@@ -82,7 +82,7 @@ namespace DevCommom
                     .Where(x => x.IsEnemy && x.IsValid && !x.IsDead && unit.ServerPosition.Distance(x.ServerPosition) < 950);
             }
 
-            return (query.Count() > 0);
+            return query.Any();
         }
 
         public static void Ping(Vector3 pos)
