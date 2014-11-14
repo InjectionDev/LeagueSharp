@@ -179,7 +179,7 @@ namespace DevAnnie
                         break;
                     case Orbwalking.OrbwalkingMode.Mixed:
                         Harass();
-                        //QHarassLastHit();
+                        QHarassLastHit();
                         break;
                     case Orbwalking.OrbwalkingMode.LaneClear:
                         WaveClear();
@@ -436,6 +436,9 @@ namespace DevAnnie
 
         public static void QHarassLastHit()
         {
+            if (!IsSupportMode)
+                return;
+
             var UseQHarassLastHit = Config.Item("UseQHarassLastHit").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
@@ -447,7 +450,7 @@ namespace DevAnnie
                     var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
                     var minionLastHit = allMinions.Where(x => HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9f).OrderBy(x => x.Health);
 
-                    if (minionLastHit.Count() > 0)
+                    if (minionLastHit.Any())
                     {
                         var unit = minionLastHit.First();
                         Q.CastOnUnit(unit, packetCast);
@@ -468,7 +471,7 @@ namespace DevAnnie
                 var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
                 var minionLastHit = allMinions.Where(x => HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.8f).OrderBy(x => x.Health);
 
-                if (minionLastHit.Count() > 0)
+                if (minionLastHit.Any())
                 {
                     var unit = minionLastHit.First();
                     Q.CastOnUnit(unit, packetCast);
@@ -479,7 +482,7 @@ namespace DevAnnie
             {
                 var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
 
-                if (allMinionsW.Count > 0)
+                if (allMinionsW.Any())
                 {
                     var farm = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
                     if (farm.MinionsHit >= 3)
@@ -518,7 +521,7 @@ namespace DevAnnie
         public static int GetPassiveStacks()
         {
             var buffs = Player.Buffs.Where(buff => (buff.Name.ToLower() == "pyromania" || buff.Name.ToLower() == "pyromania_particle"));
-            if (buffs.Count() > 0)
+            if (buffs.Any())
             {
                 var buff = buffs.First();
                 if (buff.Name.ToLower() == "pyromania_particle")
