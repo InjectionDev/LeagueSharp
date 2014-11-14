@@ -448,7 +448,7 @@ namespace DevAnnie
                 if (Player.Distance(nearestEnemy) > Q.Range + 100)
                 {
                     var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
-                    var minionLastHit = allMinions.Where(x => HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.9f).OrderBy(x => x.Health);
+                    var minionLastHit = allMinions.Where(x => x.Health > Player.GetSpellDamage(x, SpellSlot.Q)).OrderBy(x => x.Health);
 
                     if (minionLastHit.Any())
                     {
