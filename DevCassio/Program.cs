@@ -84,6 +84,8 @@ namespace DevCassio
                         break;
                 }
 
+                if (Config.Item("HarassToggle").GetValue<KeyBind>().Active)
+                    Harass();
                 
                 UseUltUnderTower();
 
@@ -760,10 +762,10 @@ namespace DevCassio
             Config.SubMenu("Combo").AddItem(new MenuItem("UseRSaveYourselfMinHealth", "Use R Save MinHealth").SetValue(new Slider(25, 0, 100)));
 
             Config.AddSubMenu(new Menu("Harass", "Harass"));
+            Config.SubMenu("Harass").AddItem(new MenuItem("HarassToggle", "Harras Active (toggle)").SetValue(new KeyBind("G".ToCharArray()[0], KeyBindType.Toggle)));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(false));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
-            
 
             Config.AddSubMenu(new Menu("Freeze", "Freeze"));
             Config.SubMenu("Freeze").AddItem(new MenuItem("UseEFreeze", "Use E").SetValue(true));
