@@ -445,7 +445,7 @@ namespace DevAnnie
             if (UseQHarassLastHit && Q.IsReady() && GetPassiveStacks() < 4)
             {
                 var nearestEnemy = Player.GetNearestEnemy();
-                if (Player.Distance(nearestEnemy) > Q.Range + 100)
+                if (Player.Distance(nearestEnemy) > Q.Range)
                 {
                     var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
                     var minionLastHit = allMinions.Where(x => x.Health > Player.GetSpellDamage(x, SpellSlot.Q)).OrderBy(x => x.Health);
