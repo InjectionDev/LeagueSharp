@@ -382,7 +382,7 @@ namespace DevCassio
                     {
                         if (UseELastHitLaneClear)
                         {
-                            if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.85 > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
+                            if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.9 > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
                             {
                                 CastE(minion);
                             }
