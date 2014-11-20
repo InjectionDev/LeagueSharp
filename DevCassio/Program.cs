@@ -404,7 +404,7 @@ namespace DevCassio
         private static double GetEDamageToMinion(Obj_AI_Base minion)
         {
             // Workaround cause DamageLib does not have the correct values for Cassio
-            var damageSpell = new DamageSpell { Slot = SpellSlot.E, DamageType = LeagueSharp.Common.Damage.DamageType.Magical, Damage = (source, target, level) => new double[] { 50, 85, 120, 155, 190 }[level] + (0.55 * source.FlatMagicDamageMod) };
+            var damageSpell = new DamageSpell { Slot = SpellSlot.E, DamageType = LeagueSharp.Common.Damage.DamageType.Magical, Damage = (source, target, level) => new double[] { 45, 85, 120, 155, 190 }[level] + (0.55 * source.FlatMagicDamageMod) };
             var rawDamage = damageSpell.Damage(Player, minion, Math.Max(1, Math.Min(Player.Spellbook.GetSpell(SpellSlot.Q).Level - 1, 6)));
 
             return CalcMagicDamage(Player, minion, rawDamage);
