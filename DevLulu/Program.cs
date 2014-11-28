@@ -42,7 +42,7 @@ namespace DevLulu
         public static BarrierManager BarrierManager;
         public static AssemblyUtil assemblyUtil;
 
-        private static bool mustDebug = true;
+        private static bool mustDebug = false;
 
         static void Main(string[] args)
         {
