@@ -15,10 +15,10 @@ using Color = System.Drawing.Color;
  * ##### DevFiora Mods #####
  * 
  * Full SBTW script
+ * Track Second Q Cast
  * Use W to counter AA
  * Use W/E after attack
- * Cast R if will Hit # (slider menu)
- * Cast R if will Kill # (slider menu)
+ * Cast R if will Hit/Kill # (slider menu)
  * Skin Hack
  * Auto Spell Level UP
  *  
@@ -377,7 +377,6 @@ namespace DevFiora
             SkinManager.Add("Royal Guard Fiora");
             SkinManager.Add("Nightraven Fiora");
             SkinManager.Add("Headmistress Fiora");
-            SkinManager.Add("Order of the Lotus Karma");
         }
 
         private static void InitializeLevelUpManager()
