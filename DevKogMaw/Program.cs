@@ -261,26 +261,42 @@ namespace DevKogMaw
 
         private static void KillSteal()
         {
+            var QKillSteal = Config.Item("QKillSteal").GetValue<bool>();
             var RKillSteal = Config.Item("RKillSteal").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
+            if (QKillSteal && Q.IsReady())
+            {
+                var query = DevHelper.GetEnemyList()
+                    .Where(enemy => enemy.IsValidTarget(Q.Range) && Q.GetDamage(enemy) > enemy.Health * 0.9 && Player.Distance(enemy) > Player.AttackRange)
+                    .OrderBy(enemy => enemy.Health);
+
+                if (query.Any())
+                {
+                    var eTarget = query.First();
+                    Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
+                }
+            }
+
             if (RKillSteal && R.IsReady())
             {
-                foreach (var enemy in DevHelper.GetEnemyList())
-                {
-                    if (enemy.IsValidTarget(R.Range) && enemy.Health < Player.GetSpellDamage(enemy, SpellSlot.R) && Player.Distance(enemy) > Player.AttackRange)
-                    {
-                        var pred = R.GetPrediction(enemy);
-                        R.Cast(pred.CastPosition, packetCast);
+                var query = DevHelper.GetEnemyList()
+                    .Where(enemy => enemy.IsValidTarget(R.Range) && R.GetDamage(enemy) > enemy.Health * 0.9 && Player.Distance(enemy) > Player.AttackRange)
+                    .OrderBy(enemy => enemy.Health);
 
-                        if (dtLastKS.AddSeconds(5) < DateTime.Now)
-                        {
-                            Game.PrintChat("R KillSteal");
-                            Utility.DelayAction.Add(0, () => DevHelper.Ping(enemy.ServerPosition));
-                            Utility.DelayAction.Add(400, () => DevHelper.Ping(enemy.ServerPosition));
-                            Utility.DelayAction.Add(800, () => DevHelper.Ping(enemy.ServerPosition));
-                            dtLastKS = DateTime.Now;
-                        }
+                if (query.Any())
+                {
+                    var enemy = query.First();
+                    var pred = R.GetPrediction(enemy);
+                    R.Cast(pred.CastPosition, packetCast);
+
+                    if (dtLastKS.AddSeconds(5) < DateTime.Now)
+                    {
+                        Game.PrintChat("R KillSteal");
+                        Utility.DelayAction.Add(0, () => DevHelper.Ping(enemy.ServerPosition));
+                        Utility.DelayAction.Add(400, () => DevHelper.Ping(enemy.ServerPosition));
+                        Utility.DelayAction.Add(800, () => DevHelper.Ping(enemy.ServerPosition));
+                        dtLastKS = DateTime.Now;
                     }
                 }
             }
@@ -568,14 +584,19 @@ namespace DevKogMaw
 
         private static bool HasWBuff()
         {
-            return Player.Buffs.Where(x => x.Name.Equals("KogMawBioArcaneBarrage", StringComparison.CurrentCultureIgnoreCase)).Any();
+            return Player.Buffs.Any(x => x.Name.Equals("KogMawBioArcaneBarrage", StringComparison.CurrentCultureIgnoreCase));
             //return Player.HasBuff("KogMawBioArcaneBarrage");
         }
 
         private static bool HasPassiveBuff()
         {
-            return Player.Buffs.Where(x => x.Name.Equals("KogMawIcathianSurprise", StringComparison.CurrentCultureIgnoreCase)).Any();
+            return Player.Buffs.Any(x => x.Name.Equals("KogMawIcathianSurprise", StringComparison.CurrentCultureIgnoreCase));
             //return Player.HasBuff("KogMawIcathianSurprise");
+        }
+
+        private static bool HasTriforcePassiveUP()
+        {
+            return Player.Buffs.Any(x => x.Name.Equals("XXXXXXXX", StringComparison.CurrentCultureIgnoreCase));
         }
 
         private static void JungleStealAlert()
@@ -681,6 +702,7 @@ namespace DevKogMaw
             Config.SubMenu("LaneClear").AddItem(new MenuItem("EManaLaneClear", "Min Mana to E").SetValue(new Slider(50, 1, 100)));
 
             Config.AddSubMenu(new Menu("KillSteal", "KillSteal"));
+            Config.SubMenu("KillSteal").AddItem(new MenuItem("QKillSteal", "Q KillSteal").SetValue(true));
             Config.SubMenu("KillSteal").AddItem(new MenuItem("RKillSteal", "R KillSteal").SetValue(true));
 
             Config.AddSubMenu(new Menu("JungleSteal", "JungleSteal"));
@@ -690,6 +712,7 @@ namespace DevKogMaw
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("ChaseEnemyAfterDeath", "Chase After Death").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("TriforceManagement", "Triforce Management").SetValue(true));
 
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("BarrierGapCloser", "Barrier onGapCloser").SetValue(true));
