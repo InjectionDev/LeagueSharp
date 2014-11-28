@@ -200,11 +200,13 @@ namespace DevBrand
             }
 
             // Passive UP +1 enemy Combo
-            var query = DevHelper.GetEnemyList()
-                .Where(x => x.IsValidTarget(R.Range) && HasPassiveBuff(x) && Player.GetSpellDamage(x, SpellSlot.R) > x.Health).OrderBy(x => x.Health);
-            if (query.Any() && R.IsReady())
+            if (useR && R.IsReady())
             {
-                R.CastOnUnit(query.First(), packetCast);
+                var query = DevHelper.GetEnemyList()
+                            .Where(x => x.IsValidTarget(R.Range) && HasPassiveBuff(x) && Player.GetSpellDamage(x, SpellSlot.R) > x.Health).OrderBy(x => x.Health);
+
+                if (query.Any())
+                    R.CastOnUnit(query.First(), packetCast);
             }
 
 
@@ -228,6 +230,7 @@ namespace DevBrand
                 }
             }
 
+            // R min enemies
             if (R.IsReady() && useR && eTarget.IsValidTarget(R.Range))
             {
                 var enemiesInRange = DevHelper.GetEnemyList().Where(x => x.Distance(eTarget) < 400);
