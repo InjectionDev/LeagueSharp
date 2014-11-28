@@ -591,25 +591,24 @@ namespace DevAnnie
                     args.Process = false;
             }
 
-            //if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-            //{
-            //    var useQ = Config.Item("UseQCombo").GetValue<bool>();
-            //    var useW = Config.Item("UseWCombo").GetValue<bool>();
-            //    var useE = Config.Item("UseQCombo").GetValue<bool>();
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            {
+                var useQ = Config.Item("UseQCombo").GetValue<bool>();
+                var useW = Config.Item("UseWCombo").GetValue<bool>();
+                var useR = Config.Item("UseRCombo").GetValue<bool>();
 
-            //    if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady())))
-            //        args.Process = false;
-            //}
-            //else
-            //    if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
-            //    {
-            //        var useQ = Config.Item("UseQHarass").GetValue<bool>();
-            //        var useW = Config.Item("UseWHarass").GetValue<bool>();
-            //        var useE = Config.Item("UseEHarass").GetValue<bool>();
+                if (args.Target.IsValidTarget(Q.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useR && R.IsReady())))
+                    args.Process = false;
+            }
+            else
+                if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+                {
+                    var useQ = Config.Item("UseQHarass").GetValue<bool>();
+                    var useW = Config.Item("UseWHarass").GetValue<bool>();
 
-            //        if (Player.GetNearestEnemy().IsValidTarget(W.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useE && E.IsReady())))
-            //            args.Process = false;
-            //    }
+                    if (args.Target.IsValidTarget(Q.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady())))
+                        args.Process = false;
+                }
         }
 
         static void Drawing_OnDraw(EventArgs args)

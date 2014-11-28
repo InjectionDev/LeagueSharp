@@ -374,15 +374,15 @@ namespace DevCassio
             {
                 MinionList = MinionManager.GetMinions(Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
-                foreach (var minion in MinionList.Where(x => x.HasBuffOfType(BuffType.Poison)).ToList())
+                foreach (var minion in MinionList.Where(x => x.HasBuffOfType(BuffType.Poison)))
                 {
                     var buffEndTime = GetPoisonBuffEndTime(minion);
-
-                    if (buffEndTime > (Game.Time + E.Delay))
+                    if (buffEndTime > Game.Time + E.Delay)
                     {
                         if (UseELastHitLaneClear)
                         {
-                            if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.85 > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
+                            //var landTime = Q.Delay + 1000 * Player.Distance(minion) / 1400;
+                            if (GetEDamageToMinion(minion) * 0.9 > minion.Health)
                             {
                                 CastE(minion);
                             }
@@ -392,8 +392,41 @@ namespace DevCassio
                             CastE(minion);
                         }
                     }
+                    else
+                    {
+                        if (mustDebug)
+                            Game.PrintChat("DONT CAST : buffEndTime " + buffEndTime);
+                    }
                 }
             }
+        }
+
+        private static double GetEDamageToMinion(Obj_AI_Base minion)
+        {
+            // Workaround cause DamageLib does not have the correct values for Cassio
+            var damageSpell = new DamageSpell { Slot = SpellSlot.E, DamageType = LeagueSharp.Common.Damage.DamageType.Magical, Damage = (source, target, level) => new double[] { 45, 85, 120, 155, 190 }[level] + (0.55 * source.FlatMagicDamageMod) };
+            var rawDamage = damageSpell.Damage(Player, minion, Math.Max(1, Math.Min(Player.Spellbook.GetSpell(SpellSlot.Q).Level - 1, 6)));
+
+            return CalcMagicDamage(Player, minion, rawDamage);
+        }
+
+        private static double CalcMagicDamage(Obj_AI_Base source, Obj_AI_Base target, double amount)
+        {
+            var magicResist = (target.SpellBlock * source.PercentMagicPenetrationMod) - source.FlatMagicPenetrationMod;
+
+            double k;
+            if (magicResist < 0)
+            {
+                k = 2 - 100 / (100 - magicResist);
+            }
+            else
+            {
+                k = 100 / (100 + magicResist);
+            }
+
+            k = k * (1 - target.PercentMagicReduction) * (1 + target.PercentMagicDamageMod);
+
+            return k * amount;
         }
 
         private static float GetPoisonBuffEndTime(Obj_AI_Base target)
@@ -423,7 +456,7 @@ namespace DevCassio
 
                     if (E.IsReady() && buffEndTime > (Game.Time + E.Delay) && minion.IsValidTarget(E.Range))
                     {
-                        if (Player.GetSpellDamage(minion, SpellSlot.E) * 0.85 > HealthPrediction.LaneClearHealthPrediction(minion, (int)E.Delay * 1000))
+                        if (GetEDamageToMinion(minion) * 0.9 > minion.Health)
                         {
                             CastE(minion);
                         }
@@ -587,8 +620,10 @@ namespace DevCassio
         {
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
-                var useAA = Config.Item("UseAACombo").GetValue<bool>();
-                args.Process = useAA;
+                args.Process = Config.Item("UseAACombo").GetValue<bool>();
+
+                if (E.IsReady() && args.Target.HasBuffOfType(BuffType.Poison) && args.Target.IsValidTarget(E.Range))
+                    args.Process = false;
             }
         }
 
@@ -792,7 +827,7 @@ namespace DevCassio
             Config.AddSubMenu(new Menu("Im Legit! :)", "Legit"));
             Config.SubMenu("Legit").AddItem(new MenuItem("PlayLegit", "Play Legit :)").SetValue(false));
             Config.SubMenu("Legit").AddItem(new MenuItem("DisableNFE", "Disable No-Face Exploit").SetValue(true));
-            Config.SubMenu("Legit").AddItem(new MenuItem("LegitCastDelay", "Cast E Delay").SetValue(new Slider(500, 0, 1000)));
+            Config.SubMenu("Legit").AddItem(new MenuItem("LegitCastDelay", "Cast E Delay").SetValue(new Slider(500, 0, 1500)));
 
             Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
             Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
