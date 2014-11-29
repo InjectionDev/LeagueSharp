@@ -677,10 +677,10 @@ namespace DevAnnie
             Config.SubMenu("JungleClear").AddItem(new MenuItem("UseQJungleClear", "Use Q").SetValue(true));
             Config.SubMenu("JungleClear").AddItem(new MenuItem("UseWJungleClear", "Use W").SetValue(true));
 
-            Config.AddSubMenu(new Menu("Extra", "Extra"));
-            Config.SubMenu("Extra").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
-            Config.SubMenu("Extra").AddItem(new MenuItem("UseEAgainstAA", "Use E against AA").SetValue(true));
-            Config.SubMenu("Extra").AddItem(new MenuItem("UseRInterrupt", "Use R + Pyromania to Interrupt").SetValue(true));
+            Config.AddSubMenu(new Menu("Misc", "Misc"));
+            Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("UseEAgainstAA", "Use E against AA").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("UseRInterrupt", "Use R + Pyromania to Interrupt").SetValue(true));
 
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
             Config.SubMenu("GapCloser").AddItem(new MenuItem("UseEGapCloser", "Use E onGapCloser").SetValue(true));

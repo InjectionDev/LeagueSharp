@@ -15,7 +15,7 @@ using Color = System.Drawing.Color;
  * ##### DevFiora Mods #####
  * 
  * Full SBTW script
- * Track Second Q Cast
+ * Smart Track of Second Q Cast
  * Use W to counter AA
  * Use W/E after attack
  * Cast R if will Hit/Kill # (slider menu)
@@ -237,7 +237,7 @@ namespace DevFiora
                 Q.CastOnUnit(eTarget, UsePackets());
             }
 
-            if (!Orbwalking.InAutoAttackRange(eTarget))
+            if (Player.Distance(eTarget) > Orbwalking.GetRealAutoAttackRange(eTarget) * 1.2 || Player.Distance(eTarget) > 550)
             {
                 Q.CastOnUnit(eTarget, UsePackets());
             }
