@@ -45,8 +45,9 @@ namespace DevAnnie
         public static ItemManager itemManager;
         public static AssemblyUtil assemblyUtil;
         public static LevelUpManager levelUpManager;
+        public static MessageManager messageManager;
 
-        private static DateTime dtBurstComboStart = DateTime.MinValue;
+        private static int dtBurstComboStart;
         private static string msgFlashCombo = string.Empty;
 
         private static bool mustDebug = false;
@@ -77,6 +78,8 @@ namespace DevAnnie
 
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie Loaded v{0}</font>", Assembly.GetExecutingAssembly().GetName().Version));
 
+                messageManager = new MessageManager();
+
                 assemblyUtil = new AssemblyUtil(Assembly.GetExecutingAssembly().GetName().Name);
                 assemblyUtil.onGetVersionCompleted += AssemblyUtil_onGetVersionCompleted;
                 assemblyUtil.GetLastVersionAsync();
@@ -90,16 +93,15 @@ namespace DevAnnie
         static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
         {
             if (args.LastAssemblyVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
-                Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie You have the lastest version.</font>"));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie :: You have the latest version.</font>"));
             else
-                Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
-        }
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevAnnie :: NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
+        } 
 
         private static void InitializeAttachEvents()
         {
             Game.OnGameUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
-            Drawing.OnEndScene += Drawing_OnEndScene;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
@@ -114,16 +116,16 @@ namespace DevAnnie
         }
 
 
-
         static void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var UseEAgainstAA = Config.Item("UseEAgainstAA").GetValue<bool>();
 
             if (UseEAgainstAA && E.IsReady() && sender is Obj_SpellMissile)
             {
                 var missile = sender as Obj_SpellMissile;
                 if (missile.SpellCaster is Obj_AI_Hero && missile.SpellCaster.IsEnemy && missile.Target.IsMe)
-                    CastE();
+                    E.Cast(packetCast);
             }
         }
 
@@ -142,18 +144,10 @@ namespace DevAnnie
 
             if (UseEGapCloser && E.IsReady())
             {
-                CastE();
+                E.Cast(packetCast);
             }
         }
 
-        private static void CastE()
-        {
-            var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            if (packetCast)
-                Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.E)).Send();
-            else
-                E.Cast();
-        }
 
         static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
         {
@@ -223,6 +217,8 @@ namespace DevAnnie
 
             if (!UseFlashCombo)
                 return;
+
+           // messageManager.AddMessage(0, "FlashComboKey ON", System.Drawing.Color.Yellow);
 
             int qtPassiveStacks = GetPassiveStacks();
 
@@ -306,8 +302,10 @@ namespace DevAnnie
             var UseRMinEnemies = Config.Item("UseRMinEnemies").GetValue<Slider>().Value;
 
             double totalComboDamage = 0;
+
             if (R.IsReady())
                 totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.R);
+
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.W);
@@ -321,6 +319,7 @@ namespace DevAnnie
             totalComboDamage += summonerSpellManager.IsReadyIgnite() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
 
             double totalManaCost = 0;
+
             if (R.IsReady())
                 totalManaCost += Player.Spellbook.GetSpell(SpellSlot.R).ManaCost;
             totalManaCost += Player.Spellbook.GetSpell(SpellSlot.Q).ManaCost;
@@ -348,9 +347,9 @@ namespace DevAnnie
                         R.Cast(pred.CastPosition, packetCast);
                     }
 
-                    dtBurstComboStart = DateTime.Now;
+                    dtBurstComboStart = Environment.TickCount;
                 }
-                dtBurstComboStart = DateTime.Now;
+                dtBurstComboStart = Environment.TickCount;
             }
 
 
@@ -365,12 +364,12 @@ namespace DevAnnie
                     var pred = R.GetPrediction(eTarget, true);
                     R.Cast(pred.CastPosition, packetCast);
 
-                    dtBurstComboStart = DateTime.Now;
+                    dtBurstComboStart = Environment.TickCount;
                 }
             }
 
             // Ignite
-            if (dtBurstComboStart.AddSeconds(4) > DateTime.Now && summonerSpellManager.IsReadyIgnite())
+            if (Environment.TickCount - dtBurstComboStart > 4000 && summonerSpellManager.IsReadyIgnite())
             {
                 if (mustDebug)
                     Game.PrintChat("Ignite -> " + eTarget.BaseSkinName);
@@ -448,7 +447,7 @@ namespace DevAnnie
                 if (Player.Distance(nearestEnemy) > Q.Range)
                 {
                     var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
-                    var minionLastHit = allMinions.Where(x => x.Health > Player.GetSpellDamage(x, SpellSlot.Q)).OrderBy(x => x.Health);
+                    var minionLastHit = allMinions.Where(x => Q.GetDamage(x) * 0.9 > x.Health).OrderBy(x => x.Health);
 
                     if (minionLastHit.Any())
                     {
@@ -469,7 +468,7 @@ namespace DevAnnie
             if (Q.IsReady() && useQ)
             {
                 var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
-                var minionLastHit = allMinions.Where(x => HealthPrediction.LaneClearHealthPrediction(x, (int)Q.Delay * 1000) < Player.GetSpellDamage(x, SpellSlot.Q) * 0.8f).OrderBy(x => x.Health);
+                var minionLastHit = allMinions.Where(x => Q.GetDamage(x) > x.Health * 0.75f).OrderBy(x => x.Health);
 
                 if (minionLastHit.Any())
                 {
@@ -484,7 +483,7 @@ namespace DevAnnie
 
                 if (allMinionsW.Any())
                 {
-                    var farm = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.8f);
+                    var farm = W.GetCircularFarmLocation(allMinionsW, W.Width * 0.75f);
                     if (farm.MinionsHit >= 3)
                     {
                         W.Cast(farm.Position, packetCast);
@@ -595,9 +594,8 @@ namespace DevAnnie
             {
                 var useQ = Config.Item("UseQCombo").GetValue<bool>();
                 var useW = Config.Item("UseWCombo").GetValue<bool>();
-                var useR = Config.Item("UseRCombo").GetValue<bool>();
 
-                if (args.Target.IsValidTarget(Q.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady() || useR && R.IsReady())))
+                if (args.Target.IsValidTarget(Q.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady())))
                     args.Process = false;
             }
             else
@@ -613,12 +611,6 @@ namespace DevAnnie
 
         static void Drawing_OnDraw(EventArgs args)
         {
-
-
-        }
-
-        static void Drawing_OnEndScene(EventArgs args)
-        {
             foreach (var spell in SpellList)
             {
                 var menuItem = Config.Item(spell.Slot + "Range").GetValue<Circle>();
@@ -627,7 +619,10 @@ namespace DevAnnie
                     Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
                 }
             }
+
+          //  messageManager.Draw();
         }
+
 
         private static float GetComboDamage(Obj_AI_Hero enemy)
         {

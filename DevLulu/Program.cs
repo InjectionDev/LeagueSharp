@@ -76,7 +76,7 @@ namespace DevLulu
         static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
         {
             if (args.LastAssemblyVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
-                Game.PrintChat(string.Format("<font color='#fb762d'>DevLulu You have the lastest version.</font>"));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevLulu You have the latest version.</font>"));
             else
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevLulu NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
        }

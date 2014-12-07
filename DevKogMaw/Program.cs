@@ -373,7 +373,7 @@ namespace DevKogMaw
         static void AssemblyUtil_onGetVersionCompleted(OnGetVersionCompletedArgs args)
         {
             if (args.LastAssemblyVersion == Assembly.GetExecutingAssembly().GetName().Version.ToString())
-                Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw You have the lastest version.</font>"));
+                Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw You have the latest version.</font>"));
             else
                 Game.PrintChat(string.Format("<font color='#fb762d'>DevKogMaw NEW VERSION available! Tap F8 for Update! {0}</font>", args.LastAssemblyVersion));
         }
