@@ -100,7 +100,7 @@ namespace DevTwitch
 
         public static void BurstCombo()
         {
-            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical);
+            var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
 
             if (eTarget == null)
                 return;
@@ -115,7 +115,7 @@ namespace DevTwitch
             // R KS (KS if 2 AA in Rrange)
             if (R.IsReady() && useR)
             {
-                var rTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Physical);
+                var rTarget = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Physical);
 
                 if (mustDebug)
                 {
@@ -180,7 +180,7 @@ namespace DevTwitch
 
         public static void Combo()
         {
-            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical);
+            var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
 
             if (eTarget == null)
                 return;
@@ -221,7 +221,7 @@ namespace DevTwitch
 
         public static void Harass()
         {
-            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical);
+            var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
 
             if (eTarget == null)
                 return;
@@ -500,7 +500,7 @@ namespace DevTwitch
             Config = new Menu("DevTwitch", "DevTwitch", true);
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));

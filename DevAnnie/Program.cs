@@ -288,7 +288,7 @@ namespace DevAnnie
 
         public static void BurstCombo()
         {
-            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -380,7 +380,7 @@ namespace DevAnnie
 
         public static void Combo()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -411,7 +411,7 @@ namespace DevAnnie
 
         public static void Harass()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -583,11 +583,15 @@ namespace DevAnnie
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            if (args.Target.IsMinion && IsSupportMode)
+            if (args.Target is Obj_AI_Base)
             {
-                var allyADC = Player.GetNearestAlly();
-                if (allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
-                    args.Process = false;
+                var target = args.Target as Obj_AI_Base;
+                if (target.IsMinion && IsSupportMode)
+                {
+                    var allyADC = Player.GetNearestAlly();
+                    if (allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
+                        args.Process = false;
+                }
             }
 
             if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
@@ -635,7 +639,7 @@ namespace DevAnnie
             Config = new Menu("DevAnnie", "DevAnnie", true);
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));

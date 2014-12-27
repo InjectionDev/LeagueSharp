@@ -24,7 +24,7 @@ namespace DevCommom
         public bool Cast()
         {
             if (HasBarrier && IsReady())
-                return ObjectManager.Player.SummonerSpellbook.CastSpell(this.BarrierSpell.Slot);
+                return ObjectManager.Player.Spellbook.CastSpell(this.BarrierSpell.Slot);
 
             return false;
         }

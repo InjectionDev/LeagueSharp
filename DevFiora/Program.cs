@@ -268,7 +268,7 @@ namespace DevFiora
 
         public static void Combo()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -312,7 +312,7 @@ namespace DevFiora
 
         public static void Harass()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -456,7 +456,7 @@ namespace DevFiora
             Config = new Menu("DevFiora", "DevFiora", true);
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));

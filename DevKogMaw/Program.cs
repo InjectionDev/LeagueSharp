@@ -109,7 +109,7 @@ namespace DevKogMaw
 
         public static void Combo()
         {
-            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -159,7 +159,7 @@ namespace DevKogMaw
 
         public static void Harass()
         {
-            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -234,7 +234,7 @@ namespace DevKogMaw
             if (mustDebug)
                 Game.PrintChat("CastAssistedUlt Start");
 
-            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -309,7 +309,7 @@ namespace DevKogMaw
 
             if (ChaseEnemyAfterDeath)
             {
-                var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+                var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
 
                 if (eTarget == null)
                     return;
@@ -673,7 +673,7 @@ namespace DevKogMaw
             Config = new Menu("DevKogMaw", "DevKogMaw", true);
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));

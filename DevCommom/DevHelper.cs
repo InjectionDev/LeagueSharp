@@ -124,5 +124,22 @@ namespace DevCommom
         {
             return (spellName.ToLower().Contains("attack") && !NoAttacks.Contains(spellName.ToLower())) || Attacks.Contains(spellName.ToLower());
         }
+
+        public static bool IsMinion(AttackableUnit unit, bool includeWards = false)
+        {
+            if (unit is Obj_AI_Minion)
+            {
+                var minion = unit as Obj_AI_Minion;
+                var name = minion.BaseSkinName.ToLower();
+                return name.Contains("minion") || (includeWards && (name.Contains("ward") || name.Contains("trinket")));
+            }
+            else
+                return false;
+        }
+
+        public static float GetRealDistance(GameObject unit, GameObject target)
+        {
+            return unit.Position.Distance(target.Position) + unit.BoundingRadius + target.BoundingRadius;
+        }
     }
 }

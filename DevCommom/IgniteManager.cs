@@ -28,7 +28,7 @@ namespace DevCommom
                 return false;
 
             if (HasIgnite && IsReady() && enemy.IsValidTarget(600))
-                return ObjectManager.Player.SummonerSpellbook.CastSpell(this.IgniteSpell.Slot, enemy);
+                return ObjectManager.Player.Spellbook.CastSpell(this.IgniteSpell.Slot, enemy);
 
             return false;
         }

@@ -134,7 +134,7 @@ namespace DevLulu
             {
                 var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-                var queryEnemyList = DevHelper.GetEnemyList().Where(x => x.Distance(unit) < Q.Range).OrderBy(x => x.Health).ToList();
+                var queryEnemyList = DevHelper.GetEnemyList().Where(x => x.Distance(unit, false) < Q.Range).OrderBy(x => x.Health).ToList();
                 if (queryEnemyList.Any())
                 {
                     if (mustDebug)
@@ -276,7 +276,7 @@ namespace DevLulu
 
         public static void CastEQ()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range * 2, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range * 2, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -292,6 +292,7 @@ namespace DevLulu
 
             var enemyList = DevHelper.GetEnemyList()
                 .Where(x => eTarget.NetworkId != x.NetworkId && Player.Distance(x) < E.Range && x.Distance(eTarget) < Q.Range).ToList();
+
             if (enemyList.Any())
             {
                 var unit = enemyList.First();
@@ -303,6 +304,7 @@ namespace DevLulu
 
             var allyList = DevHelper.GetAllyList()
                 .Where(x => !x.IsMe && Player.Distance(x) < E.Range && x.Distance(eTarget) < Q.Range).ToList();
+
             if (allyList.Any())
             {
                 var unit = allyList.First();
@@ -313,7 +315,8 @@ namespace DevLulu
             }
 
             var minionList = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.All, MinionOrderTypes.Health)
-                .Where(x => x.Distance(eTarget) < Q.Range).OrderByDescending(x => x.Health).ToList();
+                .Where(x => DevHelper.GetRealDistance(x, eTarget) < Q.Range).OrderByDescending(x => x.Health).ToList();
+
             if (minionList.Any())
             {
                 var unit = minionList.First();
@@ -343,7 +346,7 @@ namespace DevLulu
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var eTarget = SimpleTs.GetTarget(W.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -363,7 +366,7 @@ namespace DevLulu
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -378,7 +381,7 @@ namespace DevLulu
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -391,7 +394,7 @@ namespace DevLulu
 
         public static void Combo()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -449,7 +452,7 @@ namespace DevLulu
 
         public static void Harass()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -522,7 +525,8 @@ namespace DevLulu
 
         static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
         {
-            if (args.Target.IsMinion && IsSupportMode)
+
+            if (args.Target is Obj_AI_Minion && IsSupportMode)
             {
                 var allyADC = Player.GetNearestAlly();
                 if (allyADC.Distance(args.Target) < allyADC.AttackRange * 1.2)
@@ -554,7 +558,7 @@ namespace DevLulu
             Config = new Menu("DevLulu", "DevLulu", true);
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));

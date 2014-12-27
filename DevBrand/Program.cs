@@ -168,7 +168,7 @@ namespace DevBrand
 
         public static void BurstCombo()
         {
-            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -248,7 +248,7 @@ namespace DevBrand
 
         public static void Combo()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -292,7 +292,7 @@ namespace DevBrand
 
         public static void Harass()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -517,7 +517,7 @@ namespace DevBrand
             Config = new Menu("DevBrand", "DevBrand", true);
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));

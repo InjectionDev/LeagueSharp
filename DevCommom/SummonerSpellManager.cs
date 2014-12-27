@@ -31,7 +31,7 @@ namespace DevCommom
         public bool CastIgnite(Obj_AI_Hero target)
         {
             if (IsReadyIgnite())
-                return ObjectManager.Player.SummonerSpellbook.CastSpell(IgniteSlot, target);
+                return ObjectManager.Player.Spellbook.CastSpell(IgniteSlot, target);
             else
                 return false;
         }
@@ -39,7 +39,7 @@ namespace DevCommom
         public bool CastFlash(Vector3 position)
         {
             if (IsReadyFlash())
-                return ObjectManager.Player.SummonerSpellbook.CastSpell(FlashSlot, position);
+                return ObjectManager.Player.Spellbook.CastSpell(FlashSlot, position);
             else
                 return false;
         }
@@ -47,7 +47,7 @@ namespace DevCommom
         public bool CastBarrier()
         {
             if (IsReadyBarrier())
-                return ObjectManager.Player.SummonerSpellbook.CastSpell(BarrierSlot);
+                return ObjectManager.Player.Spellbook.CastSpell(BarrierSlot);
             else
                 return false;
         }
@@ -55,7 +55,7 @@ namespace DevCommom
         public bool CastHeal()
         {
             if (IsReadyHeal())
-                return ObjectManager.Player.SummonerSpellbook.CastSpell(HealSlot);
+                return ObjectManager.Player.Spellbook.CastSpell(HealSlot);
             else
                 return false;
         }
@@ -63,34 +63,34 @@ namespace DevCommom
         public bool CastExhaust(Obj_AI_Hero target)
         {
             if (IsReadyExhaust())
-                return ObjectManager.Player.SummonerSpellbook.CastSpell(ExhaustSlot, target);
+                return ObjectManager.Player.Spellbook.CastSpell(ExhaustSlot, target);
             else
                 return false;
         }
 
         public bool IsReadyIgnite()
         {
-            return (IgniteSlot != SpellSlot.Unknown && ObjectManager.Player.SummonerSpellbook.CanUseSpell(IgniteSlot) == SpellState.Ready);
+            return (IgniteSlot != SpellSlot.Unknown && ObjectManager.Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready);
         }
 
         public bool IsReadyFlash()
         {
-            return (FlashSlot != SpellSlot.Unknown && ObjectManager.Player.SummonerSpellbook.CanUseSpell(FlashSlot) == SpellState.Ready);
+            return (FlashSlot != SpellSlot.Unknown && ObjectManager.Player.Spellbook.CanUseSpell(FlashSlot) == SpellState.Ready);
         }
 
         public bool IsReadyBarrier()
         {
-            return (BarrierSlot != SpellSlot.Unknown && ObjectManager.Player.SummonerSpellbook.CanUseSpell(BarrierSlot) == SpellState.Ready);
+            return (BarrierSlot != SpellSlot.Unknown && ObjectManager.Player.Spellbook.CanUseSpell(BarrierSlot) == SpellState.Ready);
         }
 
         public bool IsReadyHeal()
         {
-            return (HealSlot != SpellSlot.Unknown && ObjectManager.Player.SummonerSpellbook.CanUseSpell(HealSlot) == SpellState.Ready);
+            return (HealSlot != SpellSlot.Unknown && ObjectManager.Player.Spellbook.CanUseSpell(HealSlot) == SpellState.Ready);
         }
 
         public bool IsReadyExhaust()
         {
-            return (ExhaustSlot != SpellSlot.Unknown && ObjectManager.Player.SummonerSpellbook.CanUseSpell(ExhaustSlot) == SpellState.Ready);
+            return (ExhaustSlot != SpellSlot.Unknown && ObjectManager.Player.Spellbook.CanUseSpell(ExhaustSlot) == SpellState.Ready);
         }
 
         public bool CanKillIgnite(Obj_AI_Hero target)

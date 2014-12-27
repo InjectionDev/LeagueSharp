@@ -105,7 +105,7 @@ namespace DevCassio
         
         public static void BurstCombo()
         {
-            var eTarget = SimpleTs.GetTarget(R.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -174,7 +174,7 @@ namespace DevCassio
 
         public static void Combo()
         {
-            var eTarget = SimpleTs.GetTarget(W.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -261,7 +261,7 @@ namespace DevCassio
 
         public static void Harass()
         {
-            var eTarget = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
 
             if (eTarget == null)
                 return;
@@ -622,8 +622,12 @@ namespace DevCassio
             {
                 args.Process = Config.Item("UseAACombo").GetValue<bool>();
 
-                if (E.IsReady() && args.Target.HasBuffOfType(BuffType.Poison) && args.Target.IsValidTarget(E.Range))
-                    args.Process = false;
+                if (args.Target is Obj_AI_Base)
+                {
+                    var target = args.Target as Obj_AI_Base;
+                    if (E.IsReady() && target.HasBuffOfType(BuffType.Poison) && target.IsValidTarget(E.Range))
+                        args.Process = false;
+                }
             }
         }
 
@@ -780,7 +784,7 @@ namespace DevCassio
             Config = new Menu("DevCassio", "DevCassio", true);
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
