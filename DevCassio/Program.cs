@@ -637,7 +637,7 @@ namespace DevCassio
                 Game.PrintChat("InitializeSpells Start");
 
             Q = new Spell(SpellSlot.Q, 850);
-            Q.SetSkillshot(400, 150, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Q.SetSkillshot(400, 140, float.MaxValue, false, SkillshotType.SkillshotCircle);
 
             W = new Spell(SpellSlot.W, 850);
             W.SetSkillshot(500, 150, 2500, false, SkillshotType.SkillshotCircle);
