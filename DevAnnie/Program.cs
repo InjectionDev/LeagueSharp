@@ -242,10 +242,7 @@ namespace DevAnnie
 
                         if (qtPassiveStacks == 3)
                         {
-                            if (packetCast)
-                                Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.E)).Send();
-                            else
-                                E.Cast();
+                            E.Cast(packetCast);
                         }
 
                         summonerSpellManager.CastFlash(predict);

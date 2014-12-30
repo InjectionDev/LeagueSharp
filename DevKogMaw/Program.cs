@@ -130,11 +130,7 @@ namespace DevKogMaw
 
             if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
             {
-                if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.W)).Send();
-                else
-                    W.Cast();
-
+                W.Cast(packetCast);
                 Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
             }
 
@@ -183,11 +179,7 @@ namespace DevKogMaw
 
             if (!HasWBuff() && Player.AttackRange < Player.Distance(eTarget) && Player.Distance(eTarget) <= (Orbwalking.GetRealAutoAttackRange(eTarget) + W.Range) && W.IsReady() && useW)
             {
-                if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.W)).Send();
-                else
-                    W.Cast();
-
+                W.Cast(packetCast);
                 Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
             }
 

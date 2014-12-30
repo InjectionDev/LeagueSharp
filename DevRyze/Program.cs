@@ -451,10 +451,7 @@ namespace DevRyze
             // Cast R if will hit 1+ enemies
             if (useR && R.IsReady() && DevHelper.CountEnemyInPositionRange(eTarget.ServerPosition, 300) > 1)
             {
-                if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
-                else
-                    R.Cast();
+                R.Cast(packetCast);
 
                 if (mustDebug)
                     Game.PrintChat("BurstCombo -> R hit 1+");
@@ -463,11 +460,8 @@ namespace DevRyze
             // Cast R for Killable Combo
             var spellCombo = new[] { SpellSlot.Q, SpellSlot.R, SpellSlot.E, SpellSlot.Q, SpellSlot.W, SpellSlot.Q };
             if (useR && R.IsReady() && Player.IsKillable(eTarget, spellCombo))
-            {
-                if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
-                else
-                    R.Cast();
+            {   
+                R.Cast(packetCast);
 
                 if (mustDebug)
                     Game.PrintChat("BurstCombo -> R Combo");

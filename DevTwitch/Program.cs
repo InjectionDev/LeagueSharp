@@ -130,10 +130,7 @@ namespace DevTwitch
 
                 if (totalCombo * 0.9 > rTarget.Health)
                 {
-                    if (packetCast)
-                        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
-                    else
-                        R.Cast();
+                    R.Cast(packetCast);
 
                     Player.IssueOrder(GameObjectOrder.AttackUnit, eTarget);
                 }
@@ -154,10 +151,7 @@ namespace DevTwitch
                 {
                     var enemy = enemies.First();
 
-                    if (packetCast)
-                        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.R)).Send();
-                    else
-                        R.Cast();
+                    R.Cast(packetCast);
 
                     Player.IssueOrder(GameObjectOrder.AttackUnit, enemy);
                 }
@@ -274,10 +268,7 @@ namespace DevTwitch
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             if (E.IsReady())
             {
-                if (packetCast)
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.E)).Send();
-                else
-                    E.Cast();
+                E.Cast(packetCast);
             }
         }
 
@@ -421,14 +412,6 @@ namespace DevTwitch
         {
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var QGapCloser = Config.Item("QGapCloser").GetValue<bool>();
-
-            //if (QGapCloser && Q.IsReady())
-            //{
-            //    if (packetCast)
-            //        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.Q)).Send();
-            //    else
-            //        Q.Cast();
-            //}
         }
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
@@ -445,17 +428,6 @@ namespace DevTwitch
                 if (BarrierManager.Cast())
                     Game.PrintChat(string.Format("OnEnemyGapcloser -> BarrierGapCloser on {0} !", gapcloser.Sender.SkinName));
             }
-
-            //if (QGapCloser && Q.IsReady())
-            //{
-            //    if (mustDebug)
-            //        Game.PrintChat(string.Format("OnEnemyGapcloser -> UseQ"));
-
-            //    if (packetCast)
-            //        Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(Player.NetworkId, SpellSlot.Q)).Send();
-            //    else
-            //        Q.Cast();
-            //}
 
         }
 
