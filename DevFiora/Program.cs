@@ -57,7 +57,7 @@ namespace DevFiora
         {
             Player = ObjectManager.Player;
 
-            if (!Player.ChampionName.ToLower().Contains(ChampionName))
+            if (Player.ChampionName != ChampionName)
                 return;
 
             try
@@ -100,7 +100,6 @@ namespace DevFiora
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
-            GameObject.OnCreate += GameObject_OnCreate;
 
             Config.Item("ComboDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("ComboDamage").GetValue<bool>())
@@ -110,33 +109,27 @@ namespace DevFiora
             }
         }
 
-        static void GameObject_OnCreate(GameObject sender, EventArgs args)
-        {
-            var UseWAfterAttack = Config.Item("UseWAfterAttack").GetValue<bool>();
-            var UseEAfterAttack = Config.Item("UseEAfterAttack").GetValue<bool>();
-
-            var missile = (Obj_SpellMissile)sender;
-            if (missile.SpellCaster is Obj_AI_Hero && missile.SpellCaster.IsValid && DevHelper.IsAutoAttack(missile.SData.Name))
-            {
-                if (UseWAfterAttack)
-                    W.Cast(UsePackets()); 
-   
-                if (UseEAfterAttack)
-                    E.Cast(UsePackets()); 
-            }
-        }
 
         static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            //if (sender.IsMe && Player.GetSpellSlot(args.SData.Name, false) == SpellSlot.Q)
-            //{
-            //    lastQCastTime = Environment.TickCount;
-            //}
-
             var UseWAgainstAA = Config.Item("UseWAgainstAA").GetValue<bool>();
+            var UseWAfterAttack = Config.Item("UseWAfterAttack").GetValue<bool>();
+            var UseEAfterAttack = Config.Item("UseEAfterAttack").GetValue<bool>();
 
             if (UseWAgainstAA && sender.IsEnemy && !sender.IsMinion && args.Target.IsMe && W.IsReady() && DevHelper.IsAutoAttack(args.SData.Name))
+            {
                 W.Cast(UsePackets());
+            }
+
+            if (UseWAfterAttack && sender.IsMe && W.IsReady() && DevHelper.IsAutoAttack(args.SData.Name))
+            {
+                W.Cast(UsePackets());
+            }
+
+            if (UseEAfterAttack && sender.IsMe && E.IsReady() && DevHelper.IsAutoAttack(args.SData.Name))
+            { 
+                E.Cast(UsePackets());
+            }
         }
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
@@ -195,6 +188,8 @@ namespace DevFiora
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+                if (mustDebug)
+                    Game.PrintChat(ex.Message);
             }
         }
 
@@ -220,6 +215,9 @@ namespace DevFiora
 
             lastQCastTime = Environment.TickCount;
             Q.CastOnUnit(eTarget, UsePackets());
+
+            if (mustDebug)
+                Game.PrintChat("CastFirstQ");
         }
 
         private static void CastSecondQ(Obj_AI_Hero eTarget)
@@ -227,20 +225,16 @@ namespace DevFiora
             if (!HasSecondQBuff())
                 return;
 
-            if (Environment.TickCount - lastQCastTime > 3600)
+            if (Environment.TickCount - lastQCastTime > 3600 ||
+                Player.GetSpellDamage(eTarget, SpellSlot.Q) * 0.9 > eTarget.Health ||
+                Player.Distance(eTarget) > Orbwalking.GetRealAutoAttackRange(eTarget) * 1.3 ||
+                Player.Distance(eTarget) > Q.Range * 0.9)
             {
                 Q.CastOnUnit(eTarget, UsePackets());
+                if (mustDebug)
+                    Game.PrintChat("CastSecondQ");
             }
 
-            if (Player.GetSpellDamage(eTarget, SpellSlot.Q) * 0.95 > eTarget.Health)
-            {
-                Q.CastOnUnit(eTarget, UsePackets());
-            }
-
-            if (Player.Distance(eTarget) > Orbwalking.GetRealAutoAttackRange(eTarget) * 1.2 || Player.Distance(eTarget) > 550)
-            {
-                Q.CastOnUnit(eTarget, UsePackets());
-            }
         }
 
         private static void CastRMinHit()
@@ -248,14 +242,22 @@ namespace DevFiora
             var minEnemyHitCount = Config.Item("UseRMinHit").GetValue<Slider>().Value;
             var minEnemyKillCount = Config.Item("UseRMinKill").GetValue<Slider>().Value;
 
-            if (minEnemyHitCount == 0)
+            if (minEnemyHitCount == 0 && minEnemyKillCount == 0)
                 return;
 
-            var enemies = DevHelper.GetEnemyList().Where(hero => hero.IsValidTarget(R.Range) && CountEnemyInPositionRange(hero.ServerPosition, 300) >= minEnemyHitCount).OrderBy(hero => hero.Health);
+            var enemies = DevHelper.GetEnemyList().Where(enemy => enemy.IsValidTarget(R.Range) && CountEnemyInPositionRange(enemy.ServerPosition, 400) >= minEnemyHitCount).OrderBy(hero => hero.Health);
+            
+            if (mustDebug)
+                Game.PrintChat("minEnemyHitCount " + enemies.Count());
+
             if (enemies.Any())
             {
                 var enemy = enemies.First();
-                var enemyKillable = DevHelper.GetEnemyList().Where(x => x.ServerPosition.Distance(enemy.ServerPosition) <= 300 && R.GetDamage(x) * 0.9 > x.Health);
+                var enemyKillable = DevHelper.GetEnemyList().Where(x => x.ServerPosition.Distance(enemy.ServerPosition) <= 400 && R.GetDamage(x) * 0.9 > x.Health);
+
+                if (mustDebug)
+                    Game.PrintChat("minEnemyKillCount " + enemyKillable.Count());
+
                 if (enemyKillable.Count() >= minEnemyKillCount)
                     R.CastOnUnit(enemy, UsePackets());
             }
@@ -268,7 +270,7 @@ namespace DevFiora
 
         public static void Combo()
         {
-            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
 
             if (eTarget == null)
                 return;
@@ -279,26 +281,23 @@ namespace DevFiora
             var useR = Config.Item("UseRCombo").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var UseWComboHeal = Config.Item("UseWComboHeal").GetValue<bool>();
-            var UseWHealMinHealth = Config.Item("UseWHealMinHealth").GetValue<Slider>().Value;
-
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
                 CastFirstQ(eTarget);
                 CastSecondQ(eTarget);
             }
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
-            {
-                if (Orbwalking.InAutoAttackRange(eTarget))
-                    W.Cast(UsePackets());
-            }
+            //if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
+            //{
+            //    if (Orbwalking.InAutoAttackRange(eTarget))
+            //        W.Cast(UsePackets());
+            //}
 
-            if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
-            {
-                if (Orbwalking.InAutoAttackRange(eTarget))
-                    E.Cast(UsePackets());
-            }
+            //if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
+            //{
+            //    if (Orbwalking.InAutoAttackRange(eTarget))
+            //        E.Cast(UsePackets());
+            //}
 
             if (useR && R.IsReady())
                 CastRMinHit();
@@ -312,7 +311,7 @@ namespace DevFiora
 
         public static void Harass()
         {
-            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
 
             if (eTarget == null)
                 return;
@@ -325,17 +324,17 @@ namespace DevFiora
             if (Player.GetManaPerc() < ManaHarass)
                 return;
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
-            {
-                if (Orbwalking.InAutoAttackRange(eTarget))
-                    W.Cast(UsePackets());
-            }
+            //if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
+            //{
+            //    if (Orbwalking.InAutoAttackRange(eTarget))
+            //        W.Cast(UsePackets());
+            //}
 
-            if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
-            {
-                if (Orbwalking.InAutoAttackRange(eTarget))
-                    E.Cast(UsePackets());
-            }
+            //if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
+            //{
+            //    if (Orbwalking.InAutoAttackRange(eTarget))
+            //        E.Cast(UsePackets());
+            //}
         }
 
         private static void WaveClear()
@@ -483,7 +482,7 @@ namespace DevFiora
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("UseWAgainstAA", "Use W Against AA").SetValue(true));
-            Config.SubMenu("Misc").AddItem(new MenuItem("UseWAfterAttack", "Use W After Attack").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("UseWAfterAttack", "Use W After Attack").SetValue(false));
             Config.SubMenu("Misc").AddItem(new MenuItem("UseEAfterAttack", "Use E After Attack").SetValue(true));
 
             //Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
