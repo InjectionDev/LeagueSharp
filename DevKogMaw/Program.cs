@@ -435,6 +435,7 @@ namespace DevKogMaw
             SkinManager.Add("Lion Dance Kog'Maw");
             SkinManager.Add("Deep Sea Kog'Maw");
             SkinManager.Add("Jurassic Kog'Maw");
+            SkinManager.Add("Battlecast Kog'Maw");
 
             if (mustDebug)
                 Game.PrintChat("InitializeSkinManager Finish");
