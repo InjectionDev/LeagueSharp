@@ -859,7 +859,7 @@ namespace DevCassio
             Config.AddSubMenu(new Menu("Im Legit! :)", "Legit"));
             Config.SubMenu("Legit").AddItem(new MenuItem("PlayLegit", "Play Legit :)").SetValue(false));
             Config.SubMenu("Legit").AddItem(new MenuItem("DisableNFE", "Disable No-Face Exploit").SetValue(true));
-            Config.SubMenu("Legit").AddItem(new MenuItem("LegitCastDelay", "Cast E Delay").SetValue(new Slider(1000, 0, 2500)));
+            Config.SubMenu("Legit").AddItem(new MenuItem("LegitCastDelay", "Cast E Delay").SetValue(new Slider(1000, 0, 2000)));
 
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
             Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q Range").SetValue(new Circle(true, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
