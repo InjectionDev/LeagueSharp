@@ -53,7 +53,7 @@ namespace DevAnnie
         private static bool hasTibber = false;
         private static int tibberNetworkId;
 
-        private static bool mustDebug = true;
+        private static bool mustDebug = false;
 
         static void Main(string[] args)
         {
