@@ -770,11 +770,11 @@ namespace DevAnnie
             Config.SubMenu("Mode").AddItem(new MenuItem("ModeType", "Mode Type").SetValue(new StringList(new[] { "SoloQ", "Support" })));
 
             Config.AddSubMenu(new Menu("Passive Stack", "Passive"));
-            Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassive", "- Stack with E").SetValue(true));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassive", "==> Stack with E").SetValue(true));
             Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassiveNoEnemy", "When No Enemy Near").SetValue(true));
             Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassiveFountain", "At Fountain").SetValue(true));
             Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassiveEverywhere", "Everywhere").SetValue(false));
-            Config.SubMenu("Passive").AddItem(new MenuItem("UseQStackPassive", "- Stack with Q").SetValue(true));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseQStackPassive", "==> Stack with Q").SetValue(true));
             Config.SubMenu("Passive").AddItem(new MenuItem("UseQStackPassiveNoEnemy", "When No Enemy Near").SetValue(true));
             Config.SubMenu("Passive").AddItem(new MenuItem("UseQStackPassiveEverywhere", "Everywhere").SetValue(false));
 
