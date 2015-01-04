@@ -148,7 +148,6 @@ namespace DevAnnie
 
         static void GameObject_OnDelete(GameObject sender, EventArgs args)
         {
-
             if (sender.Name == "Tibbers" && sender.IsAlly)
             {
                 hasTibber = false;
@@ -203,15 +202,12 @@ namespace DevAnnie
                         break;
                     case Orbwalking.OrbwalkingMode.Mixed:
                         Harass();
-                        QHarassLastHit();
-                        EPassiveStack();
                         break;
                     case Orbwalking.OrbwalkingMode.LaneClear:
                         WaveClear();
                         JungleClear();
                         break;
                     case Orbwalking.OrbwalkingMode.LastHit:
-                        //Freeze();
                         break;
                     default:
                         break;
@@ -220,6 +216,9 @@ namespace DevAnnie
                 FlashCombo();
 
                 TibbersControl();
+
+                EPassiveStack();
+                QPassiveStack();
 
                 skinManager.Update();
 
@@ -230,6 +229,8 @@ namespace DevAnnie
                 Console.WriteLine(ex.ToString());
             }
         }
+
+
 
         static bool IsSoloQMode
         {
@@ -464,23 +465,36 @@ namespace DevAnnie
 
         }
 
-        public static void QHarassLastHit()
+
+        public static void QPassiveStack()
         {
-            var UseQHarassLastHit = Config.Item("UseQHarassLastHit").GetValue<bool>();
+            var UseQStackPassive = Config.Item("UseQStackPassive").GetValue<bool>();
+            var UseQStackPassiveNoEnemy = Config.Item("UseQStackPassiveNoEnemy").GetValue<bool>();
+            var UseQStackPassiveEverywhere = Config.Item("UseQStackPassiveEverywhere").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (UseQHarassLastHit && Q.IsReady() && GetPassiveStacks() < 4)
-            {
-                var nearestEnemy = Player.GetNearestEnemy();
-                if (Player.Distance(nearestEnemy) > Q.Range * 1.3f)
-                {
-                    var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
-                    var minionLastHit = allMinions.Where(x => Q.GetDamage(x) * 0.8f > x.Health).OrderBy(x => x.Health);
+            if (GetPassiveStacks() >= 4)
+                UseQStackPassive = false;
 
-                    if (minionLastHit.Any())
+            if (UseQStackPassive && Q.IsReady())
+            {
+                if (UseQStackPassiveNoEnemy)
+                {
+                    float extraDist = 1.3f;
+                    if (UseQStackPassiveEverywhere)
+                        extraDist = 1;
+
+                    var nearestEnemy = Player.GetNearestEnemy();
+                    if (Player.Distance(nearestEnemy) > Q.Range * extraDist)
                     {
-                        var unit = minionLastHit.First();
-                        Q.CastOnUnit(unit, packetCast);
+                        var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
+                        var minionLastHit = allMinions.Where(x => Q.GetDamage(x) * 0.8f > x.Health).OrderBy(x => x.Health);
+
+                        if (minionLastHit.Any())
+                        {
+                            var unit = minionLastHit.First();
+                            Q.CastOnUnit(unit, packetCast);
+                        }
                     }
                 }
             }
@@ -488,15 +502,34 @@ namespace DevAnnie
 
         public static void EPassiveStack()
         {
-            var UseEStackPassive = Config.Item("UseEStackPassive").GetValue<bool>();
+            var UseEStackPassiveNoEnemy = Config.Item("UseEStackPassiveNoEnemy").GetValue<bool>();
+            var UseEStackPassiveFountain = Config.Item("UseEStackPassiveFountain").GetValue<bool>();
+            var UseEStackPassiveEverywhere = Config.Item("UseEStackPassiveEverywhere").GetValue<bool>();
+
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            if (UseEStackPassive && E.IsReady() && GetPassiveStacks() < 4)
+            if (GetPassiveStacks() < 4)
             {
-                var nearestEnemy = Player.GetNearestEnemy();
-                if (Player.Distance(nearestEnemy) > Q.Range * 1.2f) // save for when its needed
+                if (Player.IsRecalling())
+                    return;
+
+                if (UseEStackPassiveEverywhere && E.IsReady())
                 {
                     E.Cast(packetCast);
+                    return;
+                }
+
+                if (UseEStackPassiveNoEnemy && E.IsReady())
+                {
+                    var nearestEnemy = Player.GetNearestEnemy();
+                    if (Player.Distance(nearestEnemy) > Q.Range * 1.2f) // save for when its needed
+                        E.Cast(packetCast);
+                }
+
+                if (UseEStackPassiveFountain && E.IsReady())
+                { 
+                    if (Player.InFountain())
+                        E.Cast(packetCast);
                 }
             }
         }
@@ -604,6 +637,7 @@ namespace DevAnnie
             }
         }
 
+
         public static int GetPassiveStacks()
         {
             var buffs = Player.Buffs.Where(buff => (buff.Name.ToLower() == "pyromania" || buff.Name.ToLower() == "pyromania_particle"));
@@ -686,7 +720,7 @@ namespace DevAnnie
                 var useQ = Config.Item("UseQCombo").GetValue<bool>();
                 var useW = Config.Item("UseWCombo").GetValue<bool>();
 
-                if (args.Target.IsValidTarget(Q.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady())))
+                if ((useQ && Q.IsReady()) || (useW && W.IsReady()))
                     args.Process = false;
             }
             else
@@ -695,7 +729,7 @@ namespace DevAnnie
                     var useQ = Config.Item("UseQHarass").GetValue<bool>();
                     var useW = Config.Item("UseWHarass").GetValue<bool>();
 
-                    if (args.Target.IsValidTarget(Q.Range) && ((useQ && Q.IsReady()) || (useW && W.IsReady())))
+                    if ((useQ && Q.IsReady()) || (useW && W.IsReady()))
                         args.Process = false;
                 }
         }
@@ -735,6 +769,15 @@ namespace DevAnnie
             Config.AddSubMenu(new Menu("Mode", "Mode"));
             Config.SubMenu("Mode").AddItem(new MenuItem("ModeType", "Mode Type").SetValue(new StringList(new[] { "SoloQ", "Support" })));
 
+            Config.AddSubMenu(new Menu("Passive Stack", "Passive"));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassive", "- Stack with E").SetValue(true));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassiveNoEnemy", "When No Enemy Near").SetValue(true));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassiveFountain", "At Fountain").SetValue(true));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseEStackPassiveEverywhere", "Everywhere").SetValue(false));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseQStackPassive", "- Stack with Q").SetValue(true));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseQStackPassiveNoEnemy", "When No Enemy Near").SetValue(true));
+            Config.SubMenu("Passive").AddItem(new MenuItem("UseQStackPassiveEverywhere", "Everywhere").SetValue(false));
+
             Config.AddSubMenu(new Menu("Combo", "Combo"));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseQCombo", "Use Q").SetValue(true));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseWCombo", "Use W").SetValue(true));
@@ -752,7 +795,7 @@ namespace DevAnnie
             Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseWHarass", "Use W").SetValue(true));
             Config.SubMenu("Harass").AddItem(new MenuItem("UseEHarass", "Use E").SetValue(true));
-            Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarassLastHit", "Use Q LastHit").SetValue(true));
+            //Config.SubMenu("Harass").AddItem(new MenuItem("UseQHarassLastHit", "Use Q LastHit").SetValue(true));
 
             Config.AddSubMenu(new Menu("LaneClear", "LaneClear"));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseQLaneClear", "Use Q").SetValue(true));
@@ -766,7 +809,6 @@ namespace DevAnnie
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("UseEAgainstAA", "Use E against AA").SetValue(true));
-            Config.SubMenu("Misc").AddItem(new MenuItem("UseEStackPassive", "Use E to Stack Passive").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("UseRInterrupt", "Use R + Pyromania to Interrupt").SetValue(true));
 
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));
