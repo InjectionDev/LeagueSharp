@@ -48,12 +48,13 @@ namespace DevCassio
         public static AssemblyUtil assemblyUtil;
         public static SummonerSpellManager summonerSpellManager;
 
-        private static DateTime dtBurstComboStart = DateTime.MinValue;
-        private static DateTime dtLastQCast = DateTime.MinValue;
-        private static DateTime dtLastSaveYourself = DateTime.Now;
-        private static DateTime dtLastECast = DateTime.MinValue;
+        private static long dtBurstComboStart = 0;
+        private static long dtLastQCast = 0;
+        private static long dtLastSaveYourself = 0;
+        private static long dtLastECast = 0;
        
         public static bool mustDebug = false;
+        public static bool mustDebugPredict = false;
 
         static void Main(string[] args)
         {
@@ -151,20 +152,20 @@ namespace DevCassio
                     {
                         if (mustDebug)
                             Game.PrintChat("BurstCombo R");
-                        R.Cast(eTarget.ServerPosition, packetCast);
-                        dtBurstComboStart = DateTime.Now;
+                        if (R.Cast(eTarget, packetCast, true) == Spell.CastStates.SuccessfullyCasted)
+                            dtBurstComboStart = Environment.TickCount;
                     }
                     else
                     {
                         if (mustDebug)
                             Game.PrintChat("BurstCombo OverKill");
-                        dtBurstComboStart = DateTime.Now;
+                        dtBurstComboStart = Environment.TickCount;
                     }
                 }
             }
 
 
-            if (dtBurstComboStart.AddSeconds(5) > DateTime.Now && summonerSpellManager.IsReadyIgnite() && eTarget.IsValidTarget(600))
+            if (dtBurstComboStart + 5000 > Environment.TickCount && summonerSpellManager.IsReadyIgnite() && eTarget.IsValidTarget(600))
             {
                 if (mustDebug)
                     Game.PrintChat("Ignite");
@@ -196,11 +197,11 @@ namespace DevCassio
             {
                 if (Player.GetHealthPerc() < UseRSaveYourselfMinHealth && eTarget.IsFacing(Player))
                 {
-                    R.Cast(eTarget.ServerPosition, packetCast);
-                    if (dtLastSaveYourself.AddSeconds(3) < DateTime.Now)
+                    R.Cast(eTarget, packetCast, true);
+                    if (dtLastSaveYourself + 3000 < Environment.TickCount)
                     {
                         Game.PrintChat("Save Yourself!");
-                        dtLastSaveYourself = DateTime.Now;
+                        dtLastSaveYourself = Environment.TickCount;
                     }
                 }
             }
@@ -230,23 +231,19 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
-                if (Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                {
-                    dtLastQCast = DateTime.Now;
-                }
+                if (Q.Cast(eTarget, packetCast, true) == Spell.CastStates.SuccessfullyCasted)
+                    dtLastQCast = Environment.TickCount;
             }
 
             if (W.IsReady() && useW)
             {
-                var predic = W.GetPrediction(eTarget, true);
-                if (predic.Hitchance >= HitChance.Medium && predic.AoeTargetsHitCount > 1)
-                    W.Cast(predic.CastPosition, packetCast);
+                W.CastIfHitchanceEquals(eTarget, HitChance.High, packetCast);
             }
 
             if (useW)
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range + (W.Width / 2))));
 
-            if (W.IsReady() && useW && DateTime.Now > dtLastQCast.AddMilliseconds(Q.Delay * 1000))
+            if (W.IsReady() && useW && Environment.TickCount > dtLastQCast + Q.Delay * 1000)
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -284,24 +281,19 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
             {
-                if (Q.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                {
-                    dtLastQCast = DateTime.Now;
-                    return;
-                }
+                if (Q.Cast(eTarget, packetCast, true) == Spell.CastStates.SuccessfullyCasted)
+                    dtLastQCast = Environment.TickCount;
             }
 
             if (W.IsReady() && useW)
             {
-                var predic = W.GetPrediction(eTarget, true);
-                if (predic.Hitchance >= HitChance.Medium && predic.AoeTargetsHitCount > 1)
-                    W.Cast(predic.CastPosition, packetCast);
+                W.CastIfHitchanceEquals(eTarget, HitChance.High, packetCast);
             }
 
             if (useW)
                 useW = (!eTarget.HasBuffOfType(BuffType.Poison) || (!eTarget.IsValidTarget(Q.Range) && eTarget.IsValidTarget(W.Range + (W.Width / 2))));
 
-            if (W.IsReady() && useW && DateTime.Now > dtLastQCast.AddMilliseconds(Q.Delay * 1000))
+            if (W.IsReady() && useW && Environment.TickCount > dtLastQCast + Q.Delay * 1000)
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
@@ -327,7 +319,7 @@ namespace DevCassio
                     if (farmNonPoisoned.MinionsHit >= 3)
                     {
                         Q.Cast(farmNonPoisoned.Position, packetCast);
-                        dtLastQCast = DateTime.Now;
+                        dtLastQCast = Environment.TickCount;
                         return;
                     }
                 }
@@ -338,13 +330,13 @@ namespace DevCassio
                     if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
                     {
                         Q.Cast(farmAll.Position, packetCast);
-                        dtLastQCast = DateTime.Now;
+                        dtLastQCast = Environment.TickCount;
                         return;
                     }
                 }
             }
 
-            if (W.IsReady() && useW && Player.GetManaPerc() >= LaneClearMinMana && DateTime.Now > dtLastQCast.AddMilliseconds(Q.Delay * 1000))
+            if (W.IsReady() && useW && Player.GetManaPerc() >= LaneClearMinMana && Environment.TickCount > dtLastQCast + Q.Delay * 1000)
             {
                 var allMinionsW = MinionManager.GetMinions(Player.ServerPosition, W.Range + W.Width, MinionTypes.All).ToList();
                 var allMinionsWNonPoisoned = allMinionsW.Where(x => !x.HasBuffOfType(BuffType.Poison)).ToList();
@@ -517,15 +509,22 @@ namespace DevCassio
             if (PlayLegit && DisableNFE)
                 packetCast = false;
 
-            if (PlayLegit && DateTime.Now > dtLastECast.AddMilliseconds(LegitCastDelay))
+            if (PlayLegit)
             {
-                E.CastOnUnit(unit, packetCast);
-                dtLastECast = DateTime.Now;
+                if (Environment.TickCount > dtLastECast + LegitCastDelay)
+                {
+                    E.CastOnUnit(unit, packetCast);
+                    dtLastECast = Environment.TickCount;
+                }
+                else if (mustDebug)
+                {
+                    Game.PrintChat("E delay!!");
+                }
             }
             else
             {
                 E.CastOnUnit(unit, packetCast);
-                dtLastECast = DateTime.Now;
+                dtLastECast = Environment.TickCount;
             }
         }
 
@@ -598,6 +597,7 @@ namespace DevCassio
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
+            GameObject.OnCreate += GameObject_OnCreate;
             
             // Damage Bar
             Config.Item("EDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
@@ -613,6 +613,11 @@ namespace DevCassio
 
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
+        }
+
+        static void GameObject_OnCreate(GameObject sender, EventArgs args)
+        {
+
         }
 
 
@@ -637,15 +642,15 @@ namespace DevCassio
                 Game.PrintChat("InitializeSpells Start");
 
             Q = new Spell(SpellSlot.Q, 850);
-            Q.SetSkillshot(0.4f, 90, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            Q.SetSkillshot(0.6f, 40f, float.MaxValue, false, SkillshotType.SkillshotCircle);
 
             W = new Spell(SpellSlot.W, 850);
-            W.SetSkillshot(0.5f, 150, 2500, false, SkillshotType.SkillshotCircle);
+            W.SetSkillshot(0.5f, 90f, 2500, false, SkillshotType.SkillshotCircle);
 
             E = new Spell(SpellSlot.E, 700);
             E.SetTargetted(0.2f, float.MaxValue);
 
-            R = new Spell(SpellSlot.R, 850);
+            R = new Spell(SpellSlot.R, 800);
             R.SetSkillshot(0.6f, (float)(80 * Math.PI / 180), float.MaxValue, false, SkillshotType.SkillshotCone);
 
             SpellList.Add(Q);
@@ -773,6 +778,20 @@ namespace DevCassio
                         Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Red);
                 }
             }
+
+            if (mustDebugPredict)
+                DrawPrediction();
+        }
+
+        public static void DrawPrediction()
+        {
+            var eTarget = TargetSelector.GetTarget(Q.Range * 5, TargetSelector.DamageType.Magical);
+
+            if (eTarget == null)
+                return;
+
+            var Qpredict = Q.GetPrediction(eTarget, true);
+            Utility.DrawCircle(Qpredict.CastPosition, Q.Width, Qpredict.Hitchance >= HitChance.High ? System.Drawing.Color.Green : System.Drawing.Color.Red);
         }
 
 
@@ -789,6 +808,15 @@ namespace DevCassio
 
             Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
             Orbwalker = new Orbwalking.Orbwalker(Config.SubMenu("Orbwalking"));
+
+            Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("AssistedUltKey", "Assisted Ult Key").SetValue((new KeyBind("R".ToCharArray()[0], KeyBindType.Press))));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("BlockUlt", "Block Ult will Not Hit").SetValue(true));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseUltUnderTower", "Ult Enemy Under Tower").SetValue(true));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("UltRange", "Ultimate Range").SetValue(new Slider(650, 0, 800)));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("RMinHit", "Min Enemies Hit").SetValue(new Slider(2, 1, 5)));
+            Config.SubMenu("Ultimate").AddItem(new MenuItem("RMinHitFacing", "Min Enemies Facing").SetValue(new Slider(1, 1, 5)));
 
             Config.AddSubMenu(new Menu("Combo", "Combo"));
             Config.SubMenu("Combo").AddItem(new MenuItem("UseQCombo", "Use Q").SetValue(true));
@@ -831,16 +859,7 @@ namespace DevCassio
             Config.AddSubMenu(new Menu("Im Legit! :)", "Legit"));
             Config.SubMenu("Legit").AddItem(new MenuItem("PlayLegit", "Play Legit :)").SetValue(false));
             Config.SubMenu("Legit").AddItem(new MenuItem("DisableNFE", "Disable No-Face Exploit").SetValue(true));
-            Config.SubMenu("Legit").AddItem(new MenuItem("LegitCastDelay", "Cast E Delay").SetValue(new Slider(500, 0, 1500)));
-
-            Config.AddSubMenu(new Menu("Ultimate", "Ultimate"));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseAssistedUlt", "Use AssistedUlt").SetValue(true));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("AssistedUltKey", "Assisted Ult Key").SetValue((new KeyBind("R".ToCharArray()[0], KeyBindType.Press))));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("BlockUlt", "Block Ult will Not Hit").SetValue(true));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("UseUltUnderTower", "Ult Enemy Under Tower").SetValue(true));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("UltRange", "Ultimate Range").SetValue(new Slider(700, 0, 850)));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("RMinHit", "Min Enemies Hit").SetValue(new Slider(2, 1, 5)));
-            Config.SubMenu("Ultimate").AddItem(new MenuItem("RMinHitFacing", "Min Enemies Facing").SetValue(new Slider(1, 1, 5)));
+            Config.SubMenu("Legit").AddItem(new MenuItem("LegitCastDelay", "Cast E Delay").SetValue(new Slider(1000, 0, 2500)));
 
             Config.AddSubMenu(new Menu("Drawings", "Drawings"));
             Config.SubMenu("Drawings").AddItem(new MenuItem("QRange", "Q Range").SetValue(new Circle(true, System.Drawing.Color.FromArgb(255, 255, 255, 255))));
