@@ -16,8 +16,8 @@ namespace DevCommom
 
         public MessageManager()
         {
-            //this.messageDTOList = new List<MessageDTO>();
-            //this.IsActive = true;
+            this.messageDTOList = new List<MessageDTO>();
+            this.IsActive = true;
 
             //Drawing.OnDraw += Drawing_OnDraw;
         }
@@ -37,12 +37,19 @@ namespace DevCommom
             }
         }
 
+        public void RemoveMessage(int pSlot)
+        { 
+            var query = this.messageDTOList.Where(x => x.Slot == pSlot).ToList();
+            if (query.Any())
+                this.messageDTOList.Remove(query.First());
+        }
+
 
         public void Draw()
         {
             if (this.IsActive)
             {
-                foreach (var messageDTO in this.messageDTOList)
+                foreach (var messageDTO in this.messageDTOList.Where(x => !string.IsNullOrEmpty(x.Message)))
                 {
                     Drawing.DrawText(messageDTO.GetPosX, messageDTO.GetPosY, messageDTO.Color, messageDTO.Message);
                 }
@@ -66,7 +73,7 @@ namespace DevCommom
             public string Message { get; set; }
             public System.Drawing.Color Color { get; set; }
 
-            public float GetPosX { get { return Drawing.Width * 0.90f; } }
+            public float GetPosX { get { return Drawing.Width * 0.88f; } }
 
             public float GetPosY { get { return Drawing.Height * 0.68f + (Slot * 30); } }
         }

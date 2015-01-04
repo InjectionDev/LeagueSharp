@@ -50,7 +50,10 @@ namespace DevAnnie
         private static int dtBurstComboStart;
         private static string msgFlashCombo = string.Empty;
 
-        private static bool mustDebug = false;
+        private static bool hasTibber = false;
+        private static int tibberNetworkId;
+
+        private static bool mustDebug = true;
 
         static void Main(string[] args)
         {
@@ -106,6 +109,7 @@ namespace DevAnnie
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             GameObject.OnCreate += GameObject_OnCreate;
+            GameObject.OnDelete += GameObject_OnDelete;
 
             Config.Item("ComboDamage").ValueChanged += (object sender, OnValueChangeEventArgs e) => { Utility.HpBarDamageIndicator.Enabled = e.GetNewValue<bool>(); };
             if (Config.Item("ComboDamage").GetValue<bool>())
@@ -127,7 +131,33 @@ namespace DevAnnie
                 if (missile.SpellCaster is Obj_AI_Hero && missile.SpellCaster.IsEnemy && missile.Target.IsMe)
                     E.Cast(packetCast);
             }
+
+            if (sender.Name == "Tibbers" && sender.IsAlly)
+            {
+                hasTibber = true;
+                tibberNetworkId = sender.NetworkId;
+                if (mustDebug)
+                {
+                    Game.PrintChat("hasTibber true");
+                    Game.PrintChat("hasTibber " + sender.GetType().Name);
+                }
+                    
+            }
         }
+
+
+        static void GameObject_OnDelete(GameObject sender, EventArgs args)
+        {
+
+            if (sender.Name == "Tibbers" && sender.IsAlly)
+            {
+                hasTibber = false;
+                tibberNetworkId = -1;
+                if (mustDebug)
+                    Game.PrintChat("hasTibber false");
+            }
+        }
+
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
@@ -174,6 +204,7 @@ namespace DevAnnie
                     case Orbwalking.OrbwalkingMode.Mixed:
                         Harass();
                         QHarassLastHit();
+                        EPassiveStack();
                         break;
                     case Orbwalking.OrbwalkingMode.LaneClear:
                         WaveClear();
@@ -187,6 +218,8 @@ namespace DevAnnie
                 }
 
                 FlashCombo();
+
+                TibbersControl();
 
                 skinManager.Update();
 
@@ -386,20 +419,21 @@ namespace DevAnnie
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useE = Config.Item("UseECombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
+            var UseIgnite = Config.Item("UseIgnite").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            
 
-            if (eTarget.IsValidTarget(Q.Range) && Q.IsReady() && useQ)
+
+            if (useQ && eTarget.IsValidTarget(Q.Range) && Q.IsReady())
             {
                 Q.CastOnUnit(eTarget, packetCast);
             }
 
-            if (eTarget.IsValidTarget(W.Range) && W.IsReady() && useW)
+            if (useW && eTarget.IsValidTarget(W.Range) && W.IsReady())
             {
                 W.CastIfHitchanceEquals(eTarget, eTarget.IsMoving ? HitChance.High : HitChance.Medium, packetCast);
             }
 
-            if (summonerSpellManager.CanKillIgnite(eTarget))
+            if (UseIgnite && summonerSpellManager.CanKillIgnite(eTarget))
             {
                 if (summonerSpellManager.CastIgnite(eTarget))
                     Game.PrintChat(string.Format("Ignite Combo KS -> {0} ", eTarget.SkinName));
@@ -432,25 +466,81 @@ namespace DevAnnie
 
         public static void QHarassLastHit()
         {
-            if (!IsSupportMode)
-                return;
-
             var UseQHarassLastHit = Config.Item("UseQHarassLastHit").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
             if (UseQHarassLastHit && Q.IsReady() && GetPassiveStacks() < 4)
             {
                 var nearestEnemy = Player.GetNearestEnemy();
-                if (Player.Distance(nearestEnemy) > Q.Range)
+                if (Player.Distance(nearestEnemy) > Q.Range * 1.3f)
                 {
                     var allMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.Enemy).ToList();
-                    var minionLastHit = allMinions.Where(x => Q.GetDamage(x) * 0.9 > x.Health).OrderBy(x => x.Health);
+                    var minionLastHit = allMinions.Where(x => Q.GetDamage(x) * 0.8f > x.Health).OrderBy(x => x.Health);
 
                     if (minionLastHit.Any())
                     {
                         var unit = minionLastHit.First();
                         Q.CastOnUnit(unit, packetCast);
                     }
+                }
+            }
+        }
+
+        public static void EPassiveStack()
+        {
+            var UseEStackPassive = Config.Item("UseEStackPassive").GetValue<bool>();
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+
+            if (UseEStackPassive && E.IsReady() && GetPassiveStacks() < 4)
+            {
+                var nearestEnemy = Player.GetNearestEnemy();
+                if (Player.Distance(nearestEnemy) > Q.Range * 1.2f) // save for when its needed
+                {
+                    E.Cast(packetCast);
+                }
+            }
+        }
+
+        public static void TibbersControl()
+        {
+            if (hasTibber && R.IsReady())
+            {
+                var packetCast = Config.Item("PacketCast").GetValue<bool>();
+                var tibber = ObjectManager.GetUnitByNetworkId<Obj_AI_Base>(tibberNetworkId);
+
+                if (tibber != null)
+                {
+                    var nearEnemy = DevCommom.DevHelper.GetEnemyList().Where(x => tibber.ServerPosition.Distance(x.ServerPosition) <= 200).OrderBy(x => x.Health);
+                    if (nearEnemy.Any())
+                    {
+                        R.Cast(nearEnemy.First(), packetCast);
+                        messageManager.AddMessage(0, "Tibbers Target: " + nearEnemy.First().SkinName, System.Drawing.Color.Yellow);
+
+                        if (mustDebug)
+                            Game.PrintChat("Tibbers Target " + nearEnemy.First().SkinName);
+                    }
+                    else
+                    {
+                        nearEnemy = DevCommom.DevHelper.GetEnemyList().Where(x => tibber.ServerPosition.Distance(x.ServerPosition) <= 1000).OrderBy(x => x.Health);
+                        if (nearEnemy.Any())
+                        {
+                            R.Cast(nearEnemy.First(), packetCast);
+                            messageManager.AddMessage(0, "Tibbers Target: " + nearEnemy.First().SkinName, System.Drawing.Color.Yellow);
+
+                            if (mustDebug)
+                                Game.PrintChat("Tibbers Target " + nearEnemy.First().SkinName);
+                        }
+                        else
+                        {
+                            messageManager.RemoveMessage(0);
+                        }
+                    }
+                }
+                else
+                {
+                    messageManager.RemoveMessage(0);
+                    if (mustDebug)
+                        Game.PrintChat("Tibbers null");
                 }
             }
         }
@@ -621,7 +711,7 @@ namespace DevAnnie
                 }
             }
 
-          //  messageManager.Draw();
+            messageManager.Draw();
         }
 
 
@@ -676,6 +766,7 @@ namespace DevAnnie
             Config.AddSubMenu(new Menu("Misc", "Misc"));
             Config.SubMenu("Misc").AddItem(new MenuItem("PacketCast", "Use PacketCast").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("UseEAgainstAA", "Use E against AA").SetValue(true));
+            Config.SubMenu("Misc").AddItem(new MenuItem("UseEStackPassive", "Use E to Stack Passive").SetValue(true));
             Config.SubMenu("Misc").AddItem(new MenuItem("UseRInterrupt", "Use R + Pyromania to Interrupt").SetValue(true));
 
             Config.AddSubMenu(new Menu("GapCloser", "GapCloser"));

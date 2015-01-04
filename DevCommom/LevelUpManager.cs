@@ -17,11 +17,15 @@ namespace DevCommom
         private Menu Menu;
         private int SelectedPriority;
 
+        private AutoLevel AutoLevel;
+
         public LevelUpManager()
         {
             lastLevel = 0;
             SpellPriorityList = new Dictionary<string, int[]>();
+
         }
+
 
         public void AddToMenu(ref Menu menu)
         {
@@ -38,13 +42,19 @@ namespace DevCommom
         public void Add(string spellPriorityDesc, int[] spellPriority)
         {
             SpellPriorityList.Add(spellPriorityDesc, spellPriority);
+
+            AutoLevel = new AutoLevel(spellPriority);
+            AutoLevel.Enabled(true);
         }
 
 
         public void Update()
         {
             if (SpellPriorityList.Count == 0 || !Menu.Item("LevelUp_" + ObjectManager.Player.ChampionName + "_enabled").GetValue<bool>() || this.lastLevel == ObjectManager.Player.Level)
+            {
+                AutoLevel.Enabled(false);
                 return;
+            }
 
             this.spellPriorityList = SpellPriorityList.Values.ElementAt(SelectedPriority);
 
