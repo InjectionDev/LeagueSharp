@@ -281,8 +281,9 @@ namespace DevAnnie
 
                         summonerSpellManager.CastFlash(predict);
 
-                        if (itemManager.IsReadyDFG())
-                            itemManager.CastDFG(enemy);
+
+                        if (itemManager.IsItemReady(ItemName.DeathfireGrasp))
+                            itemManager.UseItem(ItemName.DeathfireGrasp, enemy);
 
                         if (R.IsReady())
                             R.Cast(predict, packetCast);
@@ -305,10 +306,10 @@ namespace DevAnnie
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.W);
 
-            if (itemManager.IsReadyDFG())
+            if (itemManager.IsItemReady(ItemName.DeathfireGrasp))
                 totalComboDamage = totalComboDamage * 1.2;
 
-            if (itemManager.IsReadyDFG())
+            if (itemManager.IsItemReady(ItemName.DeathfireGrasp))
                 totalComboDamage += Player.GetItemDamage(eTarget, Damage.DamageItems.Dfg);
 
             if (summonerSpellManager.IsReadyIgnite())
@@ -341,10 +342,10 @@ namespace DevAnnie
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.Q);
             totalComboDamage += Player.GetSpellDamage(eTarget, SpellSlot.W);
 
-            if (itemManager.IsReadyDFG())
+            if (itemManager.IsItemReady(ItemName.DeathfireGrasp))
                 totalComboDamage = totalComboDamage * 1.2;
 
-            if (itemManager.IsReadyDFG())
+            if (itemManager.IsItemReady(ItemName.DeathfireGrasp))
                 totalComboDamage += Player.GetItemDamage(eTarget, Damage.DamageItems.Dfg);
 
             totalComboDamage += summonerSpellManager.IsReadyIgnite() ? Player.GetSummonerSpellDamage(eTarget, Damage.SummonerSpell.Ignite) : 0;
@@ -369,8 +370,8 @@ namespace DevAnnie
                     if (mustDebug)
                         Game.PrintChat("BurstCombo R -> " + eTarget.BaseSkinName);
 
-                    if (itemManager.IsReadyDFG())
-                        itemManager.CastDFG(eTarget);
+                    if (itemManager.IsItemReady(ItemName.DeathfireGrasp))
+                        itemManager.UseItem(ItemName.DeathfireGrasp, eTarget);
 
                     if (R.IsReady() && useR)
                     {
@@ -389,8 +390,8 @@ namespace DevAnnie
             {
                 if (DevHelper.CountEnemyInPositionRange(eTarget.ServerPosition, 250) >= UseRMinEnemies)
                 {
-                    if (itemManager.IsReadyDFG())
-                        itemManager.CastDFG(eTarget);
+                    if (itemManager.IsItemReady(ItemName.DeathfireGrasp))
+                        itemManager.UseItem(ItemName.DeathfireGrasp, eTarget);
 
                     var pred = R.GetPrediction(eTarget, true);
                     R.Cast(pred.CastPosition, packetCast);
