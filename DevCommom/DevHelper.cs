@@ -95,16 +95,16 @@ namespace DevCommom
             return Vector2.DistanceSquared(source.ServerPosition.To2D(), target.ServerPosition.To2D());
         }
 
-        public static bool IsFacing(this Obj_AI_Base source, Obj_AI_Base target)
-        {
-            if (!source.IsValid || !target.IsValid)
-                return false;
+        //public static bool IsFacing(this Obj_AI_Base source, Obj_AI_Base target)
+        //{
+        //    if (!source.IsValid || !target.IsValid)
+        //        return false;
 
-            if (source.Path.Count() > 0 && source.Path[0].Distance(target.ServerPosition) < target.Distance(source))
-                return true;
-            else
-                return false;
-        }
+        //    if (source.Path.Count() > 0 && source.Path[0].Distance(target.ServerPosition) < target.Distance(source))
+        //        return true;
+        //    else
+        //        return false;
+        //}
 
         public static bool IsKillable(this Obj_AI_Hero source, Obj_AI_Base target, IEnumerable<SpellSlot> spellCombo)
         {

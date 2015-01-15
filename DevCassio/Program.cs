@@ -144,7 +144,7 @@ namespace DevCassio
                 Game.PrintChat("BurstCombo Mana {0}/{1} {2}", Convert.ToInt32(totalManaCost), Convert.ToInt32(eTarget.Mana), Player.Mana >= totalManaCost ? "Mana OK" : "No Mana");
             }
 
-            if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost)
+            if (eTarget.Health < totalComboDamage && Player.Mana >= totalManaCost && !eTarget.IsInvulnerable)
             {
                 if (R.IsReady() && useR && eTarget.IsValidTarget(R.Range) && eTarget.IsFacing(Player))
                 {
@@ -195,7 +195,7 @@ namespace DevCassio
 
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && UseRSaveYourself)
             {
-                if (Player.GetHealthPerc() < UseRSaveYourselfMinHealth && eTarget.IsFacing(Player))
+                if (Player.GetHealthPerc() < UseRSaveYourselfMinHealth && eTarget.IsFacing(Player) && !eTarget.IsInvulnerable)
                 {
                     R.Cast(eTarget, packetCast, true);
                     if (dtLastSaveYourself + 3000 < Environment.TickCount)
@@ -209,7 +209,7 @@ namespace DevCassio
             if (eTarget.IsValidTarget(R.Range) && R.IsReady() && useR)
             {
                 var castPred = R.GetPrediction(eTarget, true, R.Range);       
-                var enemiesHit = DevHelper.GetEnemyList().Where(x => R.WillHit(x, castPred.CastPosition)).ToList();
+                var enemiesHit = DevHelper.GetEnemyList().Where(x => R.WillHit(x, castPred.CastPosition) && !x.IsInvulnerable).ToList();
                 var enemiesFacing = enemiesHit.Where(x => x.IsFacing(Player)).ToList();
 
                 if (mustDebug)
@@ -219,13 +219,30 @@ namespace DevCassio
                     R.Cast(castPred.CastPosition, packetCast);
             }
                 
-            if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
+            if (E.IsReady() && useE)
             {
-                var buffEndTime = GetPoisonBuffEndTime(eTarget);
+                var eTargetCastE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
 
-                if ((eTarget.HasBuffOfType(BuffType.Poison) && buffEndTime > (Game.Time + E.Delay)) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
+                if (eTargetCastE.HasBuffOfType(BuffType.Poison))
+                { 
+                    // keep priority target
+                }
+                else
                 {
-                    CastE(eTarget);
+                    var query = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(E.Range) && x.HasBuffOfType(BuffType.Poison));
+                    if (query.Any())
+                        eTargetCastE = query.First();
+                }
+
+                if (eTargetCastE != null)
+                {
+                    var buffEndTime = GetPoisonBuffEndTime(eTargetCastE);
+                    if (buffEndTime > (Game.Time + E.Delay) || Player.GetSpellDamage(eTargetCastE, SpellSlot.E) > eTargetCastE.Health * 0.9)
+                    {
+                        CastE(eTarget);
+                        if (Player.GetSpellDamage(eTargetCastE, SpellSlot.E) > eTargetCastE.Health * 0.9)
+                            return;
+                    }
                 }
             }
 
@@ -271,11 +288,30 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("Harass Target -> " + eTarget.SkinName);
 
-            if (eTarget.IsValidTarget(E.Range) && E.IsReady() && useE)
+            if (E.IsReady() && useE)
             {
-                if (eTarget.HasBuffOfType(BuffType.Poison) || Player.GetSpellDamage(eTarget, SpellSlot.E) > eTarget.Health)
+                var eTargetCastE = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
+
+                if (eTargetCastE.HasBuffOfType(BuffType.Poison))
                 {
-                    CastE(eTarget);
+                    // keep priority target
+                }
+                else
+                {
+                    var query = DevHelper.GetEnemyList().Where(x => x.IsValidTarget(E.Range) && x.HasBuffOfType(BuffType.Poison));
+                    if (query.Any())
+                        eTargetCastE = query.First();
+                }
+
+                if (eTargetCastE != null)
+                {
+                    var buffEndTime = GetPoisonBuffEndTime(eTargetCastE);
+                    if (buffEndTime > (Game.Time + E.Delay) || Player.GetSpellDamage(eTargetCastE, SpellSlot.E) > eTargetCastE.Health * 0.9)
+                    {
+                        CastE(eTarget);
+                        if (Player.GetSpellDamage(eTargetCastE, SpellSlot.E) > eTargetCastE.Health * 0.9)
+                            return;
+                    }
                 }
             }
 
@@ -491,7 +527,7 @@ namespace DevCassio
             {
                 foreach (var eTarget in DevHelper.GetEnemyList())
                 {
-                    if (eTarget.IsValidTarget(R.Range) && eTarget.IsUnderEnemyTurret() && R.IsReady())
+                    if (eTarget.IsValidTarget(R.Range) && eTarget.IsUnderEnemyTurret() && R.IsReady() && !eTarget.IsInvulnerable)
                     {
                         R.Cast(eTarget.ServerPosition, packetCast);
                     }
@@ -754,7 +790,7 @@ namespace DevCassio
             var RAntiGapcloser = Config.Item("RAntiGapcloser").GetValue<bool>();
             var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
 
-            if (RAntiGapcloser && Player.GetHealthPerc() <= RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range) && R.IsReady())
+            if (RAntiGapcloser && Player.GetHealthPerc() <= RAntiGapcloserMinHealth && gapcloser.Sender.IsValidTarget(R.Range) && R.IsReady() && !gapcloser.Sender.IsInvulnerable)
             {
                 R.Cast(gapcloser.Sender.ServerPosition, packetCast);
             }
