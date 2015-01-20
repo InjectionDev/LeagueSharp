@@ -232,7 +232,7 @@ namespace DevRyze
 
             if (TearExploit && sender.IsMe)
             {
-                var spellSlot = Player.GetSpellSlot(args.SData.Name, false);
+                var spellSlot = Player.GetSpellSlot(args.SData.Name);
                 var target = ObjectManager.GetUnitByNetworkId<Obj_AI_Base>(args.Target.NetworkId);
                 var distance = Player.ServerPosition.Distance(target.ServerPosition);
                 var delay = 1000 * (distance / args.SData.MissileSpeed);
