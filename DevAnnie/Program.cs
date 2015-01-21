@@ -249,8 +249,8 @@ namespace DevAnnie
             var FlashAntiSuicide = Config.Item("FlashAntiSuicide").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
 
-            var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            Orbwalking.Orbwalk(eTarget, Game.CursorPos);
+            //var eTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            //Orbwalking.Orbwalk(eTarget, Game.CursorPos);
 
             if (!UseFlashCombo)
                 return;
