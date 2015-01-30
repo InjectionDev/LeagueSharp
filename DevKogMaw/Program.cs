@@ -216,8 +216,6 @@ namespace DevKogMaw
 
         public static void Freeze()
         {
-            if (mustDebug)
-                Game.PrintChat("Freeze Start");
 
         }
 
@@ -316,17 +314,11 @@ namespace DevKogMaw
 
         private static int GetRStacks()
         {
-            if (Player.HasBuff("KogMawLivingArtillery"))
-            {
-                return Player.Buffs
-                    .Where(x => x.DisplayName == "KogMawLivingArtillery")
-                    .Select(x => x.Count)
-                    .First();
-            }
+            var query = Player.Buffs.Where(x => x.DisplayName == "KogMawLivingArtillery");
+            if (query.Any())
+                return query.First().Count;
             else
-            {
                 return 0;
-            }
         }
 
         private static void onGameLoad(EventArgs args)

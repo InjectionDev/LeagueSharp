@@ -809,9 +809,9 @@ namespace DevCassio
                 if (menuItem.Active)
                 {
                     if (spell.IsReady())
-                        Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Green);
+                        Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Green);
                     else
-                        Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Red);
+                        Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Red);
                 }
             }
 
@@ -827,7 +827,7 @@ namespace DevCassio
                 return;
 
             var Qpredict = Q.GetPrediction(eTarget, true);
-            Utility.DrawCircle(Qpredict.CastPosition, Q.Width, Qpredict.Hitchance >= HitChance.High ? System.Drawing.Color.Green : System.Drawing.Color.Red);
+            Render.Circle.DrawCircle(Qpredict.CastPosition, Q.Width, Qpredict.Hitchance >= HitChance.High ? System.Drawing.Color.Green : System.Drawing.Color.Red);
         }
 
 
