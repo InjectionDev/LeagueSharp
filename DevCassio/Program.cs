@@ -61,7 +61,7 @@ namespace DevCassio
             LeagueSharp.Common.CustomEvents.Game.OnGameLoad += onGameLoad;
         }
 
-        private static void OnTick(EventArgs args)
+        static void Game_OnGameUpdate(EventArgs args)
         {
             try
             {
@@ -363,7 +363,7 @@ namespace DevCassio
                 if (allMinionsQ.Any())
                 {
                     var farmAll = Q.GetCircularFarmLocation(allMinionsQ, Q.Width * 0.8f);
-                    if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
+                    //if (farmAll.MinionsHit >= 2 || allMinionsQ.Count == 1)
                     {
                         Q.Cast(farmAll.Position, packetCast);
                         dtLastQCast = Environment.TickCount;
@@ -626,12 +626,13 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Start");
 
-            Game.OnGameUpdate += OnTick;
-            Game.OnGameSendPacket += Game_OnGameSendPacket;
+            Game.OnUpdate += Game_OnGameUpdate;
+            Game.OnSendPacket += Game_OnGameSendPacket;
             Game.OnWndProc += Game_OnWndProc;
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
-            Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
+            //Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
+            Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             GameObject.OnCreate += GameObject_OnCreate;
             
@@ -650,6 +651,20 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Finish");
         }
+
+        static void Interrupter2_OnInterruptableTarget(Obj_AI_Hero sender, Interrupter2.InterruptableTargetEventArgs args)
+        {
+            var packetCast = Config.Item("PacketCast").GetValue<bool>();
+            var RInterrupetSpell = Config.Item("RInterrupetSpell").GetValue<bool>();
+            var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
+
+            if (RInterrupetSpell && Player.GetHealthPerc() < RAntiGapcloserMinHealth && sender.IsValidTarget(R.Range) && args.DangerLevel >= Interrupter2.DangerLevel.High)
+            {
+                if (R.CastIfHitchanceEquals(sender, sender.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+                    Game.PrintChat(string.Format("OnPosibleToInterrupt -> RInterrupetSpell on {0} !", sender.SkinName));
+            }
+        }
+
 
         static void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
@@ -721,8 +736,8 @@ namespace DevCassio
             if (mustDebug)
                 Game.PrintChat("InitializeLevelUpManager Start");
 
-            var priority1 = new int[] { 1, 3, 3, 2, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
-            var priority2 = new int[] { 1, 3, 2, 3, 3, 4, 3, 1, 3, 1, 4, 1, 1, 2, 2, 4, 2, 2 };
+            var priority1 = new int[] { 0, 2, 2, 1, 2, 3, 2, 0, 2, 0, 3, 0, 0, 1, 2, 3, 1, 1 };
+            var priority2 = new int[] { 0, 2, 1, 2, 2, 3, 2, 0, 2, 0, 3, 0, 0, 1, 1, 3, 1, 1 };
 
             levelUpManager = new LevelUpManager();
             levelUpManager.Add("Q > E > E > W ", priority1);
@@ -734,23 +749,23 @@ namespace DevCassio
 
         static void Game_OnGameSendPacket(GamePacketEventArgs args)
         {
-            var BlockUlt = Config.Item("BlockUlt").GetValue<bool>();
+            //var BlockUlt = Config.Item("BlockUlt").GetValue<bool>();
 
-            if (BlockUlt && args.PacketData[0] == Packet.C2S.Cast.Header)
-            {
-                var decodedPacket = Packet.C2S.Cast.Decoded(args.PacketData);
-                if (decodedPacket.SourceNetworkId == Player.NetworkId && decodedPacket.Slot == SpellSlot.R)
-                {
-                    Vector3 vecCast = new Vector3(decodedPacket.ToX, decodedPacket.ToY, 0);
-                    var query = DevHelper.GetEnemyList().Where(x => R.WillHit(x, vecCast));
+            //if (BlockUlt && args.PacketData[0] == Packet.C2S.Cast.Header)
+            //{
+            //    var decodedPacket = Packet.C2S.Cast.Decoded(args.PacketData);
+            //    if (decodedPacket.SourceNetworkId == Player.NetworkId && decodedPacket.Slot == SpellSlot.R)
+            //    {
+            //        Vector3 vecCast = new Vector3(decodedPacket.ToX, decodedPacket.ToY, 0);
+            //        var query = DevHelper.GetEnemyList().Where(x => R.WillHit(x, vecCast));
 
-                    if (query.Count() == 0)
-                    {
-                        args.Process = false;
-                        Game.PrintChat(string.Format("Ult Blocked"));
-                    }
-                }
-            }
+            //        if (query.Count() == 0)
+            //        {
+            //            args.Process = false;
+            //            Game.PrintChat(string.Format("Ult Blocked"));
+            //        }
+            //    }
+            //}
         }
 
         static void Game_OnWndProc(WndEventArgs args)
@@ -771,18 +786,18 @@ namespace DevCassio
             }
         }
 
-        static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
-        {
-            var packetCast = Config.Item("PacketCast").GetValue<bool>();
-            var RInterrupetSpell = Config.Item("RInterrupetSpell").GetValue<bool>();
-            var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
+        //static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
+        //{
+        //    var packetCast = Config.Item("PacketCast").GetValue<bool>();
+        //    var RInterrupetSpell = Config.Item("RInterrupetSpell").GetValue<bool>();
+        //    var RAntiGapcloserMinHealth = Config.Item("RAntiGapcloserMinHealth").GetValue<Slider>().Value;
 
-            if (RInterrupetSpell && Player.GetHealthPerc() < RAntiGapcloserMinHealth && unit.IsValidTarget(R.Range) && spell.DangerLevel >= InterruptableDangerLevel.High)
-            {
-                if (R.CastIfHitchanceEquals(unit, unit.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
-                    Game.PrintChat(string.Format("OnPosibleToInterrupt -> RInterrupetSpell on {0} !", unit.SkinName));
-            }
-        }
+        //    if (RInterrupetSpell && Player.GetHealthPerc() < RAntiGapcloserMinHealth && unit.IsValidTarget(R.Range) && spell.DangerLevel >= InterruptableDangerLevel.High)
+        //    {
+        //        if (R.CastIfHitchanceEquals(unit, unit.IsMoving ? HitChance.High : HitChance.Medium, packetCast))
+        //            Game.PrintChat(string.Format("OnPosibleToInterrupt -> RInterrupetSpell on {0} !", unit.SkinName));
+        //    }
+        //}
 
         static void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
@@ -809,9 +824,9 @@ namespace DevCassio
                 if (menuItem.Active)
                 {
                     if (spell.IsReady())
-                        Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Green);
+                        Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Green);
                     else
-                        Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Red);
+                        Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, System.Drawing.Color.Red);
                 }
             }
 
@@ -827,7 +842,7 @@ namespace DevCassio
                 return;
 
             var Qpredict = Q.GetPrediction(eTarget, true);
-            Utility.DrawCircle(Qpredict.CastPosition, Q.Width, Qpredict.Hitchance >= HitChance.High ? System.Drawing.Color.Green : System.Drawing.Color.Red);
+            Render.Circle.DrawCircle(Qpredict.CastPosition, Q.Width, Qpredict.Hitchance >= HitChance.High ? System.Drawing.Color.Green : System.Drawing.Color.Red);
         }
 
 
