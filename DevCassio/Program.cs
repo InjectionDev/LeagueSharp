@@ -341,6 +341,7 @@ namespace DevCassio
             var useW = Config.Item("UseWLaneClear").GetValue<bool>();
             var useE = Config.Item("UseELaneClear").GetValue<bool>();
             var UseELastHitLaneClear = Config.Item("UseELastHitLaneClear").GetValue<bool>();
+            var UseELastHitLaneClearNonPoisoned = Config.Item("UseELastHitLaneClearNonPoisoned").GetValue<bool>();
             var packetCast = Config.Item("PacketCast").GetValue<bool>();
             var LaneClearMinMana = Config.Item("LaneClearMinMana").GetValue<Slider>().Value;
 
@@ -402,9 +403,9 @@ namespace DevCassio
             {
                 MinionList = MinionManager.GetMinions(Player.ServerPosition, E.Range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.Health);
 
-                foreach (var minion in MinionList.Where(x => x.HasBuffOfType(BuffType.Poison)))
+                foreach (var minion in MinionList.Where(x => UseELastHitLaneClearNonPoisoned || x.HasBuffOfType(BuffType.Poison)))
                 {
-                    var buffEndTime = GetPoisonBuffEndTime(minion);
+                    var buffEndTime = UseELastHitLaneClearNonPoisoned ? float.MaxValue : GetPoisonBuffEndTime(minion);
                     if (buffEndTime > Game.Time + E.Delay)
                     {
                         if (UseELastHitLaneClear)
@@ -893,6 +894,7 @@ namespace DevCassio
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseWLaneClear", "Use W").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELaneClear", "Use E").SetValue(true));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELastHitLaneClear", "Use E Only LastHit").SetValue(true));
+            Config.SubMenu("LaneClear").AddItem(new MenuItem("UseELastHitLaneClearNonPoisoned", "Use E LastHit on Non Poisoned creeps").SetValue(false));
             Config.SubMenu("LaneClear").AddItem(new MenuItem("LaneClearMinMana", "LaneClear Min Mana").SetValue(new Slider(25, 0, 100)));
 
             Config.AddSubMenu(new Menu("JungleClear", "JungleClear"));
