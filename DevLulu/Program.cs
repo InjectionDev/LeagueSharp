@@ -83,13 +83,12 @@ namespace DevLulu
 
         private static void InitializeAttachEvents()
         {
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
-
-            Game.OnGameProcessPacket += Game_OnGameProcessPacket;
+            Game.OnProcessPacket += Game_OnProcessPacket;
 
             //Evade.SkillshotDetector.OnDetectSkillshot += SkillshotDetector_OnDetectSkillshot;
 
@@ -101,7 +100,8 @@ namespace DevLulu
             }
         }
 
-        static void Game_OnGameProcessPacket(GamePacketEventArgs args)
+
+        static void Game_OnProcessPacket(GamePacketEventArgs args)
         {
             if (args.PacketData[0] == 0xB7)
             {
@@ -206,7 +206,7 @@ namespace DevLulu
             }
         }
 
-        static void Game_OnGameUpdate(EventArgs args)
+        static void Game_OnUpdate(EventArgs args)
         {
             switch (Orbwalker.ActiveMode)
             {

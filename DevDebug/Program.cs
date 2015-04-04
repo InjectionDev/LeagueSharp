@@ -32,11 +32,12 @@ namespace DevDebug
 
         private static void InitializeAttachEvents()
         {
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
 
             
         }
+
 
         static void Drawing_OnDraw(EventArgs args)
         {
@@ -44,7 +45,7 @@ namespace DevDebug
                 DrawBuffs();
         }
 
-        static void Game_OnGameUpdate(EventArgs args)
+        static void Game_OnUpdate(EventArgs args)
         {
             
         }

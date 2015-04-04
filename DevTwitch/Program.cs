@@ -50,7 +50,7 @@ namespace DevTwitch
             LeagueSharp.Common.CustomEvents.Game.OnGameLoad += onGameLoad;
         }
 
-        private static void OnTick(EventArgs args)
+        private static void Game_OnUpdate(EventArgs args)
         {
             if (Player.IsDead)
                 return;
@@ -327,8 +327,7 @@ namespace DevTwitch
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Start");
 
-            Game.OnGameUpdate += OnTick;
-            Game.OnGameSendPacket += Game_OnGameSendPacket;
+            Game.OnUpdate += Game_OnUpdate;
             Game.OnWndProc += Game_OnWndProc;
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
@@ -397,10 +396,6 @@ namespace DevTwitch
             SkinManager.Add("Vandal Twitch");
         }
 
-        static void Game_OnGameSendPacket(GamePacketEventArgs args)
-        {
-
-        }
 
         static void Game_OnWndProc(WndEventArgs args)
         {

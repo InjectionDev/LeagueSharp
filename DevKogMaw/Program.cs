@@ -57,7 +57,7 @@ namespace DevKogMaw
             LeagueSharp.Common.CustomEvents.Game.OnGameLoad += onGameLoad;
         }
 
-        private static void OnTick(EventArgs args)
+        private static void Game_OnUpdate(EventArgs args)
         {
             if (Player.IsDead)
                 return;
@@ -216,8 +216,6 @@ namespace DevKogMaw
 
         public static void Freeze()
         {
-            if (mustDebug)
-                Game.PrintChat("Freeze Start");
 
         }
 
@@ -316,17 +314,11 @@ namespace DevKogMaw
 
         private static int GetRStacks()
         {
-            if (Player.HasBuff("KogMawLivingArtillery"))
-            {
-                return Player.Buffs
-                    .Where(x => x.DisplayName == "KogMawLivingArtillery")
-                    .Select(x => x.Count)
-                    .First();
-            }
+            var query = Player.Buffs.Where(x => x.DisplayName == "KogMawLivingArtillery");
+            if (query.Any())
+                return query.First().Count;
             else
-            {
                 return 0;
-            }
         }
 
         private static void onGameLoad(EventArgs args)
@@ -375,8 +367,8 @@ namespace DevKogMaw
             if (mustDebug)
                 Game.PrintChat("InitializeAttachEvents Start");
 
-            Game.OnGameUpdate += OnTick;
-            Game.OnGameSendPacket += Game_OnGameSendPacket;
+            Game.OnUpdate += Game_OnUpdate;
+            Game.OnSendPacket += Game_OnSendPacket;
             Game.OnWndProc += Game_OnWndProc;
             Drawing.OnDraw += OnDraw;
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
@@ -455,7 +447,7 @@ namespace DevKogMaw
                 Game.PrintChat("InitializeLevelUpManager Finish");
         }
 
-        static void Game_OnGameSendPacket(GamePacketEventArgs args)
+        static void Game_OnSendPacket(GamePacketEventArgs args)
         {
             var BlockUlt = Config.Item("BlockUlt").GetValue<bool>();
             var ChaseEnemyAfterDeath = Config.Item("ChaseEnemyAfterDeath").GetValue<bool>();
